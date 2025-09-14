@@ -6,23 +6,168 @@ import {
   SquarePen,
   CircleAlert,
   Loader2,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  X,
+  MapPin, // New import for the map icon
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
 import { useState } from "react";
 import ImportantNotice from "./ImportantNotice";
-import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from "framer-motion";
+import { useMediaQuery } from "react-responsive";
+
+const OrderConfirmationModal = ({
+  cart,
+  total,
+  address,
+  onConfirm,
+  onCancel,
+  loadingPayment,
+}) => {
+  const isMobile = useMediaQuery({ maxWidth: 640 }); // Mobile check
+  const { url } = useAppContext();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: isMobile ? 100 : 50 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: isMobile ? 100 : 50 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className={`bg-white rounded-3xl shadow-2xl relative flex flex-col w-full max-w-lg 
+          ${isMobile ? "h-[95vh]" : "max-h-[90vh]"} overflow-hidden`}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            📝 Confirm Your Order
+          </h2>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600 transition"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto px-4  py-4 space-y-4">
+          {/* Product List */}
+          <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
+            {cart.map((item) => (
+              <div
+                key={item._id}
+                className="flex items-center gap-4 p-2 rounded-xl border border-gray-100 hover:shadow-md transition"
+              >
+                <img
+                  src={`${url}/img/${item.imgSrc}`}
+                  alt={item.title}
+                  className="w-16 h-16 rounded-lg object-cover shadow-sm"
+                />
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-800 line-clamp-1">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Qty: {item.qty} | Price: ₹{item.price}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Address */}
+          {address && (
+            <div className="bg-white p-4 rounded-xl border border-gray-200 relative group hover:shadow-md transition cursor-pointer">
+              <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-blue-500" />
+                Shipping to
+              </h4>
+              <div className="text-sm space-y-1">
+                <p className="font-semibold text-gray-800">
+                  {address.FullName}
+                </p>
+                <p>{address.Address}</p>
+                <p>
+                  {address.Add}, {address.VillorCity}, {address.Dist},{" "}
+                  {address.State} {address.Pin}
+                </p>
+                <p className="text-gray-500">Ph: {address.Phone}</p>
+              </div>
+              <Link
+                to="/account"
+                className="absolute top-2 right-2 p-1 text-gray-600 rounded-full hover:bg-gray-200 transition"
+              >
+                <SquarePen size={16} />
+              </Link>
+            </div>
+          )}
+
+          {/* Total Summary */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm">
+            <div className="flex justify-between items-center text-lg font-bold text-gray-900">
+              <span>Total Amount</span>
+              <span className="text-indigo-600">₹{total}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex flex-col sm:flex-row gap-3 shrink-0">
+          
+          <button
+            onClick={onCancel}
+            className="w-full py-3 bg-slate-200 text-sm sm:text-base text-gray-600 rounded-xl hover:bg-gray-100 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loadingPayment}
+            className={`w-full py-3 rounded-xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+              loadingPayment
+                ? "bg-blue-300 text-white cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 shadow-lg"
+            }`}
+          >
+            {loadingPayment ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Confirm & Pay"
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { cart, getCart, token, address, user,url } = useAppContext();
+  const { cart: rawCart, getCart, token, address, user, url } = useAppContext();
+  const cart = rawCart || [];
   const [showAddressWarning, setShowAddressWarning] = useState(false);
   const [loadingPayment, setLoadingPayment] = useState(false);
+  // NEW: State for showing the order confirmation modal
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const isMobile = useMediaQuery({ maxWidth: 640 });
 
   const [notification, setNotification] = useState({
-    message: '',
-    type: '',
+    message: "",
+    type: "",
     visible: false,
   });
 
@@ -30,15 +175,17 @@ const Cart = () => {
     setNotification({ message, type, visible: true });
     setTimeout(() => {
       setNotification((prev) => ({ ...prev, visible: false }));
-    }, 3000); 
+    }, 3000);
   };
 
-  const total = cart?.reduce((sum, item) => sum + item.price, 0) || 0;
-  const totalItems = cart?.reduce((acc, item) => acc + item.qty, 0);
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const productCount = cart.length;
 
   const checkProductAvailability = async () => {
+    // ... (Your existing checkProductAvailability function)
     try {
       if (cart.length > 0) {
+        let allProductsAvailable = true;
         for (let i = 0; i < cart.length; i++) {
           const response = await axios.get(
             `${url}/api/product/${cart[i].productId}`
@@ -53,12 +200,13 @@ const Cart = () => {
             );
             getCart();
             showNotification(
-              `${cart[i].title} removed - only ${response.data.product.stock} left in stock`,
+              `${cart[i].title} quantity reduced due to low stock.`,
               'error'
             );
+            allProductsAvailable = false;
           }
         }
-        return true;
+        return allProductsAvailable;
       } else {
         return false;
       }
@@ -73,7 +221,7 @@ const Cart = () => {
     try {
       if (!token) throw new Error("User not authenticated");
       await axios.delete(
-        `${url}/api/cart/remove/${productId}`,
+         `${url}/api/cart/remove/${productId}`,
         { headers: { Auth: token } }
       );
       getCart();
@@ -84,48 +232,61 @@ const Cart = () => {
     }
   };
 
-  const handlePayment = async () => {
+  const handleProceedToCheckout = () => {
     if (address?.FullName && address?.Phone && cart.length > 0) {
       setShowAddressWarning(false);
-      setLoadingPayment(true);
-      try {
-        const productAvailable = await checkProductAvailability();
-        if (productAvailable) {
-          const transactionId = "T" + Date.now();
-          const MUID = "MUID" + Date.now();
-          const data = {
-            amount: total,
-            MUID,
-            transactionId,
-            cartItems: cart,
-            usershipping: address,
-            userId: user?.id || "124",
-          };
-          const orderResponse = await axios.post(
-            `${url}/api/phonepe/payment`,
-            data
-          );
-          if (orderResponse?.data?.redirectUrl) {
-            showNotification("Redirecting to PhonePe...", 'warning');
-            window.location.href = orderResponse.data.redirectUrl;
-          } else {
-            showNotification("Redirecting user to PhonePe payment page...", 'warning');
-          }
-        } else {
-          showNotification("Some products are unavailable. Please refresh your cart.", 'error');
-        }
-      } catch (error) {
-        console.error("Error in handlePayment:", error);
-        showNotification("Payment failed. Try again later.", 'error');
-        navigate("/failure");
-      } finally {
-        setLoadingPayment(false);
-      }
+      setShowConfirmation(true); // Show the new modal
     } else {
       setShowAddressWarning(true);
     }
   };
 
+  // NEW: This function handles the actual payment logic after confirmation
+  const handleConfirmAndPay = async () => {
+    setLoadingPayment(true);
+    try {
+      const productAvailable = await checkProductAvailability();
+      if (productAvailable) {
+        const transactionId = "T" + Date.now();
+        const MUID = "MUID" + Date.now();
+        const data = {
+          amount: total,
+          MUID,
+          transactionId,
+          cartItems: cart,
+          usershipping: address,
+          userId: user?.id || "124",
+        };
+        const orderResponse = await axios.post(
+          `${url}/api/phonepe/payment`,
+          data
+        );
+        if (orderResponse?.data?.redirectUrl) {
+          showNotification("Redirecting to PhonePe...", "warning");
+          window.location.href = orderResponse.data.redirectUrl;
+        } else {
+          showNotification(
+            "Redirecting user to PhonePe payment page...",
+            "warning"
+          );
+        }
+      } else {
+        showNotification(
+          "Some products are unavailable. Please refresh your cart.",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error in handlePayment:", error);
+      showNotification("Payment failed. Try again later.", "error");
+      navigate("/failure");
+    } finally {
+      setLoadingPayment(false);
+      setShowConfirmation(false); // Hide the modal on success or failure
+    }
+  };
+
+  // ... (Your existing empty cart return)
   if (cart?.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
@@ -151,6 +312,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 font-inter py-6 sm:py-8">
+      {/* Existing notification component */}
       <AnimatePresence>
         {notification.visible && (
           <motion.div
@@ -179,7 +341,6 @@ const Cart = () => {
                 </p>
               </div>
 
-              {/* Close Button */}
               <div className="flex-shrink-0">
                 <motion.button
                   onClick={() => setNotification({ ...notification, visible: false })}
@@ -193,59 +354,76 @@ const Cart = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* New Order Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmation && (
+          <OrderConfirmationModal
+            cart={cart}
+            total={total}
+            address={address}
+            onConfirm={handleConfirmAndPay}
+            onCancel={() => setShowConfirmation(false)}
+            loadingPayment={loadingPayment}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-8 text-center sm:text-left animate-fadeIn">
-          🛒 Shopping Cart
-        </h1>
+        <div className="flex items-center justify-between mb-8 animate-fadeIn">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 flex items-center gap-3">
+            <span>🛒</span> Shopping Cart
+            <span className="bg-blue-600 text-white text-base font-bold px-3 py-1 rounded-full">{productCount}</span>
+          </h1>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             {cart?.map((item) => (
               <div
                 key={item._id}
-                className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-4 flex flex-col sm:flex-row items-center gap-4 hover:shadow-2xl transition-all duration-500 animate-float"
+                className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/30 p-4 sm:p-6 flex gap-4 hover:shadow-2xl transition-all duration-500 animate-fadeInUp ${isMobile ? "flex-col items-center text-center" : "flex-row items-center"}`}
               >
                 <Link
                   to={`/productDetails/${item.productId}`}
-                  className="w-full sm:w-28 sm:h-28 flex-shrink-0"
+                  className={`flex-shrink-0 overflow-hidden rounded-xl group ${isMobile ? "w-40 h-40" : "w-36 h-36"}`}
                 >
                   <img
                     src={`${url}/img/${item.imgSrc}`}
                     alt={item.title}
-                    className="w-full h-full object-cover rounded-xl border border-gray-200 transform transition-transform duration-500 hover:scale-110 shadow-md"
+                    className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110 shadow-md"
                   />
                 </Link>
 
-                <div className="flex-1 w-full text-center sm:text-left">
+                <div className={`flex-1 w-full space-y-2 ${isMobile ? "text-center" : "text-left"}`}>
                   <Link
                     to={`/productDetails/${item.productId}`}
-                    className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2"
+                    className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2"
                   >
                     {item.title}
                   </Link>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Price per item: ₹{item.price / item.qty}
-                  </p>
-                  <div className="mt-2">
-                    <span className="font-medium text-gray-800">
-                      Qty:{" "}
-                      <span className="text-blue-600 font-bold">{item.qty}</span>
+                  <div className={`flex items-center gap-2 text-sm text-gray-700 font-medium ${isMobile ? "justify-center" : ""}`}>
+                    <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                      Qty: <span className="text-blue-600 font-bold">{item.qty}</span>
+                    </span>
+                    <span className="text-gray-500">
+                      (₹{item.price / item.qty} each)
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3 sm:ml-auto w-full sm:w-auto">
-                  <p className="text-lg font-bold text-gray-900">₹{item.price}</p>
+                <div className={`flex items-center gap-4 ${isMobile ? "flex-row justify-center mt-4" : "flex-col items-end sm:ml-auto w-auto"}`}>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">₹{item.price}</p>
+
                   <div className="flex items-center gap-2">
                     <Link
                       to={`/productDetails/${item.productId}`}
-                      className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all transform hover:scale-110"
+                      className="p-3 rounded-full bg-white/70 text-blue-600 hover:bg-blue-100 transition-all transform hover:scale-110 shadow-md"
                     >
                       <SquarePen className="h-5 w-5" />
                     </Link>
                     <button
                       onClick={() => removeFromCart(item.productId)}
-                      className="p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-all transform hover:scale-110"
+                      className="p-3 rounded-full bg-white/70 text-red-600 hover:bg-red-100 transition-all transform hover:scale-110 shadow-md"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -262,7 +440,7 @@ const Cart = () => {
               </h3>
               <div className="space-y-3 mb-6 text-gray-700">
                 <div className="flex justify-between">
-                  <span>Subtotal ({totalItems} items)</span>
+                  <span>Subtotal ({productCount} items)</span>
                   <span className="font-semibold text-gray-900">₹{total}</span>
                 </div>
                 <div className="flex justify-between">
@@ -284,23 +462,14 @@ const Cart = () => {
                 </div>
               )}
 
+              {/* MODIFIED: This button now calls the new function */}
               <button
-                onClick={handlePayment}
-                disabled={loadingPayment}
+                onClick={handleProceedToCheckout}
                 className={`w-full py-3 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg transition-all duration-300 ${
-                  loadingPayment
-                    ? "bg-blue-300 text-white cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 animate-pulse-slow"
+                  cart.length > 0 && address?.FullName ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 animate-pulse-slow" : "bg-gray-300 text-gray-600 cursor-not-allowed"
                 }`}
               >
-                {loadingPayment ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Proceed to Checkout"
-                )}
+                Proceed to Checkout
               </button>
 
               <Link

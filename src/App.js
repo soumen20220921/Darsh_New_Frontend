@@ -24,6 +24,7 @@ import ScrollToTop from './components/ScrollToTop';
 import DevelopersPage from './pages/DevelopersPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
+import AllProducts from './pages/AllProducts';
 
 const App = () => {
   const context = useAppContext();
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/hotsales" element={<HotSalesPage />} />
             <Route path="/newarrivals" element={<NewArrivalsPage />} />
+            <Route path="/allproducts" element={<AllProducts />} />
             <Route path="/productDetails/:id" element={<ProductDetails />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<Pagenotfound />} />

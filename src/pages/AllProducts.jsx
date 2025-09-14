@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context/AppContext.jsx";
 import ProductCard from "../components/ProductCard";
@@ -17,8 +17,22 @@ import {
   Blocks,
 } from "lucide-react";
 
-const Categories = () => {
-  const { name } = useParams();
+const ALL_CATEGORIES = [
+  "all",
+  "saree",
+  "blouse",
+  "men",
+  "kids",
+  "jwellary",
+  "acceceries",
+  "home decor",
+  "footwear",
+  "beauty",
+  "electronics",
+  
+];
+
+const AllProducts = () => {
   const navigate = useNavigate();
   const { allProduct, url } = useAppContext();
 
@@ -26,54 +40,45 @@ const Categories = () => {
   const [sortBy, setSortBy] = useState("default");
   const [priceRange, setPriceRange] = useState([0, 3000]);
   const [stockStatus, setStockStatus] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedSubCategory, setSelectedSubCategory] = useState("all");
-  const [availableSubcategories, setAvailableSubcategories] = useState([]);
-
   const [openSection, setOpenSection] = useState("price");
-
-  // This should be your static category data if you have it
-  const categories = [
-    { id: "1", name: "saree", image: "/IMG/saree.jpg" },
-    { id: "2", name: "blouse", image: "/IMG/blouse.jpg" },
-    { id: "3", name: "men", image: "/IMG/men.jpg" },
-    { id: "4", name: "kids", image: "/IMG/kids.png" },
-    { id: "5", name: "jwellary", image: "/IMG/jwellary.png" },
-    {
-      id: "6",
-      name: "acceceries",
-      image:
-        "https://images.pexels.com/photos/3785147/pexels-photo-3785147.jpeg?auto=compress&cs=tinysrgb&w=400",
-    },
-  ];
 
   useEffect(() => {
     if (allProduct) {
       setIsLoading(false);
-      // Dynamically extract unique subcategories for the current category
-      const subCats = new Set();
-      allProduct.forEach(p => {
-        if (p.category === name && p.subCategory) {
-          subCats.add(p.subCategory.toLowerCase());
-        }
-      });
-      setAvailableSubcategories(Array.from(subCats));
     }
-  }, [allProduct, name]);
+  }, [allProduct]);
 
+  // Extract unique subCategories for selected category
+  const availableSubCategories = useMemo(() => {
+    if (!allProduct) return [];
+    if (selectedCategory === "all") return [];
+
+    const subs = [
+      ...new Set(
+        allProduct
+          .filter((p) => p.category === selectedCategory)
+          .map((p) => p.subCategory || "other")
+      ),
+    ];
+    return ["all", ...subs];
+  }, [allProduct, selectedCategory]);
+
+  // Filtering logic
   const filteredProducts = useMemo(() => {
-    let products = allProduct?.filter((product) => product.category === name) || [];
+    let products = allProduct || [];
 
-    // Filter by subcategory
-    if (selectedSubCategory !== "all") {
-      products = products.filter(
-        (product) =>
-          product.subCategory?.toLowerCase() === selectedSubCategory.toLowerCase()
-      );
+    if (selectedCategory !== "all") {
+      products = products.filter((p) => p.category === selectedCategory);
     }
 
-    // Existing filters
+    if (selectedSubCategory !== "all") {
+      products = products.filter((p) => p.subCategory === selectedSubCategory);
+    }
+
     if (searchQuery) {
       products = products.filter((p) =>
         p.productName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,14 +104,24 @@ const Categories = () => {
     }
 
     return products;
-  }, [allProduct, name, selectedSubCategory, searchQuery, priceRange, sortBy, stockStatus]);
+  }, [
+    allProduct,
+    searchQuery,
+    priceRange,
+    sortBy,
+    stockStatus,
+    selectedCategory,
+    selectedSubCategory,
+  ]);
 
   const handleResetFilters = () => {
+    setSearchQuery("");
     setPriceRange([0, 3000]);
     setSortBy("default");
     setStockStatus("all");
-    setShowFilters(false);
+    setSelectedCategory("all");
     setSelectedSubCategory("all");
+    setShowFilters(false);
   };
 
   const handleApplyFilters = () => {
@@ -144,7 +159,9 @@ const Categories = () => {
   if (isLoading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-gray-700 animate-pulse">Loading products...</p>
+        <p className="text-xl text-gray-700 animate-pulse">
+          Loading products...
+        </p>
       </div>
     );
   }
@@ -152,10 +169,15 @@ const Categories = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="relative h-60 md:h-80 rounded-b-3xl mb-10 overflow-hidden">
+      <motion.div
+        className="relative h-60 md:h-80 rounded-b-3xl mb-10 overflow-hidden"
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
         <img
-          src={categories.find((c) => c.name === name)?.image}
-          alt={name}
+          src="./IMG/all.png"
+          alt="All Products"
           className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center text-white px-4">
@@ -165,14 +187,83 @@ const Categories = () => {
           >
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 capitalize flex items-center gap-2">
+          <h1 className="text-3xl md:text-5xl font-bold mb-2 flex items-center gap-2 animate-fade-in-down">
             <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-            {name}
+            All Products
           </h1>
-          <p className="text-lg">{filteredProducts.length} products available</p>
+          <p className="text-lg">Discover our entire collection</p>
         </div>
+      </motion.div>
+
+      {/* Category Tabs */}
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+        <motion.div
+          className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          {ALL_CATEGORIES.map((category) => (
+            <motion.button
+              key={category}
+              onClick={() => {
+                setSelectedCategory(category);
+                setSelectedSubCategory("all");
+              }}
+              className={`
+                flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap transition-all duration-300
+                ${
+                  selectedCategory === category
+                    ? "bg-white text-gray-800 border-2 border-indigo-500 shadow-lg"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {category}
+            </motion.button>
+          ))}
+        </motion.div>
       </div>
 
+      {/* Subcategory Tabs */}
+      {selectedCategory !== "all" && availableSubCategories.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+          <motion.h3
+            className="text-center text-lg md:text-xl font-bold text-gray-800 mb-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            Explore {selectedCategory}
+          </motion.h3>
+          <motion.div
+            className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100 scrollbar-thumb-rounded-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+          >
+            {availableSubCategories.map((sub) => (
+              <motion.button
+                key={sub}
+                onClick={() => setSelectedSubCategory(sub)}
+                className={`
+                  flex-shrink-0 px-5 py-1.5 rounded-full font-medium text-xs capitalize transition-all duration-300
+                  ${
+                    selectedSubCategory === sub
+                      ? "bg-indigo-600 text-white shadow-md"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {sub}
+              </motion.button>
+            ))}
+          </motion.div>
+        </div>
+      )}
+      {/* Filters + Products */}
       <div className="flex flex-col md:flex-row gap-6 px-4 md:px-10">
         <AnimatePresence>
           {showFilters && (
@@ -203,6 +294,7 @@ const Categories = () => {
                 />
               </div>
 
+              {/* Accordion Filters */}
               <FilterSection id="price" title="Price Range">
                 <div>
                   <div className="flex items-center gap-3">
@@ -315,13 +407,16 @@ const Categories = () => {
           )}
         </AnimatePresence>
 
+        {/* Desktop Filters */}
         <motion.div
           className="hidden md:block md:w-1/4 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 h-fit sticky top-4"
           initial={{ x: -40, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
         >
-          <h3 className="text-lg font-semibold text-indigo-600 mb-4">Filters</h3>
-          <FilterSection id="price" title="Price Range">
+          <h3 className="text-lg font-semibold text-indigo-600 mb-4">
+            Filters
+          </h3>
+          <FilterSection id="priceDesktop" title="Price Range">
             <input
               type="range"
               min="0"
@@ -337,7 +432,7 @@ const Categories = () => {
               ₹{priceRange[0]} - ₹{priceRange[1]}
             </p>
           </FilterSection>
-          <FilterSection id="stock" title="Availability">
+          <FilterSection id="stockDesktop" title="Availability">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
@@ -369,7 +464,7 @@ const Categories = () => {
               <PackageX className="w-4 h-4 text-red-500" /> Out of Stock
             </label>
           </FilterSection>
-          <FilterSection id="sort" title="Sort By">
+          <FilterSection id="sortDesktop" title="Sort By">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -412,52 +507,6 @@ const Categories = () => {
             </button>
           </div>
 
-          {/* Subcategory Tabs Section */}
-          {availableSubcategories.length > 0 && (
-            <motion.div
-              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar mb-8 justify-start"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              <motion.button
-                onClick={() => setSelectedSubCategory("all")}
-                className={`
-                  flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap
-                  transition-all duration-300 shadow-md
-                  ${selectedSubCategory === "all"
-                    ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white transform scale-105"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                  }
-                `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                All
-              </motion.button>
-              {availableSubcategories.map((subCat) => (
-                <motion.button
-                  key={subCat}
-                  onClick={() => setSelectedSubCategory(subCat)}
-                  className={`
-                    flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap
-                    transition-all duration-300 shadow-md
-                    ${selectedSubCategory === subCat
-                      ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white transform scale-105"
-                      : "bg-white text-gray-700 hover:bg-gray-100"
-                    }
-                  `}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {subCat}
-                </motion.button>
-              ))}
-            </motion.div>
-          )}
-
-          {/* Product Count */}
           <motion.p
             className="text-gray-600 mb-4"
             initial={{ opacity: 0 }}
@@ -466,7 +515,6 @@ const Categories = () => {
             Showing <b>{filteredProducts.length}</b> products
           </motion.p>
 
-          {/* Product Grid */}
           <motion.div
             className="grid grid-cols-2 mb-7 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
             initial={{ opacity: 0 }}
@@ -479,7 +527,10 @@ const Categories = () => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -6, boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
+                  whileHover={{
+                    y: -6,
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+                  }}
                 >
                   <ProductCard
                     product={{
@@ -489,6 +540,7 @@ const Categories = () => {
                         ? `${url}/img/${product.images[0]}`
                         : "",
                       price: product.price,
+                      description: product.description,
                       stock: product.stock,
                     }}
                     isCompactMobile={true}
@@ -499,6 +551,11 @@ const Categories = () => {
               ))
             ) : (
               <motion.div
+                className="text-gray-600 col-span-full text-center py-10 text-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                 <motion.div
                 className="col-span-full text-center py-10 flex flex-col items-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -512,6 +569,7 @@ const Categories = () => {
                   <RotateCcw className="w-4 h-4" /> Reset Filters
                 </button>
               </motion.div>
+              </motion.div>
             )}
           </motion.div>
         </div>
@@ -520,4 +578,4 @@ const Categories = () => {
   );
 };
 
-export default Categories;
+export default AllProducts;

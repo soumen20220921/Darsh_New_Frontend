@@ -14,21 +14,28 @@ import {
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext.jsx";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Navigation, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import { motion } from "framer-motion";
 
 const Home = () => {
-  const { allProduct ,url} = useAppContext();
+  const { allProduct ,url } = useAppContext();
   const [hotSales, setHotSales] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (allProduct) {
-      const shuffledProducts = [...allProduct].sort(() => 0.5 - Math.random());
-      setHotSales(shuffledProducts.slice(0, 8));
-      setNewArrivals(allProduct.slice(0, 8));
+      // Only hotSell products for Hot Sales section
+      const hot = allProduct.filter((p) => p.hotSell);
+      setHotSales(hot.slice(0, 8));
+
+      // Latest products for New Arrivals
+      const sortedNew = [...allProduct].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setNewArrivals(sortedNew.slice(0, 8));
     }
   }, [allProduct]);
 
@@ -83,7 +90,7 @@ const Home = () => {
         "https://media.istockphoto.com/id/484288034/photo/portrait-of-happy-woman-after-applying-vermilion-during-durga-puja.jpg?s=612x612&w=0&k=20&c=fRC7IbQmqN1U2vJD_hC8Id9JKfL9fB3aJZ1YEoTvGJ0=",
     },
     {
-      name: "Subhajit Dey",
+      name: "Subhra Dey",
       quote:
         "Ordered kidswear for my daughter. The fabric is soft and comfortable, perfect for daily use.",
       image:
@@ -107,10 +114,13 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-tr from-pink-200/20 via-amber-100/10 to-transparent animate-pulse-slow" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
-              ✨ Shop by Category
+            <h2 className="text-2xl whitespace-nowrap sm:text-3xl lg:text-4xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
+              <span className="text-pink-500 animate-pulse">
+                <Sparkles className="inline-block mr-2 animate-spin-slow" />
+              </span>
+              Shop by Category
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
               Discover our wide range of products across different categories.
             </p>
           </div>
@@ -119,9 +129,9 @@ const Home = () => {
               <Link
                 key={idx}
                 to={`/Categories/${cat.name}`}
-                 onClick={() =>
-            window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
-          }
+                onClick={() =>
+                  window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+                }
                 className="group relative block rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105"
               >
                 <div className="relative">
@@ -136,11 +146,13 @@ const Home = () => {
                   <h3 className="text-xl font-bold mb-1 drop-shadow-lg">
                     {cat.name}
                   </h3>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs uppercase tracking-wider">
+                  <div className="flex justify-between items-center cursor-pointer">
+                    <span className="text-xs uppercase tracking-wider font-medium">
                       Shop Now
                     </span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight
+                      className=" h-5 w-5 ml-1 animate-[arrowMove_1.2s_ease-in-out_infinite]"
+                    />
                   </div>
                 </div>
               </Link>
@@ -148,100 +160,124 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Hot Sales Section */}
+      {/* Hot Sales */}
       <section className="py-16 bg-gradient-to-r from-red-50 via-white to-pink-50 rounded-3xl shadow-xl my-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
             <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Flame className="text-red-500 animate-bounce" /> Hot Sales
+              <Flame size={38} className="text-red-500 animate-pulse " /> Hot
+              Sales
             </h2>
             <Link
               to="/hotsales"
-              className="flex items-center text-pink-600 hover:text-pink-700 font-semibold"
+              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 hover:from-pink-500 hover:via-red-500 hover:to-rose-500 shadow-lg hover:shadow-xl  transform hover:scale-105 active:scale-95  transition-all duration-300 ease-out "
             >
-              View All <ArrowRight className="ml-1 h-5 w-5" />
+              <span>View All</span>
+              <ArrowRight className="ml-2 h-4 animate-arrowMove sm:h-5 w-4 sm:w-5" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {hotSales.slice(0, 4).map((product) => (
-              <div
-                key={product._id}
-                className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-pink-200"
-              >
-                <ProductCard
-                  product={{
-                    id: product._id,
-                    name: product.productName,
-                    image: product.images?.[0]
-                      ? `${url}/img/${product.images[0]}`
-                      : "",
-                    price: product.price,
-                    oldprice:product.originalPrice,
-                  }}
-                  onAddToCart={() => {}}
-                  onToggleWishlist={() => {}}
-                  isCompactMobile={true}
-                />
-                
-                <span className="absolute top-2 right-2 bg-pink-600 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                  Hot
-                </span>
-              </div>
+
+          {/* Mobile Swipe */}
+          <Swiper
+            spaceBetween={16}
+            slidesPerView={1.5}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 4 },
+            }}
+            autoplay={{ delay: 3000 }}
+            modules={[Autoplay]}
+            className="mySwiper"
+          >
+            {hotSales.map((product) => (
+              <SwiperSlide key={product._id}>
+                <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-pink-200">
+                  <ProductCard
+                    product={{
+                      id: product._id,
+                      name: product.productName,
+                      image: product.images?.[0]
+                        ? `${url}/img/${product.images[0]}`
+                        : "https://placehold.co/400x400",
+                      price: product.price,
+                      oldprice: product.originalPrice,
+                    }}
+                    onAddToCart={() => {}}
+                    onToggleWishlist={() => {}}
+                    isCompactMobile={true}
+                  />
+                  <span className="absolute top-2 right-2 bg-pink-600 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                    Hot
+                  </span>
+                </div>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         </div>
       </section>
 
-      {/* New Arrivals Section */}
+      {/* New Arrivals */}
       <section className="py-16 bg-gradient-to-l from-blue-50 via-white to-indigo-50 rounded-3xl shadow-xl my-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
             <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Crown className="text-indigo-500 animate-pulse" /> New Arrivals
+              <Crown size={38} className="text-indigo-500 animate-pulse" /> New
+              Arrivals
             </h2>
             <Link
               to="/newarrivals"
-              className="flex items-center text-indigo-600 hover:text-indigo-700 font-semibold"
+              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-500 hover:to-indigo-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              View All <ArrowRight className="ml-1 h-5 w-5" />
+              View All
+              <ArrowRight className="ml-2 animate-arrowMove h-5 w-5" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {newArrivals.slice(0, 4).map((product) => (
-              <div
-                key={product._id}
-                className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-indigo-200"
-              >
-                <ProductCard
-                  product={{
-                    id: product._id,
-                    name: product.productName,
-                    image: product.images?.[0]
-                      ? `${url}/img/${product.images[0]}`
-                      : "",
-                    price: product.price,
-                  }}
-                  onAddToCart={() => {}}
-                  onToggleWishlist={() => {}}
-                  isCompactMobile={true}
-                />
-                <span className="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full animate-bounce">
-                  New
-                </span>
-              </div>
+
+          {/* Mobile Swipe */}
+          <Swiper
+            spaceBetween={16}
+            slidesPerView={1.5}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 4 },
+            }}
+            autoplay={{ delay: 3000 }}
+            modules={[Autoplay]}
+            className="mySwiper"
+          >
+            {newArrivals.map((product) => (
+              <SwiperSlide key={product._id}>
+                <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-indigo-200">
+                  <ProductCard
+                    product={{
+                      id: product._id,
+                      name: product.productName,
+                      image: product.images?.[0]
+                        ? `${url}/img/${product.images[0]}`
+                        : "",
+                      price: product.price,
+                    }}
+                    onAddToCart={() => {}}
+                    onToggleWishlist={() => {}}
+                    isCompactMobile={true}
+                  />
+                  <span className="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full animate-bounce">
+                    New
+                  </span>
+                </div>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         </div>
       </section>
 
       {/* Why Choose Darsh (Enhanced Design) */}
       <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
+          <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
             The ShopHub Legacy
           </h2>
-          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-lg sm:text-xl font-body animate-fade-in delay-200">
+          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
             Blending traditional craftsmanship with modern design, we bring
             timeless elegance to your wardrobe.
           </p>
@@ -306,10 +342,10 @@ const Home = () => {
       </section>
 
       <section className="py-20 my-10 bg-gradient-to-r from-yellow-300 via-amber-400 to-pink-400 rounded-3xl shadow-2xl text-center relative overflow-hidden">
-        <h2 className="text-4xl font-extrabold text-white mb-4 drop-shadow-lg">
-              Festive Deals Are Here!
+        <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
+          Festive Deals Are Here!
         </h2>
-        <p className="text-lg text-white/90 max-w-xl mx-auto mb-8">
+        <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
           Shop exclusive festive sarees, jewelry, and more with special
           discounts this season.
         </p>
@@ -322,13 +358,117 @@ const Home = () => {
         </Link>
       </section>
 
+      {/* All Products */}
+      <section className="py-16 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-3xl shadow-xl my-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
+            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingBag size={36} className="text-teal-500 animate-pulse" />
+              All Products
+            </h2>
+            <Link
+              to="/allproducts"
+              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-cyan-500 hover:to-teal-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              View All 
+              <ArrowRight className="ml-2 animate-arrowMove h-5 w-5" />
+            </Link>
+          </div>
+
+          {/* Mobile & Tablet Swipe (below 1024px) */}
+          <div className="lg:hidden">
+            <Swiper
+              spaceBetween={16}
+              slidesPerView={1.5}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                768: { slidesPerView: 2.5 },
+              }}
+              autoplay={{ delay: 3000 }}
+              modules={[Autoplay]}
+              className="mySwiper"
+            >
+              {allProduct?.slice(0, 8).map((product) => (
+                <SwiperSlide key={product._id}>
+                  <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-teal-200">
+                    <ProductCard
+                      product={{
+                        id: product._id,
+                        name: product.productName,
+                        image: product.images?.[0]
+                          ? `${url}/img/${product.images[0]}`
+                          : "https://placehold.co/400x400",
+                        price: product.price,
+                        description: product.description,
+                        stock: product.stock,
+                      }}
+                      isCompactMobile={true}
+                      onAddToCart={() => {}}
+                      onToggleWishlist={() => {}}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          {/* Desktop Grid (1024px and above) */}
+          <div className="hidden lg:block">
+            <motion.div
+              className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {allProduct && allProduct.length > 0 ? (
+                allProduct.slice(0, 4).map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{
+                      y: -6,
+                      boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <ProductCard
+                      product={{
+                        id: product._id,
+                        name: product.productName,
+                        image: product.images?.[0]
+                          ? `${url}/img/${product.images[0]}`
+                          : "https://placehold.co/400x400",
+                        price: product.price,
+                        description: product.description,
+                        stock: product.stock,
+                      }}
+                      isCompactMobile={true}
+                      onAddToCart={() => {}}
+                      onToggleWishlist={() => {}}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <motion.p
+                  className="text-gray-600 col-span-full text-center py-10 text-lg"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  No products found.
+                </motion.p>
+              )}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials - Redesigned & Animated */}
       <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-4 font-serif animate-fade-in-up">
             Our Community
           </h2>
-          <p className="text-gray-700 max-w-2xl mx-auto mb-12 text-lg sm:text-xl">
+          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
             Stories from our happy customers who are part of the ShopHub family.
           </p>
 

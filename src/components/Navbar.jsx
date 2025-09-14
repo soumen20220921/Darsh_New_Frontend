@@ -3,17 +3,30 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   AiOutlineUser,
   AiOutlineShopping,
+  AiOutlineLogout, 
 } from "react-icons/ai";
 import { FiMenu } from "react-icons/fi";
 import { IoMdClose } from "react-icons/io";
 import { useAppContext } from "../context/AppContext";
+import LogoutModal from "../pages/LogoutModal";
+
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const { login, setLogin, totalItems } = useAppContext(); // <-- Get totalItems from context
+  const { login, setLogin, totalItems } = useAppContext();
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const userName = localStorage.getItem("name");
+  const logOut = () => setShowModal(true);
+
+  const confirmLogout = () => {
+    localStorage.clear();
+    navigate("/auth");
+    window.location.reload();
+  };
+    const cancelLogout = () => setShowModal(false);
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -148,57 +161,131 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden fixed top-16 left-0 w-full bg-gradient-to-b from-white/90 via-white/95 to-white shadow-xl transition-transform duration-500 ease-in-out transform ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`lg:hidden fixed top-0 left-0 w-full h-screen
+        bg-black/20 bg-gradient-to-br from-indigo-100 via-white to-pink-100
+        backdrop-blur-xl shadow-2xl z-50 flex flex-col
+        transition-all duration-500 ease-in-out
+        ${
+          isMobileMenuOpen
+            ? "translate-x-0 opacity-100"
+            : "-translate-x-full opacity-0"
+        }
+      `}
       >
-        {login && (
-          <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 animate-slideDown">
-            <span className="text-lg font-bold text-gray-800">
-              Hi, {userName}!
-            </span>
-          </div>
-        )}
-        <ul className="flex flex-col p-4 gap-2">
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
           {login && (
-            <li className="w-full animate-slideUp">
-              <button
-                type="button"
-                onClick={() => handleNavigation("/account")}
-                className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r from-indigo-100 to-pink-50 transition-all duration-300"
-              >
-                <AiOutlineUser size={20} className="text-indigo-500" />
-                <span className="text-base font-medium">My Account</span>
-              </button>
-            </li>
-          )}
-          <li className="w-full animate-slideUp">
-            <button
-              type="button"
-              onClick={() => handleNavigation("/cart")}
-              className="relative flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r from-green-100 to-green-50 transition-all duration-300"
-            >
-              <AiOutlineShopping size={20} className="text-green-500" />
-              <span className="text-base font-medium">Cart</span>
-              {totalItems > 0 && (
-                <span className="ml-auto flex items-center justify-center min-h-[28px] min-w-[28px] p-1 rounded-full bg-purple-600 text-white text-sm font-bold shadow-lg transform transition-transform duration-300 group-hover:scale-110">
-                  {totalItems}
+            <div className="animate-fade-in-down">
+              <span className="text-lg font-bold text-gray-800">
+                👋 Hi,{" "}
+                <span className="font-extrabold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
+                  {userName}!
                 </span>
-              )}
-            </button>
-          </li>
-          {!login && (
-            <li className="w-full animate-slideUp">
+              </span>
+            </div>
+          )}
+          <button
+            onClick={handleMenuToggle}
+            className="ml-auto h-11 w-11 flex items-center justify-center rounded-full bg-white/60 shadow-md 
+            hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:rotate-180
+            focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            <IoMdClose size={24} />
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-between p-6 overflow-y-auto">
+          <ul className="flex flex-col gap-4">
+           
+            {login && (
+              <li
+                className="animate-stagger-in"
+                style={{ animationDelay: "100ms" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleNavigation("/account")}
+                  className="group flex items-center gap-4 w-full px-4 py-3 rounded-xl
+                  text-gray-800 font-semibold bg-white/50 border border-white/30 backdrop-blur-sm
+                  hover:bg-white/80 hover:-translate-y-1
+                  transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
+                >
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 shadow-inner">
+                    <AiOutlineUser size={22} />
+                  </div>
+                  My Account
+                </button>
+              </li>
+            )}
+
+            <li
+              className="animate-stagger-in"
+              style={{ animationDelay: "200ms" }}
+            >
               <button
                 type="button"
-                onClick={() => handleNavigation("/account")}
-                className="w-full text-center bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-4 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg"
+                onClick={() => handleNavigation("/cart")}
+                className="group relative flex items-center gap-4 w-full px-4 py-3 rounded-xl
+                text-gray-800 font-semibold bg-white/50 border border-white/30 backdrop-blur-sm
+                hover:bg-white/80 hover:-translate-y-1
+                transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
               >
-                <span className="text-base font-medium">Log In</span>
+                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-green-100 text-green-600 shadow-inner">
+                  <AiOutlineShopping size={22} />
+                </div>
+                Cart
+                {totalItems > 0 && (
+                 
+                  <span
+                    className="ml-auto flex items-center justify-center h-7 w-7
+                  rounded-full bg-purple-600 text-white text-sm font-bold shadow-lg
+                  ring-2 ring-purple-400 animate-pulse"
+                  >
+                    {totalItems}
+                  </span>
+                )}
               </button>
             </li>
+
+            {!login && (
+              <li
+                className="animate-stagger-in"
+                style={{ animationDelay: "300ms" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleNavigation("/account")}
+                  className="w-full text-center bg-gradient-to-r from-indigo-500 to-pink-500 text-white
+                  px-5 py-4 rounded-xl shadow-lg
+                  hover:scale-105 hover:shadow-pink-500/50 transition-all duration-300 active:scale-95"
+                >
+                  Log In / Sign Up
+                </button>
+              </li>
+            )}
+          </ul>
+
+          
+          {login && (
+            <div className="mt-8 pt-6 border-t border-white/20 animate-fade-in-up">
+              <button
+                type="button"
+                onClick={logOut}
+                className="group flex items-center gap-4 w-full px-4 py-3 rounded-xl
+                text-red-500 font-semibold
+                hover:bg-red-50
+                transition-all duration-300 active:scale-95"
+              >
+                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-100 text-red-500">
+                  <AiOutlineLogout size={22} />
+                </div>
+                Log Out
+              </button>
+            </div>
           )}
-        </ul>
+        </div>
+        {showModal && (
+        <LogoutModal onConfirm={confirmLogout} onCancel={cancelLogout} />
+      )}
       </div>
     </nav>
   );

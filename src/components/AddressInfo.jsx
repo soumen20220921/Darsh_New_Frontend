@@ -17,7 +17,7 @@ const AddressInfo = () => {
     Phone: "",
   });
 
-  const { address, setAddress, error, setError, loading, setLoading ,url} =
+  const { address, setAddress, error, setError, loading, setLoading, url } =
     useAppContext();
 
   useEffect(() => {

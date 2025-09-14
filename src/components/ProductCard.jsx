@@ -91,16 +91,20 @@ const ProductCard = ({ product, onAddToCart, isCompactMobile }) => {
           </div>
         </div>
 
+       {/* Button */}
         {onAddToCart && (
           <Link
             to={`/productDetails/${id}`}
             onClick={() =>
               window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
             }
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
+              bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-medium 
+              shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 relative
+              before:absolute before:inset-0 before:rounded-lg before:bg-white/10 before:opacity-0 hover:before:opacity-100 before:transition-opacity"
           >
-            <Eye className="animate-pulse" />
-            <span className="hidden md:inline">View</span>
+            <Eye className="hidden sm:inline animate-pulse" />
+            <span>View</span>
           </Link>
         )}
       </div>

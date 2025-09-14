@@ -8,6 +8,10 @@ export default function Hero() {
 
    const handleClickShop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); 
+    navigate("/allproducts");
+  };
+   const handleClickTrend = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); 
     navigate("/hotsales");
   };
 
@@ -33,7 +37,7 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text Content */}
           <div className="text-white">
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-2 mb-4 animate-pulse">
               <Star className="h-5 w-5 text-yellow-400 fill-current" />
               <span className="text-yellow-400 font-medium">Premium Quality Products</span>
             </div>
@@ -45,7 +49,7 @@ export default function Hero() {
               </span>
             </h1>
             
-            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+          <p className="text-blue-100 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
               Shop the latest trends with unbeatable prices. From electronics to fashion, 
               find everything you need with fast shipping and excellent customer service.
             </p>
@@ -58,11 +62,11 @@ export default function Hero() {
               >
                 <ShoppingBag className="h-5 w-5" />
                 <span>Shop Now</span>
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-5 w-5 animate-pulse " />
               </button>
               
               <button
-                onClick={handleClickShop}
+                onClick={handleClickTrend}
                 className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <TrendingUp className="h-5 w-5" />
@@ -74,7 +78,7 @@ export default function Hero() {
             <div className="grid grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">10K+</div>
-                <div className="text-blue-200 text-sm">Happy Customers</div>
+                <div className="text-blue-200 text-ms sm:text-sm">Happy Customers</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">500+</div>
