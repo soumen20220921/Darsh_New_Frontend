@@ -34,28 +34,13 @@ const Navbar = () => {
   }, [setLogin]);
 
   const handleMenuToggle = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const handleSearchToggle = () => setIsSearchVisible(!isSearchVisible);
   const handleNavigation = (path) => {
     navigate(path);
     setIsMobileMenuOpen(false);
     setIsSearchVisible(false);
   };
 
-  const NavButton = ({ label, icon: Icon, onClick, color }) => (
-    <div className="relative group">
-      <button
-        type="button"
-        aria-label={label}
-        onClick={onClick}
-        className="group flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300 hover:scale-110 hover:bg-gradient-to-br hover:from-indigo-500 hover:to-pink-500"
-      >
-        <Icon className={`text-gray-700 group-hover:text-white`} size={24} />
-      </button>
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-1 bg-gray-800 text-white text-xs rounded opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none whitespace-nowrap">
-        {label}
-      </div>
-    </div>
-  );
+
 
   return (
     <nav className="sticky top-0 z-50 shadow-md backdrop-blur-sm bg-white/80">
@@ -266,7 +251,7 @@ const Navbar = () => {
 
           
           {login && (
-            <div className="mt-8 pt-6 border-t border-white/20 animate-fade-in-up">
+            <div className="mt-8 mb-16 pt-6 border-t border-white/20 animate-fade-in-up">
               <button
                 type="button"
                 onClick={logOut}

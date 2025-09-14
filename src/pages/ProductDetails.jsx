@@ -439,17 +439,17 @@ useEffect(() => {
                     className={`text-gray-700 leading-relaxed transition-all duration-300  ${
                       isExpanded
                         ? ""
-                        : "line-clamp-2 max-h-20 overflow-hidden relative"
+                        : "line-clamp-3 max-h-20 overflow-hidden relative"
                     }`}
                   >
                     <p>{product.description || "No description available."}</p>
                     {!isExpanded &&
                       product.description &&
-                      product.description.length > 150 && (
+                      product.description.length > 100 && (
                         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
                       )}
                   </div>
-                  {product.description && product.description.length > 150 && (
+                  {product.description && product.description.length > 100 && (
                     <button
                       className="mt-4 text-blue-600 hover:text-blue-800 transition-colors"
                       onClick={() => setIsExpanded(!isExpanded)}
