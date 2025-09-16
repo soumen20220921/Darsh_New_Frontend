@@ -10,7 +10,9 @@ import {
   XCircle,
   AlertCircle,
   X,
-  MapPin, // New import for the map icon
+  MapPin,
+  Plus,
+  Navigation
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
@@ -27,7 +29,7 @@ const OrderConfirmationModal = ({
   onCancel,
   loadingPayment,
 }) => {
-  const isMobile = useMediaQuery({ maxWidth: 640 }); // Mobile check
+  const isMobile = useMediaQuery({ maxWidth: 640 });
   const { url } = useAppContext();
 
   return (
@@ -58,9 +60,7 @@ const OrderConfirmationModal = ({
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-4  py-4 space-y-4">
-          {/* Product List */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
             {cart.map((item) => (
               <div
@@ -122,7 +122,6 @@ const OrderConfirmationModal = ({
 
         {/* Footer */}
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex flex-col sm:flex-row gap-3 shrink-0">
-          
           <button
             onClick={onCancel}
             className="w-full py-3 bg-slate-200 text-sm sm:text-base text-gray-600 rounded-xl hover:bg-gray-100 transition"
@@ -153,6 +152,50 @@ const OrderConfirmationModal = ({
   );
 };
 
+const AddressSection = ({ onAddAddress }) => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6"
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-red-100 rounded-full">
+          <CircleAlert className="h-6 w-6 text-red-500" />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900">Shipping Address Required</h3>
+      </div>
+      
+      <p className="text-gray-600 mb-6">
+        You need to add a shipping address before proceeding to checkout. This helps us deliver your order to the right place.
+      </p>
+      
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border-l-4 border-red-400 mb-6">
+        <div className="flex items-start gap-3">
+          <Navigation className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="font-semibold text-red-700 mb-1">Why we need your address</h4>
+            <p className="text-sm text-red-600">
+              We need your complete address to estimate delivery time, and ensure your order reaches you safely.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <button
+        onClick={onAddAddress}
+        className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+      >
+        <Plus className="h-5 w-5" />
+        Add Shipping Address
+      </button>
+      
+      <p className="text-xs text-gray-500 mt-4 text-center">
+        Your address information is secure and will only be used for delivery purposes.
+      </p>
+    </motion.div>
+  );
+};
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -160,7 +203,6 @@ const Cart = () => {
   const cart = rawCart || [];
   const [showAddressWarning, setShowAddressWarning] = useState(false);
   const [loadingPayment, setLoadingPayment] = useState(false);
-  // NEW: State for showing the order confirmation modal
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const isMobile = useMediaQuery({ maxWidth: 640 });
@@ -182,7 +224,6 @@ const Cart = () => {
   const productCount = cart.length;
 
   const checkProductAvailability = async () => {
-    // ... (Your existing checkProductAvailability function)
     try {
       if (cart.length > 0) {
         let allProductsAvailable = true;
@@ -235,13 +276,16 @@ const Cart = () => {
   const handleProceedToCheckout = () => {
     if (address?.FullName && address?.Phone && cart.length > 0) {
       setShowAddressWarning(false);
-      setShowConfirmation(true); // Show the new modal
+      setShowConfirmation(true);
     } else {
       setShowAddressWarning(true);
     }
   };
 
-  // NEW: This function handles the actual payment logic after confirmation
+  const handleAddAddress = () => {
+    navigate("/account", { state: { scrollToAddress: true } });
+  };
+
   const handleConfirmAndPay = async () => {
     setLoadingPayment(true);
     try {
@@ -282,11 +326,10 @@ const Cart = () => {
       navigate("/failure");
     } finally {
       setLoadingPayment(false);
-      setShowConfirmation(false); // Hide the modal on success or failure
+      setShowConfirmation(false); 
     }
   };
 
-  // ... (Your existing empty cart return)
   if (cart?.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
@@ -297,7 +340,7 @@ const Cart = () => {
           Your Cart is Empty
         </h2>
         <p className="text-gray-600 mb-6 max-w-md animate-fadeIn delay-200">
-          Looks like you haven’t added anything yet. Explore our collection and
+          Looks like you haven't added anything yet. Explore our collection and
           add your favorites!
         </p>
         <Link
@@ -312,7 +355,6 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 font-inter py-6 sm:py-8">
-      {/* Existing notification component */}
       <AnimatePresence>
         {notification.visible && (
           <motion.div
@@ -354,7 +396,6 @@ const Cart = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* New Order Confirmation Modal */}
       <AnimatePresence>
         {showConfirmation && (
           <OrderConfirmationModal
@@ -434,6 +475,37 @@ const Cart = () => {
           </div>
 
           <div className="lg:col-span-1">
+            {!address?.FullName && (
+              <AddressSection onAddAddress={handleAddAddress} />
+            )}
+            
+            {address?.FullName && (
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-blue-500" />
+                    Shipping Address
+                  </h3>
+                  <Link
+                    to="/account"
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                  >
+                    <SquarePen className="h-4 w-4" />
+                    Change
+                  </Link>
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                  <p className="font-semibold text-gray-800 mb-1">{address.FullName}</p>
+                  <p className="text-sm text-gray-600">{address.Address}</p>
+                  <p className="text-sm text-gray-600">
+                    {address.Add}, {address.VillorCity}, {address.Dist}, {address.State} {address.Pin}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2">Phone: {address.Phone}</p>
+                </div>
+              </div>
+            )}
+
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 animate-fadeIn">
               <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">
                 Order Summary
@@ -462,14 +534,16 @@ const Cart = () => {
                 </div>
               )}
 
-              {/* MODIFIED: This button now calls the new function */}
               <button
                 onClick={handleProceedToCheckout}
+                disabled={!address?.FullName}
                 className={`w-full py-3 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg transition-all duration-300 ${
-                  cart.length > 0 && address?.FullName ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 animate-pulse-slow" : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  address?.FullName 
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 animate-pulse-slow" 
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
                 }`}
               >
-                Proceed to Checkout
+                {address?.FullName ? "Proceed to Checkout" : "Add Address First"}
               </button>
 
               <Link

@@ -50,8 +50,15 @@ const ProductDetails = () => {
   visible: false,
 });
   const [countdown, setCountdown] = useState(null);
-  const isLowStock = product.stock > 0 && product.stock <= 5;
-  const isOutOfStock = product.stock === 0;
+  const isLowStock = product && product.stock > 0 && product.stock <= 5;
+  const isOutOfStock = product && product.stock === 0;
+
+   useEffect(() => {
+    setIsAdded(false);
+    setSelectedImage(0);
+    setQuantity(1);
+    window.scrollTo(0, 0);
+  }, [id]);
 
   
   const showNotification = (message, type) => {
@@ -87,12 +94,7 @@ useEffect(() => {
     [product, url]
   );
 
-  useEffect(() => {
-    setIsAdded(false);
-    setSelectedImage(0);
-    setQuantity(1);
-    window.scrollTo(0, 0);
-  }, [id]);
+ 
 
   const handleAddToCart = useCallback(async () => {
   if (!token) {
