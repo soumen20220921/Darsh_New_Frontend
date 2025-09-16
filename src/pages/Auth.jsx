@@ -67,58 +67,73 @@ const Auth = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(null);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setMessage(null);
 
-     if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    try {
-      setLoading(true);
-     const url = isLogin
-        ? `${url2}/api/user/login`
-        : `${url2}/api/user/register`;
-      const payload = isLogin
-        ? { email: formData.email, password: formData.password }
-        : {
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-          };
+  try {
+    setLoading(true);
+    const apiUrl = isLogin
+      ? `${url2}/api/user/login`
+      : `${url2}/api/user/register`;
 
-      const { data } = await axios.post(url, payload);
-
-      setMessage({
-        text: data.message,
-        type: data.success ? "success" : "error",
-      });
-
-      if (isLogin && data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("name", data.user.name);
-        localStorage.setItem("email", data.user.email);
-        localStorage.setItem("phone", data.user.phone);
-        localStorage.setItem("userId", data.user._id);
-
-        setUserName(data.user.name);
-        setLoginSuccess(true);
-        setTimeout(() => {
-          navigate("/account");
-          window.location.reload();
-        }, 2000);
-      } else if (!isLogin && data.success) {
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-          setIsLogin(true);
-          setMessage({ text: "Registration successful! Please log in.", type: "success" });
-        }, 1000);
-      }
-    } catch (err) {
-      setMessage({ text: "Something went wrong", type: "error" });
-    } finally {
-      setLoading(false);
+    let payload;
+    if (isLogin) {
+      payload =
+        authMethod === "email"
+          ? { email: formData.email, password: formData.password }
+          : { phone: formData.phone, password: formData.password };
+    } else {
+      payload = {
+        name: formData.name,
+        password: formData.password,
+        ...(authMethod === "email"
+          ? { email: formData.email }
+          : { phone: formData.phone }),
+      };
     }
-  };
+
+    const { data } = await axios.post(apiUrl, payload);
+
+    setMessage({
+      text: data.message,
+      type: data.success ? "success" : "error",
+    });
+
+    if (isLogin && data.success) {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("name", data.user.name);
+      if (data.user.email) localStorage.setItem("email", data.user.email);
+      if (data.user.phone) localStorage.setItem("phone", data.user.phone);
+      localStorage.setItem("userId", data.user._id);
+
+      setUserName(data.user.name);
+      setLoginSuccess(true);
+
+      setTimeout(() => {
+        navigate("/account");
+        window.location.reload();
+      }, 2000);
+    } else if (!isLogin && data.success) {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        setIsLogin(true);
+        setMessage({
+          text: "Registration successful! Please log in.",
+          type: "success",
+        });
+      }, 1000);
+    }
+  } catch (err) {
+    console.error(err);
+    setMessage({ text: "Something went wrong", type: "error" });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>

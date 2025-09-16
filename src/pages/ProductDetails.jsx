@@ -50,8 +50,9 @@ const ProductDetails = () => {
   visible: false,
 });
   const [countdown, setCountdown] = useState(null);
-  const isLowStock = product && product.stock > 0 && product.stock <= 5;
-  const isOutOfStock = product && product.stock === 0;
+  const stock = product ? Math.max(0, product.stock) : 0;  
+  const isLowStock = stock > 0 && stock <= 5;
+  const isOutOfStock = stock === 0;
 
    useEffect(() => {
     setIsAdded(false);
@@ -105,7 +106,7 @@ useEffect(() => {
     showNotification("Product data not found.", 'error');
     return;
   }
-  if (quantity > product.stock) {
+  if (quantity > stock) {
     showNotification(`Only ${product.stock} items left in stock.`, 'error');
     return;
   }
@@ -139,7 +140,7 @@ useEffect(() => {
   } finally {
     setLoading(false);
   }
-}, [token, product, quantity, id, getCart, url]);
+}, [token, product, quantity, id, getCart, url, stock]);
 
   const handleShare = async (platform) => {
     if (!product) return;
@@ -403,8 +404,8 @@ useEffect(() => {
                         {isOutOfStock
                           ? "Out of Stock"
                           : isLowStock
-                          ? `Low Stock! (${product.stock} left)`
-                          : `In Stock (${product.stock} available)`}
+                          ? `Low Stock! (${stock} left)`
+                          : `In Stock (${stock} available)`}
                       </span>
                     </div>
                     {isLowStock && (
@@ -489,7 +490,7 @@ useEffect(() => {
                         setQuantity(Math.min(product.stock, quantity + 1))
                       }
                       className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
-                      disabled={quantity >= product.stock}
+                      disabled={quantity >= stock}
                     >
                       <Plus className="h-5 w-5 text-gray-600" />
                     </button>
