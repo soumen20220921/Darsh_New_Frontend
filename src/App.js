@@ -29,6 +29,7 @@ import AllProducts from './pages/AllProducts';
 const App = () => {
   const context = useAppContext();
 
+  
   return (
     <AppProvider>
       <Router>
