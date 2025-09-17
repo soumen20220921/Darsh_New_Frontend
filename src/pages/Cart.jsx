@@ -650,8 +650,8 @@ const Cart = () => {
               >
                 {address?.FullName ? (
                   <>
-                    <IndianRupee className="h-5 w-5" />
-                    Pay ₹{total}
+                    
+                    Proceed to Checkout
                   </>
                 ) : (
                   "Add Address First"
