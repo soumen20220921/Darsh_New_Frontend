@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Flame, Timer } from "lucide-react";
+import { Flame, Timer, Zap} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
 import ProductCard from "../components/ProductCard";
@@ -8,11 +8,9 @@ import DealOfTheDay from "./DealOfTheDay.jsx";
 const HotSalesPage = () => {
   const { allProduct,url  } = useAppContext();
 
-  // Filter products where hotSell is explicitly true
   const hotSales = allProduct?.filter((product) => product.hotSell) || [];
 
-  // Find the product with the best discount for Deal of the Day
-  const dealOfTheDay = useMemo(() => {
+   const dealOfTheDay = useMemo(() => {
     if (!hotSales.length) return null;
     return hotSales.reduce((best, product) => {
       if (product.originalPrice && product.price) {
@@ -29,27 +27,76 @@ const HotSalesPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-pink-50 font-inter">
-      {/* Header */}
-      <section className="relative text-center py-12 sm:py-16 bg-gradient-to-r from-pink-100 via-red-100 to-yellow-100 shadow-lg">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl whitespace-nowrap sm:text-4xl font-extrabold text-gray-900 flex items-center justify-center gap-3 animate-fade-in-up">
-            <Flame size={40} className="text-red-500 animate-fade-in " />
-            Today’s Hot Picks
-          </h1>
-          <p className="text-gray-600 text-sm mt-3 sm:mt-4 sm:text-lg animate-fade-in delay-200">
-            Don’t miss out on these limited-time deals — grab them before they’re gone!
+      <section className="relative text-center py-8 sm:py-11 lg:py-14 bg-gradient-to-r from-pink-100 via-red-100 to-yellow-100 shadow-xl overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute animate-float"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${i * 0.5}s`,
+                animationDuration: `${6 + Math.random() * 10}s`,
+              }}
+            >
+              <div
+                className={`rounded-full opacity-30`}
+                style={{
+                  width: `${6 + Math.random() * 8}px`,
+                  height: `${6 + Math.random() * 8}px`,
+                  backgroundColor: ["#ef4444", "#f97316", "#f59e0b"][
+                    Math.floor(Math.random() * 3)
+                  ],
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-white/30 pointer-events-none"></div>
+
+        <div className="max-w-3xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+            <div className="relative">
+              <Flame size={56} className="text-red-500 animate-pulse" />
+              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-70"></div>
+            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 animate-fade-in-up bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent leading-tight">
+              Today's Hot Picks
+            </h1>
+          </div>
+
+          <p className="text-gray-700 text-sm sm:text-mb lg:text-lg mt-2 sm:mt-4 max-w-3xl mx-auto animate-fade-in delay-200 font-medium px-2">
+            Don't miss out on these limited-time deals — grab them before
+            they're gone!
           </p>
+
+          <div className="mt-6 flex items-center justify-center text-red-600 font-semibold animate-bounce text-sm sm:text-base">
+            <Timer className="mr-2" size={18} />
+            <span>Limited Time Offers</span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 w-full flex justify-between px-10 opacity-70">
+          <Zap size={32} className="text-yellow-500 animate-pulse delay-300" />
+          <Zap size={32} className="text-red-500 animate-pulse delay-500" />
+          <Zap size={32} className="text-orange-500 animate-pulse delay-700" />
         </div>
       </section>
 
-      {/* Deal of the Day */}
       {dealOfTheDay && <DealOfTheDay dealOfTheDay={dealOfTheDay} />}
 
-      {/* More Hot Deals */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8 text-center">
-          More Hot Deals
-        </h2>
+        <div className="text-center mb-12 relative">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
+            More Hot Deals
+            <div className="absolute -bottom-2 left-1/4 w-1/2 h-1 bg-gradient-to-r from-red-500 to-pink-500 rounded-full"></div>
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover more amazing deals that are flying off the shelves
+          </p>
+        </div>
 
         {hotSales.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">

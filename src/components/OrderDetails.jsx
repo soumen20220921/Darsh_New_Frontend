@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect  } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -23,6 +23,18 @@ import { useAppContext } from "../context/AppContext";
 const OrderDetails = ({ order, onClose }) => {
   const {url} = useAppContext();
   const [copied, setCopied] = useState(false);
+  const [progressWidth, setProgressWidth] = useState(0);
+  const orderDate = new Date(order.orderDate);
+  const estimatedDate = new Date(
+    orderDate.getTime() + 7 * 24 * 60 * 60 * 1000
+  );
+
+  useEffect(() => {
+    const { step } = getStatusInfo();
+    setTimeout(() => {
+      setProgressWidth((step - 1) * 50);
+    }, 300);
+  }, [order]);
 
   if (!order) {
     return (
@@ -49,7 +61,7 @@ const OrderDetails = ({ order, onClose }) => {
     if (order.orderAccept) {
       return { status: "Accepted", color: "green", step: 2, icon: Package };
     }
-    return { status: "Placed", color: "purple", step: 1, icon: CheckCircle };
+    return { status: "Order Placed", color: "purple", step: 1, icon: CheckCircle };
   };
 
   const { status, color, step, icon } = getStatusInfo();
@@ -62,6 +74,29 @@ const OrderDetails = ({ order, onClose }) => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+   const statusSteps = [
+    { 
+      label: "Placed", 
+      icon: CheckCircle, 
+      index: 1,
+      description: "Order received",
+      ds: "Done"
+    },
+    { 
+      label: "Accepted", 
+      icon: Package, 
+      index: 2,
+      description: "Accepted your order",
+      ds : "Complete"
+    },
+    { 
+      label: "Shipped", 
+      icon: Truck, 
+      index: 3,
+      description: "On the way to you",
+      ds: "On the way "
+    },
+  ];
 
   return (
     <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl border border-gray-200 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto my-6 animate-fade-in">
@@ -83,50 +118,98 @@ const OrderDetails = ({ order, onClose }) => {
             </p>
           </div>
         </div>
+         {/* Estimated Delivery Badge */}
+        {!order.orderReject && (
+          <div className="bg-white py-2 px-4 rounded-lg shadow-md flex items-center">
+            <CalendarDays className="h-5 w-5 text-blue-500 mr-2" />
+            <div>
+              <p className="text-xs text-gray-500">Estimated Delivery</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {estimatedDate.toDateString()}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <hr className="my-6" />
 
       {/* Order Status Timeline */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+     <div className="mb-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div>
           Order Status
         </h2>
-        <div className="relative flex justify-between items-center text-center">
-          <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 z-0 rounded">
+        
+        <div className="relative mb-10">
+          {/* Progress bar */}
+          <div className="absolute top-7 left-0 right-0 h-2 bg-gray-200 z-0 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded transition-all duration-700"
-              style={{ width: `${(step - 1) * 50}%` }}
+              className="h-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-full transition-all duration-1000 ease-out"
+              style={{ width: `${progressWidth}%` }}
             ></div>
+            {progressWidth > 0 && progressWidth < 100 && (
+              <div className="absolute top-0 h-full w-4 bg-white opacity-50 animate-shine" 
+                style={{ left: `${progressWidth - 2}%` }}></div>
+            )}
           </div>
-          {[
-            { label: "Placed", icon: CheckCircle, index: 1 },
-            { label: "Accepted", icon: Package, index: 2 },
-            { label: "Track ID", icon: Truck, index: 3 },
-          ].map((s, i) => (
-            <div key={i} className="flex flex-col items-center w-1/3 z-10">
-              <div
-                className={`p-2 rounded-full shadow-md transform transition-all ${
-                  step >= s.index
-                    ? "bg-green-500 text-white scale-110"
-                    : "bg-gray-300 text-gray-500"
-                }`}
-              >
-                <s.icon className="h-5 w-5" />
-              </div>
-              <p className="text-xs sm:text-sm mt-2 font-medium text-gray-700">
-                {s.label}
-              </p>
-            </div>
-          ))}
+          
+          {/* Status steps */}
+          <div className="relative flex justify-between items-start z-10">
+            {statusSteps.map((s, i) => {
+              const StepIcon = s.icon;
+              const isCompleted = step >= s.index;
+              const isCurrent = step === s.index;
+              
+              return (
+                <div key={i} className="flex flex-col items-center w-1/3 relative">
+                  <div className={`p-3 rounded-full shadow-lg transform transition-all duration-500 ${
+                    isCompleted 
+                      ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white scale-110 shadow-blue-200" 
+                      : "bg-white text-gray-400 border-2 border-gray-300"
+                  } ${isCurrent ? "animate-pulse ring-2 ring-offset-2 ring-blue-400" : ""}`}>
+                    <StepIcon className="h-5 w-5" />
+                  </div>
+                  <p className={`text-xs font-medium mt-3 text-center ${
+                    isCompleted ? "text-gray-900 font-semibold" : "text-gray-500"
+                  }`}>
+                    {s.label}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 text-center hidden sm:block">
+                    {s.description}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 text-center block sm:hidden">
+                    {s.ds}
+                  </p>
+                  
+                  {/* Connector lines between steps */}
+                  {i < statusSteps.length - 1 && (
+                    <div className={`hidden sm:block absolute top-4 left-2/3 w-1/3 h-0.5 ${
+                      step > s.index ? "bg-blue-500" : "bg-gray-300"
+                    }`}></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="mt-6 text-center flex justify-center items-center space-x-2">
-          <span
-            className={`flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-${color}-600 animate-pulse shadow-md`}
-          >
-            <StatusIcon className="h-4 w-4 mr-2" />
+        
+        {/* Current status display */}
+        <div className="text-center">
+          <div className={`inline-flex items-center px-4 py-3 rounded-full text-sm font-semibold 
+            ${color === "red" ? "bg-red-100 text-red-800" : 
+              color === "green" ? "bg-green-100 text-green-800" : 
+              color === "blue" ? "bg-blue-100 text-blue-800" : 
+              "bg-purple-100 text-purple-800"} 
+            shadow-md transition-all duration-500 transform hover:scale-105`}>
+            <StatusIcon className="h-5 w-5 mr-2" />
             {status}
-          </span>
+          </div>
+          <p className="text-sm text-gray-600 mt-2">
+            {order.orderReject 
+              ? "Please contact support for assistance" 
+              : `Step ${step} of ${statusSteps.length}`}
+          </p>
         </div>
       </div>
 

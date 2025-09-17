@@ -3,7 +3,6 @@ import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 
-const successSound = "./IMG/preview.mp3"; 
 
 const SuccessMessage = ({ name }) => {
   useEffect(() => {
@@ -13,13 +12,6 @@ const SuccessMessage = ({ name }) => {
       origin: { y: 0.6 },
     });
 
-    try {
-      const audio = new Audio(successSound);
-      audio.volume = 0.2;
-      audio.play();
-    } catch (error) {
-      console.error("Error playing sound:", error);
-    }
   }, []); 
 
   const cardVariants = {

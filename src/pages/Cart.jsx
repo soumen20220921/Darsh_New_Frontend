@@ -12,7 +12,8 @@ import {
   X,
   MapPin,
   Plus,
-  Navigation
+  Navigation,
+  IndianRupee
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
@@ -24,6 +25,10 @@ import { useMediaQuery } from "react-responsive";
 const OrderConfirmationModal = ({
   cart,
   total,
+  subtotal,
+  shippingCharge,
+  platformCharge,
+  discount,
   address,
   onConfirm,
   onCancel,
@@ -111,11 +116,40 @@ const OrderConfirmationModal = ({
             </div>
           )}
 
-          {/* Total Summary */}
+          {/* Detailed Summary */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm">
-            <div className="flex justify-between items-center text-lg font-bold text-gray-900">
-              <span>Total Amount</span>
-              <span className="text-indigo-600">₹{total}</span>
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <IndianRupee className="h-5 w-5" />
+              Order Summary
+            </h4>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal ({cart.length} items)</span>
+                <span>₹{subtotal}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Platform Charge</span>
+                <span>₹{platformCharge}</span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Shipping Charge</span>
+                <span>₹{shippingCharge}</span>
+              </div>
+              
+              <div className="flex justify-between text-green-600">
+                <span>Discount</span>
+                <span>-₹{discount}</span>
+              </div>
+              
+              <div className="border-t border-gray-300 pt-2 mt-2">
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total Amount</span>
+                  <span className="text-indigo-600">₹{total}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -176,7 +210,7 @@ const AddressSection = ({ onAddAddress }) => {
           <div>
             <h4 className="font-semibold text-red-700 mb-1">Why we need your address</h4>
             <p className="text-sm text-red-600">
-              We need your complete address to estimate delivery time, and ensure your order reaches you safely.
+              We need your complete address to estimate delivery time, calculate shipping charges, and ensure your order reaches you safely.
             </p>
           </div>
         </div>
@@ -220,7 +254,14 @@ const Cart = () => {
     }, 3000);
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  const platformCharge = 10;
+  const discount = 5;
+  
+  const shippingCharge = address?.State?.toLowerCase() === "west bengal" ? 10 : 20;
+  
+  const total = subtotal + platformCharge + shippingCharge - discount;
+  
   const productCount = cart.length;
 
   const checkProductAvailability = async () => {
@@ -401,6 +442,10 @@ const Cart = () => {
           <OrderConfirmationModal
             cart={cart}
             total={total}
+            subtotal={subtotal}
+            shippingCharge={shippingCharge}
+            platformCharge={platformCharge}
+            discount={discount}
             address={address}
             onConfirm={handleConfirmAndPay}
             onCancel={() => setShowConfirmation(false)}
@@ -419,10 +464,13 @@ const Cart = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {cart?.map((item) => (
-              <div
+            {cart?.map((item, index) => (
+              <motion.div
                 key={item._id}
-                className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/30 p-4 sm:p-6 flex gap-4 hover:shadow-2xl transition-all duration-500 animate-fadeInUp ${isMobile ? "flex-col items-center text-center" : "flex-row items-center"}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/30 p-4 sm:p-6 flex gap-4 hover:shadow-2xl transition-all duration-500 ${isMobile ? "flex-col items-center text-center" : "flex-row items-center"}`}
               >
                 <Link
                   to={`/productDetails/${item.productId}`}
@@ -470,7 +518,7 @@ const Cart = () => {
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -480,7 +528,11 @@ const Cart = () => {
             )}
             
             {address?.FullName && (
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6"
+              >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-blue-500" />
@@ -503,48 +555,108 @@ const Cart = () => {
                   </p>
                   <p className="text-sm text-gray-600 mt-2">Phone: {address.Phone}</p>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 animate-fadeIn">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 animate-fadeIn"
+            >
               <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">
                 Order Summary
               </h3>
-              <div className="space-y-3 mb-6 text-gray-700">
+              
+              <div className="space-y-3 mb-4 text-gray-700">
                 <div className="flex justify-between">
                   <span>Subtotal ({productCount} items)</span>
-                  <span className="font-semibold text-gray-900">₹{total}</span>
+                  <span className="font-semibold text-gray-900">₹{subtotal}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span className="text-green-600 font-semibold">Free</span>
-                </div>
-                <div className="border-t pt-3">
+                
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex justify-between"
+                >
+                  <span>Platform Charge</span>
+                  <span>₹{platformCharge}</span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex justify-between"
+                >
+                  <span>Shipping Charge</span>
+                  <span>
+                    ₹{shippingCharge}
+                    {address?.State && (
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({address.State})
+                      </span>
+                    )}
+                  </span>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex justify-between text-green-600"
+                >
+                  <span>Discount</span>
+                  <span>-₹{discount}</span>
+                </motion.div>
+                
+                <div className="border-t border-gray-300 pt-3 mt-2">
                   <div className="flex justify-between font-bold text-xl text-gray-900">
                     <span>Total</span>
-                    <span>₹{total}</span>
+                    <motion.span 
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500 }}
+                      className="text-indigo-600"
+                    >
+                      ₹{total}
+                    </motion.span>
                   </div>
                 </div>
               </div>
 
               {showAddressWarning && (
-                <div className="bg-red-100/80 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md animate-shake">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-red-100/80 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md animate-shake"
+                >
                   <CircleAlert className="h-5 w-5 inline mr-2" />
                   Please add a <span className="font-semibold">shipping address</span>.
-                </div>
+                </motion.div>
               )}
 
-              <button
+              <motion.button
+                whileHover={{ scale: address?.FullName ? 1.03 : 1 }}
+                whileTap={{ scale: address?.FullName ? 0.97 : 1 }}
                 onClick={handleProceedToCheckout}
                 disabled={!address?.FullName}
                 className={`w-full py-3 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg transition-all duration-300 ${
                   address?.FullName 
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 animate-pulse-slow" 
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl" 
                     : "bg-gray-300 text-gray-600 cursor-not-allowed"
                 }`}
               >
-                {address?.FullName ? "Proceed to Checkout" : "Add Address First"}
-              </button>
+                {address?.FullName ? (
+                  <>
+                    <IndianRupee className="h-5 w-5" />
+                    Pay ₹{total}
+                  </>
+                ) : (
+                  "Add Address First"
+                )}
+              </motion.button>
 
               <Link
                 to="/"
@@ -552,8 +664,15 @@ const Cart = () => {
               >
                 Continue Shopping
               </Link>
-            </div>
-            <ImportantNotice />
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <ImportantNotice />
+            </motion.div>
           </div>
         </div>
       </div>

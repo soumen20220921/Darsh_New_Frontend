@@ -17,6 +17,10 @@ import {
   Clock,
   CircleOff,
   Hourglass,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Move
 } from "lucide-react";
 import { FaWhatsapp, FaTelegram, FaFacebook } from "react-icons/fa";
 import axios from "axios";
@@ -38,26 +42,33 @@ const ProductDetails = () => {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("specifications");
+  const [activeTab, setActiveTab] = useState("description");
   const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [showFAQ, setShowFAQ] = useState({});
-  const [isExpanded, setIsExpanded] = useState(false);
   const [notification, setNotification] = useState({
   message: '',
   type: '',
   visible: false,
 });
   const [countdown, setCountdown] = useState(null);
+  const [zoomMode, setZoomMode] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
+
   const stock = product ? Math.max(0, product.stock) : 0;  
   const isLowStock = stock > 0 && stock <= 5;
   const isOutOfStock = stock === 0;
 
-   useEffect(() => {
+     useEffect(() => {
     setIsAdded(false);
     setSelectedImage(0);
     setQuantity(1);
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
     window.scrollTo(0, 0);
   }, [id]);
 
@@ -95,6 +106,83 @@ useEffect(() => {
     [product, url]
   );
 
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 3));
+  };
+
+    const handleZoomOut = () => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - 0.5, 1);
+      if (newZoom === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setStartPosition({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging && zoomLevel > 1) {
+      setPosition({
+        x: e.clientX - startPosition.x,
+        y: e.clientY - startPosition.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Touch events for mobile
+  const handleTouchStart = (e) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setStartPosition({
+        x: e.touches[0].clientX - position.x,
+        y: e.touches[0].clientY - position.y
+      });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (isDragging && zoomLevel > 1) {
+      setPosition({
+        x: e.touches[0].clientX - startPosition.x,
+        y: e.touches[0].clientY - startPosition.y
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Full screen zoom mode
+  const toggleZoomMode = () => {
+    setZoomMode(!zoomMode);
+    if (!zoomMode) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+      setZoomLevel(1);
+      setPosition({ x: 0, y: 0 });
+    }
+  };
  
 
   const handleAddToCart = useCallback(async () => {
@@ -218,6 +306,13 @@ useEffect(() => {
   //   </div>
   // );
 
+    const toggleFAQ = (index) => {
+    setShowFAQ(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-inter">
       {notification.visible && (
@@ -298,41 +393,128 @@ useEffect(() => {
       </div>
 
       {/* Main content area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-3xl shadow-xl overflow-hidden p-4 sm:p-8"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+            {/* Image Gallery Section */}
             <div className="col-span-1">
+              {/* Main Image Container with Zoom Controls */}
               <div className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={images[selectedImage] || "placeholder"}
-                    src={images[selectedImage]}
-                    alt={product.productName}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="   object-contain bg-white"
-                  />
-                </AnimatePresence>
+                <div
+                  className="relative h-80 sm:h-96 md:h-[500px] overflow-hidden cursor-zoom-in"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onClick={toggleZoomMode}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={images[selectedImage] || "placeholder"}
+                      src={images[selectedImage]}
+                      alt={product.productName}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.35 }}
+                      className="w-full h-full object-contain bg-white"
+                      style={{
+                        transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                        transition: isDragging ? 'none' : 'transform 0.3s ease',
+                        cursor: zoomLevel > 1 ? 'grabbing' : 'zoom-in'
+                      }}
+                    />
+                  </AnimatePresence>
+
+                  {/* <div className="absolute bottom-4 right-4 flex gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleZoomIn();
+                      }}
+                      disabled={zoomLevel >= 3}
+                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                      aria-label="Zoom in"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleZoomOut();
+                      }}
+                      disabled={zoomLevel <= 1}
+                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                      aria-label="Zoom out"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResetZoom();
+                      }}
+                      disabled={zoomLevel === 1}
+                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                      aria-label="Reset zoom"
+                    >
+                      <RotateCw className="h-4 w-4" />
+                    </button>
+                  </div> */}
+
+                  {/* Fullscreen Toggle Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleZoomMode();
+                    }}
+                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-md hover:bg-gray-200 transition-colors"
+                    aria-label="Fullscreen view"
+                  >
+                    {zoomMode ? (
+                      <X className="h-4 w-4" />
+                    ) : (
+                      <ZoomIn className="h-4 w-4" />
+                    )}
+                  </button>
+
+                  {zoomLevel > 1 && (
+                    <div className="absolute top-4 left-4 px-2 py-1 bg-black/70 text-white text-xs rounded-md">
+                      {Math.round(zoomLevel * 100)}%
+                    </div>
+                  )}
+
+                  {zoomLevel > 1 && (
+                    <div className="absolute bottom-4 left-4 flex items-center gap-1 px-2 py-1 bg-black/70 text-white text-xs rounded-md">
+                      <Move className="h-3 w-3" /> Drag to pan
+                    </div>
+                  )}
+
+                  
+                </div>
               </div>
 
               {/* Thumbnails */}
-              <div className="mt-4 flex gap-3 overflow-x-auto py-2">
+              <div className="mt-4 flex gap-3 overflow-x-auto py-2 px-1">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setSelectedImage(idx);
+                      setZoomLevel(1);
+                      setPosition({ x: 0, y: 0 });
                     }}
-                    className={`w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border-2 ${
+                    className={`w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
                       selectedImage === idx
                         ? "border-blue-600 shadow-lg"
-                        : "border-gray-200"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                     aria-label={`View image ${idx + 1}`}
                   >
@@ -346,123 +528,89 @@ useEffect(() => {
               </div>
             </div>
 
+            {/* Product Info Section */}
             <div className="col-span-1">
-              <div className="lg:sticky lg:top-8 lg:pt-8 space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+              <div className="flex flex-col h-full">
+                {/* Product Title and Rating */}
+                <div className="mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     {product.productName}
                   </h1>
-                  <div className="mt-4 flex items-center gap-3">
-                    <span className="text-3xl font-bold text-blue-600">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.floor(rating)
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-2 text-sm text-gray-600">
+                        {rating} • 142+ Reviews
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price and Stock Info */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl font-bold text-gray-900">
                       ₹{product.price}
                     </span>
                     {product.originalPrice && (
-                      <>
-                        <span className="line-through text-gray-500 text-lg">
-                          ₹{product.originalPrice}
-                        </span>
-                        <span className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                          -
-                          {Math.round(
-                            ((product.originalPrice - product.price) /
-                              product.originalPrice) *
-                              100
-                          )}
-                          % OFF
-                        </span>
-                      </>
+                      <span className="text-xl text-gray-500 line-through">
+                       ₹{product.originalPrice}
+                      </span>
+                    )}
+                    {product.originalPrice && (
+                      <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
+                        {Math.round(
+                          ((product.originalPrice - product.price) /
+                            product.originalPrice) *
+                            100
+                        )}
+                        % OFF
+                      </span>
                     )}
                   </div>
-                </motion.div>
 
-                {/* Stock info */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  className={`w-full p-4 rounded-xl shadow-sm border 
-        ${isOutOfStock ? "bg-red-50 border-red-200" : ""}
-        ${isLowStock ? "bg-orange-50 border-orange-200" : ""}
-        ${!isOutOfStock && !isLowStock ? "bg-green-50 border-green-200" : ""}`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-gray-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm sm:text-lg">Status:</span>
-                      <span
-                        className={`font-semibold text-sm sm:text-lg ${
-                          isOutOfStock
-                            ? "text-red-500"
-                            : isLowStock
-                            ? "text-orange-500"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {isOutOfStock
-                          ? "Out of Stock"
-                          : isLowStock
-                          ? `Low Stock! (${stock} left)`
-                          : `In Stock (${stock} available)`}
+                  {/* Stock Information */}
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                    {isOutOfStock ? (
+                      <div className="flex items-center text-red-600">
+                        <CircleOff className="h-4 w-4 mr-1" />
+                        <span>Out of stock</span>
+                      </div>
+                    ) : isLowStock ? (
+                      <div className="flex items-center text-yellow-600">
+                        <Hourglass className="h-4 w-4 mr-1 animate-spin" />
+                        <span>Only {stock} left in stock</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-green-600">
+                        <Check className="h-4 w-4 mr-1" />
+                        <span>In stock</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Countdown Timer for Low Stock */}
+                  {isLowStock && countdown !== null && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-yellow-700 bg-yellow-50 p-2 rounded-lg">
+                      <Clock className="h-4 w-4" />
+                      <span className="animate-pulse font-medium">
+                        Limited time offer: {Math.floor(countdown / 60)}:
+                        {String(countdown % 60).padStart(2, "0")}
                       </span>
                     </div>
-                    {isLowStock && (
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 260,
-                          damping: 20,
-                        }}
-                        className="flex items-center gap-1 text-orange-500 font-bold mt-2 sm:mt-0"
-                      >
-                        <Hourglass className="h-4 w-4 animate-spin" />
-                        <span className="text-xs sm:text-sm">
-                          {countdown}s left
-                        </span>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* Product Description - New Design */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="bg-gray-50 p-6 rounded-2xl border border-gray-100"
-                >
-                  <h3 className="text-xl font-bold mb-3 text-gray-900">
-                    About this product
-                  </h3>
-                  <div
-                    className={`text-gray-700 leading-relaxed transition-all duration-300  ${
-                      isExpanded
-                        ? ""
-                        : "line-clamp-3 max-h-20 overflow-hidden relative"
-                    }`}
-                  >
-                    <p>{product.description || "No description available."}</p>
-                    {!isExpanded &&
-                      product.description &&
-                      product.description.length > 100 && (
-                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
-                      )}
-                  </div>
-                  {product.description && product.description.length > 100 && (
-                    <button
-                      className="mt-4 text-blue-600 hover:text-blue-800 transition-colors"
-                      onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                      {isExpanded ? "Read less" : "Read more"}
-                    </button>
                   )}
-                </motion.div>
+                </div>
 
-                {/* Quantity selector */}
+                {/* Quantity Selector */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -474,7 +622,8 @@ useEffect(() => {
                   >
                     Quantity
                   </label>
-                  <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden w-fit shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex mb-3 items-center border border-gray-300 rounded-xl overflow-hidden w-fit shadow-sm">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -495,9 +644,16 @@ useEffect(() => {
                       <Plus className="h-5 w-5 text-gray-600" />
                     </button>
                   </div>
+                  <span className="text-sm text-gray-500">
+                      {stock} available
+                    </span>
+                  </div>
                 </motion.div>
 
-                {/* Action buttons */}
+
+
+                {/* Add to Cart Button */}
+               {/* Action buttons */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -571,6 +727,9 @@ useEffect(() => {
                     </button>
                   </div>
                 </motion.div>
+
+
+                
 
                 {/* Trust badges */}
                 <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
@@ -669,85 +828,129 @@ useEffect(() => {
                     Add Bundle to Cart
                   </button>
                 </motion.div> */}
+
               </div>
             </div>
           </div>
 
-          {/* Detailed Tabs section */}
-          <div className="mt-12 border-t pt-8">
-            <div className="flex space-x-4 border-b overflow-x-auto">
-              {["specifications" , "highlights" ].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-3 capitalize font-semibold ${
-                    activeTab === tab
-                      ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <div className="p-4 text-gray-700">
-            {activeTab === "specifications" && (
-                <p>{product.specification || "No specifications provided."}</p>
-              )}
-              {activeTab === "highlights" && (
-                <ul className="list-disc list-inside space-y-2">
-                  <li>High-resolution display for vivid visuals.</li>
-                  <li>Long-lasting battery for all-day use.</li>
-                  <li>Powerful processor for multitasking.</li>
-                  <li>Ergonomic design for comfort.</li>
-                  <li>Integrated security features.</li>
-                </ul>
-              )}
-              {/* {activeTab === "description" && (
-                <p>{product.description || "No description available."}</p>
-              )} */}
+          {/* Product Details Tabs */}
+          <div className="mt-6 border-t border-gray-200">
+            <div className="flex space-x-4 border-b overflow-x-auto mb-6">
               
+              <button
+                onClick={() => setActiveTab("description")}
+                className={`px-4 py-3 font-medium text-sm sm:text-base ${
+                  activeTab === "description"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Description
+              </button>
+              <button
+                onClick={() => setActiveTab("specifications")}
+                className={`px-4 py-3 font-medium text-sm sm:text-base ${
+                  activeTab === "specifications"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Specifications
+              </button>
+              <button
+                onClick={() => setActiveTab("faq")}
+                className={`px-4 py-3 font-medium text-sm sm:text-base ${
+                  activeTab === "faq"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                FAQ
+              </button>
             </div>
-          </div>
 
-          {/* Reviews & FAQ Section */}
-          <div className="mt-8">
-            <div className="mt-6">
-              <h4 className="text-lg font-semibold mb-2">
-                Frequently Asked Questions
-              </h4>
-              <div className="space-y-2">
-                {faqs.map((f, i) => (
-                  <div key={i} className="border rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setShowFAQ((s) => ({ ...s, [i]: !s[i] }))}
-                      className="w-full text-left px-4 py-3 flex items-center justify-between"
-                      aria-expanded={showFAQ[i]}
-                    >
-                      <span className="font-medium">{f.q}</span>
-                      <span className="text-sm text-gray-500">
-                        {showFAQ[i] ? "-" : "+"}
-                      </span>
-                    </button>
-                    <AnimatePresence>
-                      {showFAQ[i] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="px-4 pb-4 text-gray-700"
-                        >
-                          {f.a}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+            <div className="mb-8">
+              {activeTab === "specifications" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <p>{product.specification || "No specifications provided."}</p>
+
+                </div>
+              )}
+
+              {activeTab === "description" && (
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed">
+                    {product.description ||
+                      "No description available for this product."}
+                  </p>
+                </div>
+              )}
+
+              {activeTab === "reviews" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row items-start gap-6">
+                    <div className="bg-gray-50 p-6 rounded-xl md:w-1/3">
+                      <div className="text-center mb-4">
+                        <div className="text-4xl font-bold text-gray-900 mb-2">
+                          {rating}/5
+                        </div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-5 w-5 ${
+                                i < Math.floor(rating)
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Based on 142 reviews
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                        Write a Review
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {activeTab === "faq" && (
+                <div className="space-y-4">
+                  {faqs.map((faq, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-lg overflow-hidden"
+                    >
+                      <button
+                        onClick={() => toggleFAQ(index)}
+                        className="w-full p-4 text-left font-medium text-gray-900 bg-gray-50 hover:bg-gray-100 flex items-center justify-between"
+                      >
+                        {faq.q}
+                        <Plus
+                          className={`h-5 w-5 transition-transform ${
+                            showFAQ[index] ? "rotate-45" : ""
+                          }`}
+                        />
+                      </button>
+                      {showFAQ[index] && (
+                        <div className="p-4 bg-white">
+                          <p className="text-gray-700">{faq.a}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Similar products compact row */}
+          {/* Similar Products Section */}
           {similarProducts.length > 0 && (
             <div className="mt-10">
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 text-center sm:text-left">
@@ -806,10 +1009,111 @@ useEffect(() => {
               </div>
             </div>
           )}
+
         </motion.div>
       </div>
 
-           {/* Share Modal */}
+      <AnimatePresence>
+        {zoomMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black z-50 flex items-center justify-center p-4"
+            onClick={toggleZoomMode}
+          >
+            <div className="relative w-full h-full flex items-center justify-center">
+              <div
+                className="relative max-w-4xl max-h-full overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={images[selectedImage]}
+                  alt={product.productName}
+                  className="max-w-full max-h-full object-contain"
+                  style={{
+                    transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                    transition: isDragging ? 'none' : 'transform 0.3s ease',
+                    cursor: zoomLevel > 1 ? 'grabbing' : 'grab'
+                  }}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                />
+
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+                  <button
+                    onClick={handleZoomIn}
+                    disabled={zoomLevel >= 3}
+                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    aria-label="Zoom in"
+                  >
+                    <ZoomIn className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleZoomOut}
+                    disabled={zoomLevel <= 1}
+                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleResetZoom}
+                    disabled={zoomLevel === 1}
+                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                    aria-label="Reset zoom"
+                  >
+                    <RotateCw className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={toggleZoomMode}
+                    className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+                    aria-label="Close fullscreen"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {zoomLevel > 1 && (
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-black/70 text-white text-sm rounded-md">
+                    {Math.round(zoomLevel * 100)}%
+                  </div>
+                )}
+
+                <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-full">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedImage(idx);
+                        setZoomLevel(1);
+                        setPosition({ x: 0, y: 0 });
+                      }}
+                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border transition-all ${
+                        selectedImage === idx
+                          ? "border-blue-500 shadow-md"
+                          : "border-gray-400"
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`thumb-${idx}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showShareModal && (
           <motion.div
