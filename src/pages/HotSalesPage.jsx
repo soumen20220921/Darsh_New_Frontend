@@ -100,10 +100,8 @@ const HotSalesPage = () => {
 
         {hotSales.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {/* Slice the array to show a few more hot deals, excluding Deal of the Day */}
             {hotSales
               .filter((p) => p._id !== dealOfTheDay?._id)
-              .slice(0, 8)
               .map((product) => (
                 <div
                   key={product._id}

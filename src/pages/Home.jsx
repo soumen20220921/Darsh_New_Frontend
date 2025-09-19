@@ -14,11 +14,13 @@ import {
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext.jsx";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay} from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { motion } from "framer-motion";
+import FestiveBanner from "./FestiveBanner.jsx";
+import Reels from "./Reels.jsx"
 
 const Home = () => {
   const { allProduct ,url } = useAppContext();
@@ -27,11 +29,9 @@ const Home = () => {
 
  useEffect(() => {
     if (allProduct) {
-      // Only hotSell products for Hot Sales section
       const hot = allProduct.filter((p) => p.hotSell);
       setHotSales(hot.slice(0, 8));
 
-      // Latest products for New Arrivals
       const sortedNew = [...allProduct].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -110,7 +110,7 @@ const Home = () => {
       <Hero />
 
       {/* Categories Section */}
-      <section className="py-16 bg-white/70 backdrop-blur-md shadow-inner rounded-b-3xl relative overflow-hidden">
+      <section className="py-8 bg-white/70 backdrop-blur-md shadow-inner rounded-b-3xl relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-tr from-pink-200/20 via-amber-100/10 to-transparent animate-pulse-slow" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
@@ -120,7 +120,7 @@ const Home = () => {
               </span>
               Shop by Category
             </h2>
-            <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
+            <p className="text-gray-700 max-w-3xl mx-auto mb-8 text-sm sm:text-xl font-body animate-fade-in delay-200">
               Discover our wide range of products across different categories.
             </p>
           </div>
@@ -161,13 +161,18 @@ const Home = () => {
         </div>
       </section>
       {/* Hot Sales */}
-      <section className="py-16 bg-gradient-to-r from-red-50 via-white to-pink-50 rounded-3xl shadow-xl my-8">
+      <section className="  my-8 mb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Flame size={38} className="text-red-500 animate-pulse " /> Hot
-              Sales
-            </h2>
+            <div className="flex items-center">
+              <div className="p-3 animate-pulse bg-red-100 rounded-full mr-4">
+                <Flame size={32} className=" text-red-500" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Hot Sales</h2>
+                <p className="text-sm sm:text-lg text-gray-600">Limited time offers on our most popular items</p>
+              </div>
+            </div>
             <Link
               to="/hotsales"
               className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 hover:from-pink-500 hover:via-red-500 hover:to-rose-500 shadow-lg hover:shadow-xl  transform hover:scale-105 active:scale-95  transition-all duration-300 ease-out "
@@ -217,13 +222,18 @@ const Home = () => {
       </section>
 
       {/* New Arrivals */}
-      <section className="py-16 bg-gradient-to-l from-blue-50 via-white to-indigo-50 rounded-3xl shadow-xl my-8">
+      <section className=" my-8 mt-9">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Crown size={38} className="text-indigo-500 animate-pulse" /> New
-              Arrivals
-            </h2>
+            <div className="flex items-center">
+              <div className="p-3 animate-pulse bg-blue-100 rounded-full mr-4">
+                <Crown size={32} className="text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
+                <p className="text-sm sm:text-lg text-gray-600">Discover our latest additions</p>
+              </div>
+            </div>
             <Link
               to="/newarrivals"
               className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-500 hover:to-indigo-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
@@ -270,16 +280,16 @@ const Home = () => {
           </Swiper>
         </div>
       </section>
+      <Reels/>
 
       {/* Why Choose Darsh (Enhanced Design) */}
-      <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
+      {/* <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
-            The ShopHub Legacy
+            Why Choose POMWB
           </h2>
           <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
-            Blending traditional craftsmanship with modern design, we bring
-            timeless elegance to your wardrobe.
+            We combine traditional craftsmanship with modern convenience to bring you the best shopping experience.
           </p>
 
           <Swiper
@@ -339,27 +349,13 @@ const Home = () => {
             ))}
           </Swiper>
         </div>
-      </section>
+      </section> */}
 
-      <section className="py-20 my-10 bg-gradient-to-r from-yellow-300 via-amber-400 to-pink-400 rounded-3xl shadow-2xl text-center relative overflow-hidden">
-        <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
-          Festive Deals Are Here!
-        </h2>
-        <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
-          Shop exclusive festive sarees, jewelry, and more with special
-          discounts this season.
-        </p>
-        <Link
-          to="/hotsales"
-          className="inline-flex items-center px-8 py-3 rounded-full shadow-lg text-white bg-red-600 hover:bg-red-700 transform hover:scale-110 transition-all duration-500"
-        >
-          Explore Now
-          <ArrowRight className="ml-2 h-5 w-5" />
-        </Link>
-      </section>
+
+      <FestiveBanner />
 
       {/* All Products */}
-      <section className="py-16 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-3xl shadow-xl my-8">
+      <section className="my-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
             <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -463,12 +459,12 @@ const Home = () => {
       </section>
 
       {/* Testimonials - Redesigned & Animated */}
-      <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
+      <section className="py-7 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-4 font-serif animate-fade-in-up">
             Our Community
           </h2>
-          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
+          <p className="text-gray-700 max-w-3xl mx-auto mb-8 text-sm sm:text-xl font-body animate-fade-in delay-200">
             Stories from our happy customers who are part of the ShopHub family.
           </p>
 
