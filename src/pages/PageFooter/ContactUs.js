@@ -30,9 +30,9 @@ const ContactUs = () => {
     {
       title: "WE ARE HERE - YOU CAN KEEP IN TOUCH WITH US ANYTIME",
       items: [
-        { icon: <Phone className="w-5 h-5 text-indigo-600" />, text: "Phone: +91 9474048860" },
-        { icon: <Mail className="w-5 h-5 text-indigo-600" />, text: "Email: pomwb2004@gmail.com" },
-        { icon: <MapPin className="w-5 h-5 text-indigo-600" />, text: "Address: Patrasayer, Bankura, West Bengal 722206" },
+        { icon: <Phone className="w-5 h-5 text-indigo-600" />, text: "Phone: +91 7363054510" },
+        { icon: <Mail className="w-5 h-5 text-indigo-600" />, text: "Email: pomwbweb@gmail.com" },
+        { icon: <MapPin className="w-5 h-5 text-indigo-600" />, text: "Address: Nilkuthidanga, puruli,West bengal,723101" },
       ],
       gradient: "from-indigo-100 to-purple-200",
     },

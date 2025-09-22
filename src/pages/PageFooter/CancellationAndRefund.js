@@ -28,10 +28,10 @@ const CancellationAndRefund = () => {
       gradient: "from-rose-100 to-red-200",
     },
     {
-      title: "2. Refund Process",
+      title: "2. Refund Policy",
       icon: <RefreshCw className="w-8 h-8 text-green-600" />,
       content: [
-        "Once approved, refunds will be processed within 5–7 business days to the original payment method.",
+        "Once your refund request is approved, the amount will be credited to your bank account within 7-10 business days.",
         "If delays occur, please contact your bank or payment provider for assistance.",
       ],
       gradient: "from-green-100 to-emerald-200",
@@ -51,23 +51,31 @@ const CancellationAndRefund = () => {
       icon: <RotateCcw className="w-8 h-8 text-yellow-600" />,
       content: [
         "Returns are accepted for products that are damaged, defective, or incorrect upon delivery.",
-        "Return requests must be submitted within 7 days of receiving your order.",
         "An unboxing video is mandatory for all return or refund requests.",
         "Items must be unused, in their original packaging, and include all original tags and proof of purchase.",
-        "Once approved, returns will be processed within 5 business days of receiving the returned item.",
+        "If you receive a damaged product, you must return it within 2 days of delivery to be eligible for a refund",
         "Approved refunds will be credited within 5 to 7 working days.",
       ],
       gradient: "from-yellow-100 to-amber-200",
     },
     {
-      title: "5. Contact Us",
+      title: "5.shipping policy",
       icon: <Phone className="w-8 h-8 text-purple-600" />,
       content: [
-        "Email: pomwb@gmail.com",
-        "Phone: +91 9474048860",
+        "Shipping policy: Once an order is placed, delivery will take up to 7 business days to the provided address.",
+        
       ],
       gradient: "from-purple-100 to-pink-200",
     },
+        {
+      title: "6. Contact Us",
+      icon: <Phone className="w-8 h-8 text-green-300" />,
+      content: [
+        "Email: pomwbweb@gmail.com",
+        "Phone: +91 7363054510",
+      ],
+      gradient: "from-blue-100 to-red-200",
+    }
   ];
 
   const trail = useTrail(sections.length, {

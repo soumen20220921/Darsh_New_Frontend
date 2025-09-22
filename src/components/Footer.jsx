@@ -54,20 +54,20 @@ export default function Footer() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-center md:justify-start space-x-3">
                 <Phone className="h-5 w-5 text-blue-400 animate-bounce" />
-                <span className="text-gray-300">+91 9474048860</span>
+                <span className="text-gray-300">+91 7363054510</span>
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-3">
                 <Mail className="h-5 w-5 text-blue-400 animate-bounce delay-100" />
-                <span className="text-gray-300">support@shophub.com</span>
+                <span className="text-gray-300">pomwbweb@gmail.com</span>
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-3">
                 <MapPin className="h-5 w-5 text-blue-400 animate-bounce delay-200" />
-                <span className="text-gray-300">123 Commerce St, New York</span>
+                <span className="text-gray-300">Nilkuthidanga, puruli,West bengal,723101</span>
               </div>
             </div>
 
             {/* Social Links */}
-            <div className="flex space-x-4 mt-6 justify-center md:justify-start">
+            {/* <div className="flex space-x-4 mt-6 justify-center md:justify-start">
               {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
                 <a
                   key={idx}
@@ -77,7 +77,7 @@ export default function Footer() {
                   <Icon className="h-5 w-5 text-white" />
                 </a>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Support Links */}
@@ -109,7 +109,7 @@ export default function Footer() {
           </div>
 
           {/* Developers Section */}
-          <div className="text-center md:text-left animate-fadeInUp delay-200">
+          {/* <div className="text-center md:text-left animate-fadeInUp delay-200">
             <h3 className="text-lg font-semibold mb-4">Developers</h3>
             <div className="space-y-2 text-sm">
               <p className="text-gray-300">Developed with passion by:</p>
@@ -130,7 +130,7 @@ export default function Footer() {
                 </a>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Subscription Section */}
@@ -178,7 +178,7 @@ export default function Footer() {
              <div className="flex flex-col items-center p-6 rounded-xl bg-gray-800/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <Truck className="h-8 w-8 text-blue-400 mb-3" />
               <div className="text-xs md:text-lg font-medium">Fast Shipping</div>
-              <div className="hidden md:inline text-sm text-gray-400 mt-1">On all orders over $100</div>
+              <div className="hidden md:inline text-sm text-gray-400 mt-1">On all orders over 1000</div>
             </div>
             <div className="flex flex-col items-center p-6 rounded-xl bg-gray-800/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
               <Shield className="h-8 w-8 text-green-400 mb-3" />
