@@ -36,18 +36,19 @@ const TermsAndConditions = () => {
             Rule 3 (1) of the Information Technology (Intermediaries guidelines)
             Rules, 2011 that require publishing the rules and regulations,
             privacy policy and Terms of Use for access or usage of domain name{" "}
-            <strong>www.pomwb.com</strong> (“Website”), including the
-            related mobile site and mobile application (hereinafter referred to
-            as “Platform”).
+            <strong>www.pomwb.com</strong> (“Website”), including the related
+            mobile site and mobile application (hereinafter referred to as
+            “Platform”).
           </p>
 
           <p>
-            • The Platform is owned by{" "}
-            <strong>POMWB</strong>, a
-            company incorporated under the Companies Act, 1956 with its
-            registered office at{" "}
-            <strong>Nilkuthidanga, puruli,West bengal,723101</strong> (hereinafter referred to
-            as "Platform Owner", “we”, “us”, “our”).
+            • The Platform is owned by <strong>POMWB</strong>, a company
+            incorporated under the Companies Act, 1956 with its registered
+            office at{" "}
+            <strong>Nilkuthidanga, Puruli, West Bengal, 723101</strong>{" "}
+            (hereinafter referred to as "Platform Owner", “we”, “us”, “our”).
+            This website is operated by <strong>Piyali Sarkar Bakshi</strong>,
+            and the Bank Account Name is <strong>Piyali Sarkar Bakshi</strong>.
           </p>
 
           <p>
@@ -125,7 +126,10 @@ const TermsAndConditions = () => {
               Services may lead to action against you as per these Terms of Use
               and/or applicable laws.
             </li>
-            <li>You agree to pay us the charges associated with availing the Services.</li>
+            <li>
+              You agree to pay us the charges associated with availing the
+              Services.
+            </li>
             <li>
               You agree not to use the Platform and/ or Services for any purpose
               that is unlawful, illegal or forbidden by these Terms, or Indian

@@ -21,6 +21,7 @@ const Categories = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const { allProduct, url } = useAppContext();
+  console.log(url);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
