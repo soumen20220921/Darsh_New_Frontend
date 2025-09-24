@@ -36,16 +36,16 @@ const Categories = () => {
 
   // This should be your static category data if you have it
   const categories = [
-    { id: "1", name: "saree", image: "/IMG/saree.jpg" },
-    { id: "2", name: "blouse", image: "/IMG/blouse.jpg" },
-    { id: "3", name: "men", image: "/IMG/men.jpg" },
+    { id: "1", name: "saree", image: "/IMG/saree.png" },
+    { id: "2", name: "blouse", image: "/IMG/blouse.png" },
+    { id: "3", name: "men", image: "/IMG/men.png" },
     { id: "4", name: "kids", image: "/IMG/kids.png" },
     { id: "5", name: "jwellary", image: "/IMG/jwellary.png" },
     {
       id: "6",
       name: "acceceries",
       image:
-        "https://images.pexels.com/photos/3785147/pexels-photo-3785147.jpeg?auto=compress&cs=tinysrgb&w=400",
+        "/IMG/acceceries.png",
     },
   ];
 

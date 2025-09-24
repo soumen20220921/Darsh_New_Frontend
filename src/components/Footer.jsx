@@ -38,7 +38,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white font-inter overflow-hidden relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 sm:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           <div className="lg:col-span-2 text-center md:text-left animate-fadeInLeft">
             <Link to="/" className="inline-flex items-center justify-center md:justify-start space-x-2 mb-4 transform transition-transform duration-500 hover:scale-110 cursor-pointer">
               <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg animate-pulse">

@@ -40,16 +40,16 @@ const Home = () => {
   }, [allProduct]);
 
   const categories = [
-    { id: "1", name: "saree", image: "/IMG/saree.jpg" },
-    { id: "2", name: "blouse", image: "/IMG/blouse.jpg" },
-    { id: "3", name: "men", image: "/IMG/men.jpg" },
+    { id: "1", name: "saree", image: "/IMG/saree.png" },
+    { id: "2", name: "blouse", image: "/IMG/blouse.png" },
+    { id: "3", name: "men", image: "/IMG/men.png" },
     { id: "4", name: "kids", image: "/IMG/kids.png" },
     { id: "5", name: "jwellary", image: "/IMG/jwellary.png" },
     {
       id: "6",
       name: "acceceries",
       image:
-        "https://images.pexels.com/photos/3785147/pexels-photo-3785147.jpeg?auto=compress&cs=tinysrgb&w=400",
+        "/IMG/acceceries.png",
     },
   ];
 
@@ -144,15 +144,13 @@ const Home = () => {
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                   <h3 className="text-xl font-bold mb-1 drop-shadow-lg">
-                    {cat.name}
+                    {cat.name.toUpperCase()}
                   </h3>
                   <div className="flex justify-between items-center cursor-pointer">
                     <span className="text-xs uppercase tracking-wider font-medium">
                       Shop Now
                     </span>
-                    <ArrowRight
-                      className=" h-5 w-5 ml-1 animate-[arrowMove_1.2s_ease-in-out_infinite]"
-                    />
+                    <ArrowRight className=" h-5 w-5 ml-1 animate-[arrowMove_1.2s_ease-in-out_infinite]" />
                   </div>
                 </div>
               </Link>
@@ -170,7 +168,9 @@ const Home = () => {
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">Hot Sales</h2>
-                <p className="text-sm sm:text-lg text-gray-600">Limited time offers on our most popular items</p>
+                <p className="text-sm sm:text-lg text-gray-600">
+                  Limited time offers on our most popular items
+                </p>
               </div>
             </div>
             <Link
@@ -230,8 +230,12 @@ const Home = () => {
                 <Crown size={32} className="text-blue-500" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
-                <p className="text-sm sm:text-lg text-gray-600">Discover our latest additions</p>
+                <h2 className="text-3xl font-bold text-gray-900">
+                  New Arrivals
+                </h2>
+                <p className="text-sm sm:text-lg text-gray-600">
+                  Discover our latest additions
+                </p>
               </div>
             </div>
             <Link
@@ -280,7 +284,7 @@ const Home = () => {
           </Swiper>
         </div>
       </section>
-      <Reels/>
+      <Reels />
 
       {/* Why Choose Darsh (Enhanced Design) */}
       {/* <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
@@ -351,7 +355,6 @@ const Home = () => {
         </div>
       </section> */}
 
-
       <FestiveBanner />
 
       {/* All Products */}
@@ -366,7 +369,7 @@ const Home = () => {
               to="/allproducts"
               className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-cyan-500 hover:to-teal-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              View All 
+              View All
               <ArrowRight className="ml-2 animate-arrowMove h-5 w-5" />
             </Link>
           </div>
