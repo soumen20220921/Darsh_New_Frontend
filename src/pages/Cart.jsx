@@ -255,10 +255,11 @@ const Cart = () => {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-  const platformCharge = 10;
-  const discount = 5;
+  const platformCharge = 0;
+  const discount = 0;
   
-  const shippingCharge = address?.State?.toLowerCase() === "west bengal" ? 10 : 20;
+  // const shippingCharge = address?.State?.toLowerCase() === "west bengal" ? 10 : 20;
+  const shippingCharge = 0;
   
   const total = subtotal + platformCharge + shippingCharge - discount;
   
