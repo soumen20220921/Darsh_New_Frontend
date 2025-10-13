@@ -23,7 +23,7 @@ const ALL_CATEGORIES = [
   "blouse",
   "men",
   "kids",
-  "jwellary",
+  "jewellery",
   "acceceries",
   "home decor",
   "footwear",
