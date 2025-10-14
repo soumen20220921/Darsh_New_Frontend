@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Volume2, VolumeX, Heart, ShoppingBag, ChevronLeft, ChevronRight, Sparkles, Maximize, Minimize } from "lucide-react";
+import {  Volume2, VolumeX, Sparkles, Maximize, Minimize } from "lucide-react";
 
 const Reels = () => {
   const reelsData = [

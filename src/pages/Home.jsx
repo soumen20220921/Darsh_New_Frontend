@@ -150,7 +150,7 @@ const Home = () => {
                     <span className="text-xs uppercase tracking-wider font-medium">
                       Shop Now
                     </span>
-                    <ArrowRight className=" h-5 w-5 ml-1 animate-[arrowMove_1.2s_ease-in-out_infinite]" />
+                    <ArrowRight className=" h-5 w-5 ml-1  animate-[arrowMove_1.2s_ease-in-out_infinite]" />
                   </div>
                 </div>
               </Link>

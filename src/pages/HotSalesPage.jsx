@@ -1,16 +1,17 @@
 import React, { useMemo } from "react";
-import { Flame, Timer, Zap} from "lucide-react";
+import { Flame, Timer, Zap, Rocket, Star, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
 import ProductCard from "../components/ProductCard";
-import DealOfTheDay from "./DealOfTheDay.jsx"; 
+import DealOfTheDay from "./DealOfTheDay.jsx";
+import { ArrowRight, Shield, Truck, Award } from "lucide-react";
 
 const HotSalesPage = () => {
-  const { allProduct,url  } = useAppContext();
+  const { allProduct, url } = useAppContext();
 
   const hotSales = allProduct?.filter((product) => product.hotSell) || [];
 
-   const dealOfTheDay = useMemo(() => {
+  const dealOfTheDay = useMemo(() => {
     if (!hotSales.length) return null;
     return hotSales.reduce((best, product) => {
       if (product.originalPrice && product.price) {
@@ -26,75 +27,104 @@ const HotSalesPage = () => {
   }, [hotSales]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-pink-50 font-inter">
-      <section className="relative text-center py-8 sm:py-11 lg:py-14 bg-gradient-to-r from-pink-100 via-red-100 to-yellow-100 shadow-xl overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          {[...Array(20)].map((_, i) => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 font-inter">
+      <section className="relative text-center py-7 sm:py-8 lg:py-9 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Floating Geometric Shapes */}
+          {[...Array(15)].map((_, i) => (
             <div
               key={i}
-              className="absolute animate-float"
+              className="absolute animate-float-slow"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
-                animationDelay: `${i * 0.5}s`,
-                animationDuration: `${6 + Math.random() * 10}s`,
+                animationDelay: `${i * 0.7}s`,
+                animationDuration: `${8 + Math.random() * 12}s`,
               }}
             >
               <div
-                className={`rounded-full opacity-30`}
+                className={`opacity-20 ${
+                  i % 3 === 0 ? "rounded-lg" : i % 3 === 1 ? "rounded-full" : "rotate-45"
+                }`}
                 style={{
-                  width: `${6 + Math.random() * 8}px`,
-                  height: `${6 + Math.random() * 8}px`,
-                  backgroundColor: ["#ef4444", "#f97316", "#f59e0b"][
+                  width: `${8 + Math.random() * 12}px`,
+                  height: `${8 + Math.random() * 12}px`,
+                  backgroundColor: ["#ffffff", "#c7d2fe", "#f0abfc"][
                     Math.floor(Math.random() * 3)
                   ],
                 }}
               />
             </div>
           ))}
+          
+          {/* Gradient Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/20 via-transparent to-pink-600/20"></div>
+          <div className="absolute top-0 left-0 w-72 h-72 bg-indigo-300/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-300/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
         </div>
-
-        <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-white/30 pointer-events-none"></div>
 
         <div className="max-w-3xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-            <div className="relative">
-              <Flame size={56} className="text-red-500 animate-pulse" />
-              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-70"></div>
+         
+
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 mb-8">
+            <div className="hidden sm:block relative group mb-8">
+              <div className="absolute inset-0 bg-white/20 rounded-full blur-lg group-hover:blur-xl transition-all duration-500"></div>
+              <Flame size={64} className="text-white relative z-10 animate-pulse group-hover:scale-110 transition-transform duration-300" />
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 animate-fade-in-up bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent leading-tight">
-              Today's Hot Picks
-            </h1>
+            
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 leading-tight">
+                
+                <span className="block whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-pink-200 mt-2">
+                  Premium Hot Deals
+                </span>
+              </h1>
+              
+              <div className="flex items-center justify-center lg:justify-start gap-3 text-white/90 mb-4">
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 text-yellow-300 fill-current" />
+                  <span className="text-sm font-medium">Exclusive Offers</span>
+                </div>
+                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-4 w-4 text-yellow-300" />
+                  <span className="text-sm font-medium">Flash Sale</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <p className="text-gray-700 text-sm sm:text-mb lg:text-lg mt-2 sm:mt-4 max-w-3xl mx-auto animate-fade-in delay-200 font-medium px-2">
-            Don't miss out on these limited-time deals — grab them before
-            they're gone!
-          </p>
-
-          <div className="mt-6 flex items-center justify-center text-red-600 font-semibold animate-bounce text-sm sm:text-base">
-            <Timer className="mr-2" size={18} />
-            <span>Limited Time Offers</span>
-          </div>
+          
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full flex justify-between px-10 opacity-70">
-          <Zap size={32} className="text-yellow-500 animate-pulse delay-300" />
-          <Zap size={32} className="text-red-500 animate-pulse delay-500" />
-          <Zap size={32} className="text-orange-500 animate-pulse delay-700" />
+        <div className="absolute bottom-3/ left-1/2 -translate-x-1/2 flex gap-8 opacity-60">
+          <Sparkles size={24} className="text-indigo-200 animate-pulse delay-100" />
+          <Sparkles size={24} className="text-purple-200 animate-pulse delay-300" />
+          <Sparkles size={24} className="text-pink-200 animate-pulse delay-500" />
         </div>
       </section>
 
       {dealOfTheDay && <DealOfTheDay dealOfTheDay={dealOfTheDay} />}
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="text-center mb-12 relative">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
-            More Hot Deals
-            <div className="absolute -bottom-2 left-1/4 w-1/2 h-1 bg-gradient-to-r from-red-500 to-pink-500 rounded-full"></div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+        <div className="text-center mb-16 relative">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-12 h-px bg-gradient-to-r from-transparent to-indigo-500"></div>
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">
+              Premium Collection
+            </span>
+            <div className="w-12 h-px bg-gradient-to-l from-transparent to-pink-500"></div>
+          </div>
+          
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500">
+              More Exclusive Deals
+            </span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Discover more amazing deals that are flying off the shelves
+          
+          <p className="text-gray-600 text-xs sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            Handpicked premium products with exceptional discounts. 
+            Each item carefully selected for quality and value.
           </p>
         </div>
 
@@ -102,11 +132,24 @@ const HotSalesPage = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {hotSales
               .filter((p) => p._id !== dealOfTheDay?._id)
-              .map((product) => (
+              .map((product, index) => (
                 <div
                   key={product._id}
-                  className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-pink-200"
+                  className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden transform hover:-translate-y-2"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
+                  <div className="absolute top-4 right-4 z-20">
+                    <div className="relative">
+                      <div className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                        <div className="flex items-center gap-1">
+                          <Flame className="h-3 w-3" />
+                          <span>HOT</span>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full blur-sm opacity-50 animate-ping"></div>
+                    </div>
+                  </div>
+
                   <ProductCard
                     product={{
                       id: product._id,
@@ -121,37 +164,75 @@ const HotSalesPage = () => {
                     onAddToCart={() => {}}
                     isCompactMobile={true}
                   />
-                  <span className="absolute top-2 right-2 bg-pink-600 text-white text-xs sm:text-sm px-2 py-1 rounded-full animate-pulse">
-                    Hot
-                  </span>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
               ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Flame className="mx-auto h-16 w-16 text-gray-400 mb-4 animate-fade-in" />
-            <p className="text-lg font-medium text-gray-600">
-              No hot deals are currently available. Check back soon!
+          <div className="text-center py-16 lg:py-20">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-100 to-pink-100 rounded-3xl flex items-center justify-center">
+              <Flame className="h-12 w-12 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No Hot Deals Available
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              We're preparing some amazing deals for you. Check back soon for exclusive offers!
             </p>
           </div>
         )}
       </section>
 
-      {/* Call to Action */}
-      <section className="mt-10 sm:mt-16 py-12 sm:py-16 bg-gradient-to-r from-orange-400 via-red-500 to-pink-600 rounded-3xl shadow-xl text-center relative overflow-hidden">
-        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-4xl font-extrabold mb-4 text-white animate-fade-in-up">
-            Hurry, Hot Deals Won’t Last Long!
-          </h2>
-          <p className="text-white/90 mb-6 sm:mb-8 text-sm sm:text-base animate-fade-in delay-200">
-            Check out the full Hot Sales collection and grab your favorites now.
-          </p>
-          <Link
-            to="/allproducts"
-            className="px-6 sm:px-8 py-2 sm:py-3 rounded-full bg-white text-red-600 font-semibold shadow-lg hover:bg-gray-100 hover:shadow-2xl transition-all duration-300 animate-bounce inline-block"
-          >
-            Shop All Deals
-          </Link>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 lg:mb-20">
+        <div className="relative rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-80 h-80 bg-pink-300/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+          </div>
+          
+          <div className="relative z-10 text-center py-16 lg:py-20 px-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+              Don't Miss Out On Premium Deals!
+            </h2>
+            <p className="text-white/80 text-xs sm:text-lg mb-8 max-w-2xl mx-auto">
+              Explore our complete collection of premium products with exclusive discounts and fast delivery.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                to="/allproducts"
+                className="group bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-3"
+              >
+                <span>Explore All Products</span>
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              
+              <Link
+                to="/"
+                className="group border-2 border-white text-white px-8 py-4 rounded-2xl font-bold backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center gap-3"
+              >
+                <span>Browse Categories</span>
+                <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </Link>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/70 text-sm">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                <span>Secure Payment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4" />
+                <span>Fast Delivery</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                <span>Premium Quality</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>

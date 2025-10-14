@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Timer, ArrowRight } from "lucide-react";
+import { Timer, ArrowRight, Crown, Zap, Sparkles, Flame } from "lucide-react";
 import { useAppContext } from "../context/AppContext.jsx";
 
 const DealOfTheDay = ({ dealOfTheDay }) => {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-    const { url } = useAppContext();
+  const [isHovered, setIsHovered] = useState(false);
+  const { url } = useAppContext();
 
   useEffect(() => {
     if (!dealOfTheDay) return;
@@ -34,76 +35,149 @@ const DealOfTheDay = ({ dealOfTheDay }) => {
   if (!dealOfTheDay) return null;
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-      {/* Heading */}
-      <h2 className="text-xl sm:text-3xl font-extrabold text-gray-900 mb-8 text-center flex items-center justify-center gap-3">
-        <Timer className="text-red-500 animate-pulse" />
-        Deal of the Day
-      </h2>
-
-      {/* Card */}
-      <div className="grid md:grid-cols-2 gap-6 sm:gap-10 items-center bg-white rounded-3xl shadow-2xl p-5 sm:p-8 relative overflow-hidden animate-fade-in">
-        {/* Image */}
-        <div className="relative rounded-xl overflow-hidden shadow-lg group">
-          <img
-            src={
-              dealOfTheDay.images?.[0]
-                ? `${url}/img/${dealOfTheDay.images[0]}`
-                : "https://placehold.co/500x300"
-            }
-            alt={dealOfTheDay.productName}
-            className="w-full h-56 sm:h-72 md:h-80 object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-
-          {/* Discount badge */}
-          {dealOfTheDay.discount && (
-            <span className="absolute top-4 left-4 bg-red-600 text-white text-xs sm:text-sm font-bold px-3 py-1 sm:px-4 sm:py-2 rounded-full shadow-xl animate-pulse ">
-              🔥 {dealOfTheDay.discount}% OFF
-            </span>
-          )}
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-10">
+      <div className="text-center mb-1 lg:mb-6 relative">
+        <div className="inline-flex items-center gap-3 mb-4 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 backdrop-blur-sm border border-indigo-400/20 px-6 py-3 rounded-2xl">
+          <Crown className="h-5 w-5 text-yellow-400" />
+          <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">
+            Premium Exclusive
+          </span>
+          <Sparkles className="h-5 w-5 text-pink-400" />
         </div>
+        
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+            Deal of the Day
+          </span>
+        </h2>
+      </div>
 
-        {/* Info */}
-        <div className="text-center md:text-left space-y-4">
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
-            {dealOfTheDay.productName}
-          </h3>
-          <p className="text-gray-600 text-sm sm:text-base md:text-lg">
-            Exclusive today-only offer. Limited stock available!
-          </p>
+      <div className="relative">
+        <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-50 animate-pulse"></div>
+        <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500/10 to-pink-500/10 rounded-3xl blur-lg"></div>
 
-          {/* Price */}
-          <div className="flex items-center justify-center md:justify-start gap-3">
-            {dealOfTheDay.originalPrice && (
-              <span className="line-through text-gray-400 text-base sm:text-lg">
-                ₹{dealOfTheDay.originalPrice}
+        <div 
+          className="relative grid lg:grid-cols-2 gap-8 lg:gap-12 items-center  rounded-3xl  p-6 sm:p-8 lg:p-12  transform transition-all  duration-500 hover:shadow-3xl "
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className="relative group">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src={
+                  dealOfTheDay.images?.[0]
+                    ? `${url}/img/${dealOfTheDay.images[0]}`
+                    : "https://placehold.co/600x400"
+                }
+                alt={dealOfTheDay.productName}
+                className="w-full h-64 sm:h-80 lg:h-96 object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity duration-300"></div>
+              
+             
+
+              <div className="absolute top-6 right-6 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 text-xs font-bold px-3 py-2 rounded-full shadow-lg">
+                <div className="flex items-center gap-1">
+                  <Crown className="h-3 w-3" />
+                  <span>PREMIUM</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-indigo-400/20 rounded-full blur-sm animate-float"></div>
+            <div className="absolute -top-4 -right-4 w-6 h-6 bg-pink-400/20 rounded-full blur-sm animate-float delay-1000"></div>
+          </div>
+
+          <div className="space-y-6 lg:space-y-8 text-center lg:text-left">
+            <div>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+                {dealOfTheDay.productName}
+              </h3>
+              <p className="text-gray-600 text-sm lg:text-lg leading-relaxed">
+                Exclusive premium offer with limited availability. Don't miss this incredible deal!
+              </p>
+            </div>
+
+            <div className="flex flex-row items-center gap-4">
+              {dealOfTheDay.originalPrice && (
+                <div className="text-center sm:text-left">
+                  <span className="text-sm text-gray-500 font-medium">Original Price</span>
+                  <div className="line-through text-gray-400 text-xl font-semibold">
+                    ₹{dealOfTheDay.originalPrice}
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-center sm:text-left">
+                <span className="text-sm text-gray-500 font-medium">Discounted Price</span>
+                <div className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500 font-black text-3xl lg:text-4xl">
+                  ₹{dealOfTheDay.price}
+                </div>
+              </div>
+
+              {dealOfTheDay.discount && (
+                <div className="text-center sm:text-left">
+                  <span className="text-sm text-gray-500 font-medium">You Save</span>
+                  <div className="text-green-600 font-bold text-xl">
+                    ₹{dealOfTheDay.originalPrice - dealOfTheDay.price}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gradient-to-r from-indigo-50 to-pink-50 rounded-2xl p-6 border border-indigo-100">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Timer className="h-5 w-5 text-indigo-600 animate-pulse" />
+                <span className="text-sm font-semibold text-gray-700">Offer ends in:</span>
+              </div>
+              
+              <div className="flex justify-center gap-3 lg:gap-4">
+                {[
+                  { value: timeLeft.hours, label: "Hours" },
+                  { value: timeLeft.minutes, label: "Minutes" }, 
+                  { value: timeLeft.seconds, label: "Seconds" }
+                ].map((time, index) => (
+                  <div key={time.label} className="text-center">
+                    <div className="bg-white rounded-xl shadow-lg p-3 min-w-16">
+                      <div className="font-mono font-bold text-2xl lg:text-3xl text-gray-800">
+                        {String(time.value).padStart(2, "0")}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 font-medium">
+                      {time.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Link
+              to={`/productDetails/${dealOfTheDay._id}`}
+              className="group inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-pink-500 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 active:scale-95 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              
+              <span className="relative whitespace-nowrap z-10 flex items-center gap-3">
+                <Zap className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                Grab Premium Deal
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform duration-300 animate-arrowMove" />
               </span>
-            )}
-            <span className="text-red-600 font-extrabold text-2xl sm:text-3xl">
-              ₹{dealOfTheDay.price}
-            </span>
+            </Link>
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Limited Stock</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span>Premium Quality</span>
+              </div>
+            </div>
           </div>
-
-          {/* Countdown */}
-           <div className="flex justify-center lg:justify-start items-center gap-2 sm:gap-3 text-sm sm:text-base bg-gray-100 px-3 py-2 rounded-lg font-mono text-gray-800 shadow-inner">
-            <span className="font-bold">{String(timeLeft.hours).padStart(2, "0")}h</span> :
-            <span className="font-bold">{String(timeLeft.minutes).padStart(2, "0")}m</span> :
-            <span className="font-bold">{String(timeLeft.seconds).padStart(2, "0")}s</span>
-          </div>
-
-          {/* Button */}
-         <Link
-  to={`/productDetails/${dealOfTheDay._id}`}
-  className="group inline-flex animate-arrowMove items-center mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 via-pink-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden"
->
-  <span className="relative z-10">Grab Deal</span>
-  <ArrowRight
-    className="h-5 w-5 ml-2 relative z-10 animate-arrowMove transform transition-transform duration-300 group-hover:translate-x-2"
-  />
-  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-</Link>
-
         </div>
       </div>
     </section>
