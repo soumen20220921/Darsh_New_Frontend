@@ -25,6 +25,8 @@ import DevelopersPage from './pages/DevelopersPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 import AllProducts from './pages/AllProducts';
+import DoctorsPage from "./components/DoctorsPage.jsx";
+import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
 
 const App = () => {
   const context = useAppContext();
@@ -33,7 +35,7 @@ const App = () => {
   return (
     <AppProvider>
       <Router>
-        <ScrollToTop /> 
+        <ScrollToTop />
         <div className="min-h-screen bg-gray-50">
           <Navbar />
           <Routes>
@@ -49,14 +51,25 @@ const App = () => {
             <Route path="/Categories/:name" element={<Categories />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/PaymentOptions" element={<PaymentOptions />} />
-            <Route path="/CancellationandRefund" element={<CancellationAndRefund />} />
+            <Route
+              path="/CancellationandRefund"
+              element={<CancellationAndRefund />}
+            />
             <Route path="/track-order" element={<ShippingAndDelivery />} />
-            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route
+              path="/terms-and-conditions"
+              element={<TermsAndConditions />}
+            />
             <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/failure" element={<PaymentFailed />} />
-            <Route path="/account" element={context.login ? <Account /> : <Auth />} />
+            <Route path="/doctors" element={<DoctorsPage />} />
+            <Route path="/doctor/:id" element={<DoctorDetailPage />} />
+            <Route
+              path="/account"
+              element={context.login ? <Account /> : <Auth />}
+            />
             <Route path="/cart" element={context.login ? <Cart /> : <Auth />} />
           </Routes>
           <Footer />

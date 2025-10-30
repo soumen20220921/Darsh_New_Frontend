@@ -8,8 +8,10 @@ import {
 } from "react-icons/ai";
 import { FiMenu } from "react-icons/fi";
 import { IoMdClose } from "react-icons/io";
+import { FaUserMd } from "react-icons/fa";
 import { useAppContext } from "../context/AppContext";
 import LogoutModal from "../pages/LogoutModal";
+
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -80,6 +82,17 @@ const Navbar = () => {
                   <AiOutlineHome size={22} />
                 </div>
             <span className="text-sm font-medium bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent tracking-wide">Home</span>
+          </button>
+           <button
+            onClick={() => handleNavigation("/doctors")}
+            className="flex items-center gap-1 px-4 py-2 rounded-full text-gray-700 hover:bg-gray-100 transition-all duration-300"
+          >
+            <div className=" bg-gradient-to-r from-green-600 to-teal-500 bg-clip-text ">
+              <FaUserMd size={20} />
+            </div>
+            <span className="text-sm font-medium bg-gradient-to-r from-green-600 to-teal-500 bg-clip-text text-transparent tracking-wide">
+              Doctors
+            </span>
           </button>
           
           {/* Cart Button */}
@@ -207,6 +220,24 @@ const Navbar = () => {
                   <AiOutlineHome size={22} />
                 </div>
                 Home
+              </button>
+            </li>
+            <li
+              className="animate-stagger-in"
+              style={{ animationDelay: "150ms" }}
+            >
+              <button
+                type="button"
+                onClick={() => handleNavigation("/doctors")}
+                className="group flex items-center gap-4 w-full px-4 py-3 rounded-xl
+                text-gray-800 font-semibold bg-white/50 border border-white/30 backdrop-blur-sm
+                hover:bg-white/80 hover:-translate-y-1
+                transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
+              >
+                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-teal-100 text-teal-600 shadow-inner">
+                  <FaUserMd size={22} />
+                </div>
+                Find a Doctor
               </button>
             </li>
            
