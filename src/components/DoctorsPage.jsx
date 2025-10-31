@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaStethoscope, FaUserMd, FaSearch } from "react-icons/fa";
+import { useAppContext } from "../context/AppContext";
+import axios from "axios";
 
 // --- DEMO DATA FOR LISTING ---
 const DUMMY_DOCTORS = [
@@ -95,15 +97,18 @@ const DoctorCard = ({ doctor }) => {
 };
 
 const DoctorsPage = () => {
-  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterSpecialization, setFilterSpecialization] = useState("All");
+  const {doctors } = useAppContext();
+
+
 
   useEffect(() => {
     // Using DUMMY DATA for demonstration
-    setDoctors(DUMMY_DOCTORS);
+    // setDoctors(DUMMY_DOCTORS);
     setLoading(false);
+    
   }, []);
 
   const handleSearchChange = (e) => {

@@ -12,7 +12,8 @@ export const AppProvider = ({ children }) => {
   const [login, setLogin] = useState(false);
   const [totalItems, setTotalItems] = useState(0); 
   
-  const url = "https://api2.darshsaree.com"
+  //  const url = "https://api2.darshsaree.com"
+   const url = "http://localhost:8001"
   const token = localStorage.getItem("token");
   const user = {
     name: localStorage.getItem("name"),
@@ -132,12 +133,27 @@ export const AppProvider = ({ children }) => {
       setOrderLoading(false);
     }
   };
+// fetch all doctors
+
+  const [doctors, setDoctors] = useState([]);
+
+    const fetchDoctors = async () => {
+    try {
+      const res = await axios.get(`${url}/api/doctor/all`);
+      console.log(res.data.doctors)
+      setDoctors(res.data.doctors);
+    } catch (err) {
+      console.error("Error fetching doctors:", err);
+      // toast.error("Failed to fetch doctors");
+    }
+  };
 
   useEffect(() => {
     getProduct();
     if (token) {
       getCart();
       getOrder();
+      fetchDoctors();
     }
   }, [token]);
 
@@ -162,7 +178,8 @@ export const AppProvider = ({ children }) => {
         orderLoading,
         orderError,
         totalItems,
-        url
+        url,
+        doctors
       }}
     >
       {children}
