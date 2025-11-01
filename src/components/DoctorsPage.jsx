@@ -286,41 +286,42 @@ const DoctorCard = ({ doctor }) => {
 };
 
 const DoctorsPage = () => {
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterSpecialization, setFilterSpecialization] = useState("All");
   const [sortBy, setSortBy] = useState("experience");
   const [showFilters, setShowFilters] = useState(false);
-  const { doctors, setDoctors } = useAppContext();
+  const { doctors, booking } = useAppContext();
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        setLoading(true);
-        setError("");
+console.log(booking)
+  // useEffect(() => {
+  //   const fetchDoctors = async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError("");
         
-        const response = await axios.get("/api/doctors", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+  //       const response = await axios.get("/api/doctors", {
+  //         headers: {
+  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //         },
+  //       });
         
-        if (response.data.success) {
-          setDoctors(response.data.doctors);
-        } else {
-          setError("Failed to fetch doctors");
-        }
-      } catch (err) {
-        console.error("Error fetching doctors:", err);
-        setError("Failed to load doctors. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       if (response.data.success) {
+  //         setDoctors(response.data.doctors);
+  //       } else {
+  //         setError("Failed to fetch doctors");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching doctors:", err);
+  //       setError("Failed to load doctors. Please try again.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchDoctors();
-  }, [setDoctors]);
+  //   fetchDoctors();
+  // }, [setDoctors]);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -371,17 +372,17 @@ const DoctorsPage = () => {
       }
     });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg font-medium">Finding Best Doctors...</p>
-          <p className="text-gray-400 text-sm mt-2">Please wait while we load available specialists</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600 text-lg font-medium">Finding Best Doctors...</p>
+  //         <p className="text-gray-400 text-sm mt-2">Please wait while we load available specialists</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
