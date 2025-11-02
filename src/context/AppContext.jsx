@@ -140,7 +140,7 @@ export const AppProvider = ({ children }) => {
     const fetchDoctors = async () => {
     try {
       const res = await axios.get(`${url}/api/doctor/all`);
-      console.log(res.data.doctors)
+      // console.log(res.data.doctors)
       setDoctors(res.data.doctors);
     } catch (err) {
       console.error("Error fetching doctors:", err);
@@ -148,15 +148,40 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+
+
+
+  // Fetch Booking By ID
+
+   const [booking, setBooking] = useState(null);
+
+  const getBooking = async () => {
+    try {
+      const res = await axios.get(
+        `${url}/api/booking/getBookingById`,
+        {
+          headers: {
+            Auth: token,
+          },
+        }
+      );
+
+      console.log("booking", res.data);
+      setBooking(res.data.orders || null);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+    } 
+  };
+  
   useEffect(() => {
     getProduct();
     if (token) {
       getCart();
       getOrder();
       fetchDoctors();
+      getBooking();
     }
   }, [token]);
-
   return (
     <AppContext.Provider
       value={{
@@ -179,7 +204,8 @@ export const AppProvider = ({ children }) => {
         orderError,
         totalItems,
         url,
-        doctors
+        doctors,
+        booking
       }}
     >
       {children}

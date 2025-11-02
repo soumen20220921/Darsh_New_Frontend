@@ -58,6 +58,7 @@ const BookingModal = ({ doctor, onClose, user, url }) => {
 
       const data = {
         userId,
+        doctorId:doctor._id,
         FullName: patientName,
         Phone: phone,
         Date: date,
