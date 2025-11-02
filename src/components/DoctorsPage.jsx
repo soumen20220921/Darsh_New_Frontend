@@ -11,6 +11,7 @@ import {
   FaPhone,
   FaExclamationTriangle
 } from "react-icons/fa";
+import { Stethoscope, CalendarHeart, Users } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
 
@@ -300,17 +301,17 @@ const DoctorsPage = () => {
         setLoading(true);
         setError("");
         
-        const response = await axios.get("/api/doctors", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        // const response = await axios.get("/api/doctors", {
+        //   headers: {
+        //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+        //   },
+        // });
         
-        if (response.data.success) {
-          setDoctors(response.data.doctors);
-        } else {
-          setError("Failed to fetch doctors");
-        }
+        // if (response.data.success) {
+        //   setDoctors(response.data.doctors);
+        // } else {
+        //   setError("Failed to fetch doctors");
+        // }
       } catch (err) {
         console.error("Error fetching doctors:", err);
         setError("Failed to load doctors. Please try again.");
@@ -385,34 +386,51 @@ const DoctorsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="bg-white shadow-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 sm:py-6">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-                Book a Doctor Appointment
-              </h1>
+     <div className="relative bg-gradient-to-r from-blue-50 via-indigo-50 to-pink-50 border-b border-gray-200 shadow-sm overflow-hidden">
+  {/* Floating glow effect */}
+  <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/30 via-pink-100/20 to-transparent animate-pulse" />
 
-              <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-                Schedule your consultation with verified specialists in minutes.
-              </p>
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    
+    {/* Left Section */}
+    <div className="flex items-start sm:items-center gap-1 md:gap-4 flex-1 min-w-0">
+      <div className="p-2 sm:p-4 bg-white/70 backdrop-blur-md rounded-2xl shadow-sm border border-indigo-100 flex items-center justify-center">
+        <Stethoscope className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 animate-pulse" />
+      </div>
 
-              <div className="lg:hidden mt-2 text-sm font-medium text-indigo-600">
-                {filteredDoctors.length} doctors available
-              </div>
-            </div>
+      <div>
+        <h1 className="text-lg sm:text-3xl lg:text-4xl whitespace-nowrap font-extrabold text-gray-900 bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
+          Book a Doctor Appointment
+        </h1>
 
-            <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-              <div className="p-3 bg-blue-50 rounded-lg text-center">
-                <span className="text-xl font-bold text-blue-700">
-                  {filteredDoctors.length}
-                </span>
-                <p className="text-sm text-blue-600">Doctors Available</p>
-              </div>
-            </div>
-          </div>
+        <p className="text-xs sm:text-base text-gray-600 mt-1 sm:mt-2 leading-snug">
+          Schedule your consultation with{" "}
+          <span className="font-semibold text-indigo-600">trusted medical experts</span> in just minutes.
+        </p>
+
+        {/* Mobile doctor count */}
+        <div className="lg:hidden mt-1 inline-flex items-center gap-2 text-indigo-600 font-semibold bg-indigo-50 px-3 py-1 rounded-lg text-sm">
+          <Users className="w-4 h-4" />
+          {filteredDoctors.length} Doctors Available
         </div>
       </div>
+    </div>
+
+    {/* Right Section */}
+    <div className="hidden lg:flex items-center gap-4">
+      <div className="flex items-center gap-4 bg-white/80 backdrop-blur-md rounded-2xl border border-indigo-100 px-6 py-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-3 rounded-full bg-indigo-100">
+          <CalendarHeart className="w-6 h-6 text-indigo-600" />
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Doctors Available</p>
+          <p className="text-2xl font-bold text-indigo-700">{filteredDoctors.length}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="lg:hidden mb-6">

@@ -237,7 +237,7 @@ const Navbar = () => {
                 <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-teal-100 text-teal-600 shadow-inner">
                   <FaUserMd size={22} />
                 </div>
-                Find a Doctor
+                Doctor Appointment
               </button>
             </li>
            
