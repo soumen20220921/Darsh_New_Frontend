@@ -95,7 +95,7 @@ export default function Hero() {
 
       {/* Content Section */}
       <div className="absolute inset-0 flex flex-col items-center justify-center px-4 z-30 pt-16 pb-24 sm:pt-10 sm:pb-20 ">
-        <div className="animated-glow mb-4 sm:mb-6 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600/20 to-pink-500/20 backdrop-blur-sm border border-indigo-400/30 shadow-lg shadow-indigo-500/10">
+        <div className="animated-glow mb-4 sm:mb-6 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-600/20 to-pink-500/20 backdrop-blur-sm border border-indigo-400/30 shadow-lg shadow-indigo-500/10">
           <h2 className="text-xs sm:text-sm md:text-lg font-bold tracking-widest uppercase text-indigo-200 drop-shadow-lg flex items-center justify-center flex-wrap gap-2">
             <Zap className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-pulse flex-shrink-0 text-pink-400" />
             <span className="text-center bg-gradient-to-r from-indigo-200 to-pink-300 bg-clip-text text-transparent">
@@ -124,7 +124,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-indigo-100/90 text-center mb-6 sm:mb-8 md:mb-12 max-w-xs sm:max-w-md md:max-w-2xl animate-fade-in-up delay-300 backdrop-blur-sm bg-gradient-to-r from-indigo-900/20 to-purple-900/20 px-6 py-3 rounded-full border border-indigo-500/30 mx-2 shadow-lg shadow-indigo-500/10">
+        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-indigo-100/90 text-center mb-6 sm:mb-8 md:mb-12 max-w-xs sm:max-w-md md:max-w-2xl animate-fade-in-up delay-300 backdrop-blur-sm bg-gradient-to-r from-indigo-900/20 to-purple-900/20 px-6 py-1 rounded-full border border-indigo-500/30 mx-2 shadow-lg shadow-indigo-500/10">
           <span className="text-xs flex items-center justify-center gap-2 sm:text-2xl">
             <Crown className="h-3 w-3 text-purple-400 sm:h-7 sm:w-7" />
             Luxury • Quality • Fast
@@ -132,29 +132,57 @@ export default function Hero() {
           </span>
         </p>
 
-        <div className="hidden md:flex flex-col sm:flex-row gap-6 animate-fade-in-up delay-500">
-          <button
-            onClick={handleClickShop}
-            className="group bg-gradient-to-r from-indigo-600 to-pink-500 text-white px-10 py-5 rounded-full font-bold text-lg hover:from-indigo-500 hover:to-pink-400 transition-all duration-300 flex items-center justify-center space-x-3 shadow-2xl shadow-purple-500/25 relative overflow-hidden transform hover:scale-[1.05] active:scale-[0.98]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-shine" />
-            <ShoppingBag className="h-7 w-7 transition-transform group-hover:scale-110 group-hover:rotate-12" />
-            <span className="relative font-extrabold">
-              Shop Premium Collection
-            </span>
-            <ArrowRight className="h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
-          </button>
+       <div className="hidden md:flex items-center justify-center gap-5 animate-fade-in-up">
+  {/* Modern Primary Button */}
+  <button
+    onClick={handleClickShop}
+    className="group relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white px-9 py-4.5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center justify-center gap-4 shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+  >
+    {/* Gradient Overlay */}
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 opacity-100 group-hover:from-indigo-500 group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-500" />
+    
+    {/* Animated Shine */}
+    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+    
+    {/* Inner Glow */}
+    <div className="absolute inset-1 rounded-xl bg-white/5 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    
+    <div className="relative flex items-center py-2 gap-3 z-10">
+      <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+        <ShoppingBag className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+      </div>
+      <span className="font-semibold tracking-wide drop-shadow-sm">
+        Shop Premium
+      </span>
+      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+    </div>
+  </button>
 
-          <button
-            onClick={handleClickTrend}
-            className="group border-2 border-indigo-300 text-indigo-100 px-10 py-5 rounded-full font-bold text-lg hover:bg-gradient-to-r hover:from-indigo-500/20 hover:to-pink-500/20 hover:text-white transition-all duration-300 flex items-center justify-center space-x-3 relative overflow-hidden transform hover:scale-[1.05] active:scale-[0.98] backdrop-blur-sm bg-indigo-500/10"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400/10 via-transparent to-pink-400/10 transform -skew-x-12 animate-shine-slow" />
-            <TrendingUp className="h-7 w-7 transition-transform group-hover:scale-110" />
-            <span className="relative font-extrabold">Trending Now</span>
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
-          </button>
-        </div>
+  {/* Modern Secondary Button */}
+  <button
+    onClick={handleClickTrend}
+    className="group relative bg-gradient-to-br from-gray-900/80 to-gray-800/90 border border-gray-600/30 text-gray-100 px-9 py-4.5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center justify-center gap-4 backdrop-blur-xl hover:border-indigo-400/50 hover:bg-gray-800/90 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+  >
+    {/* Animated Background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    
+    {/* Border Glow */}
+    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-400/30 via-purple-400/30 to-pink-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm group-hover:blur-0 -z-10" />
+    
+    {/* Floating Dots */}
+    <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full animate-ping" />
+    <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full animate-ping delay-700" />
+    
+    <div className="relative flex items-center gap-3 py-2 z-10">
+      <div className="p-1.5 bg-indigo-500/20 rounded-lg backdrop-blur-sm">
+        <TrendingUp className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200 transition-colors duration-300" />
+      </div>
+      <span className="font-semibold tracking-wide bg-gradient-to-r from-indigo-200 to-purple-200 bg-clip-text text-transparent group-hover:from-white group-hover:to-gray-200 transition-all duration-500">
+        Trending Now
+      </span>
+    </div>
+  </button>
+</div>
 
         <div className="md:hidden flex flex-col gap-4 mt-6 w-full max-w-xs px-4 animate-fade-in-up delay-700">
           <div className="flex gap-3">

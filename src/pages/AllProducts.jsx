@@ -29,6 +29,7 @@ const ALL_CATEGORIES = [
   "footwear",
   "beauty",
   "electronics",
+  "others",
   
 ];
 

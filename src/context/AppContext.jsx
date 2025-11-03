@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
-// 1. Create the context
 const AppContext = createContext();
 
-// 2. Create a provider component
 export const AppProvider = ({ children }) => {
   const [address, setAddress] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +28,6 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch User Address
   useEffect(() => {
     const fetchAddress = async () => {
       try {
@@ -64,24 +61,26 @@ export const AppProvider = ({ children }) => {
       }
     };
 
-    fetchAddress();
-  }, []);
+    if (token) {
+      fetchAddress();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
 
-  // Fetch All product
   const [allProduct, setAllProduct] = useState(null);
   const getProduct = async () => {
     try {
       const res = await axios.get(
         `${url}/api/product/getallproduct`
       );
-            // console.log("all product", res.data); // res.data has your actual products
+            // console.log("all product", res.data); 
       setAllProduct(res.data.products);
     } catch (error) {
       console.error("Error fetching products:", error.message);
     }
   };
 
-  // Fetch cart details
   const [cart, setCart] = useState(null);
   const getCart = async () => {
     try {
@@ -94,7 +93,6 @@ export const AppProvider = ({ children }) => {
         }
       );
       setCart(res.data.cart.items);
-      // Calculate total items from the fetched cart
       const total = res.data.cart.items.reduce(
         (acc, item) => acc + item.qty,
         0
@@ -133,27 +131,29 @@ export const AppProvider = ({ children }) => {
       setOrderLoading(false);
     }
   };
-// fetch all doctors
+
 
   const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState(null);
 
-    const fetchDoctors = async () => {
+  const fetchDoctors = async () => {
     try {
+      setDoctorsLoading(true);
+      setDoctorsError(null);
       const res = await axios.get(`${url}/api/doctor/all`);
-      // console.log(res.data.doctors)
-      setDoctors(res.data.doctors);
+      console.log("Doctors data:", res.data.doctors);
+      setDoctors(res.data.doctors || []);
     } catch (err) {
       console.error("Error fetching doctors:", err);
-      // toast.error("Failed to fetch doctors");
+      setDoctorsError("Failed to load doctors. Please try again later.");
+      setDoctors([]); 
+    } finally {
+      setDoctorsLoading(false);
     }
   };
 
-
-
-
-  // Fetch Booking By ID
-
-   const [booking, setBooking] = useState(null);
+  const [booking, setBooking] = useState(null);
 
   const getBooking = async () => {
     try {
@@ -172,16 +172,34 @@ export const AppProvider = ({ children }) => {
       console.error("Error fetching orders:", err);
     } 
   };
-  
+
   useEffect(() => {
-    getProduct();
-    if (token) {
-      getCart();
-      getOrder();
-      fetchDoctors();
-      getBooking();
-    }
+    const initializeData = async () => {
+      try {
+        await Promise.all([
+          getProduct(),
+          fetchDoctors() 
+        ]);
+
+        if (token) {
+          await Promise.all([
+            getCart(),
+            getOrder(),
+            getBooking()
+          ]);
+        }
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
+    };
+
+    initializeData();
   }, [token]);
+
+  const refreshDoctors = () => {
+    fetchDoctors();
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -205,6 +223,9 @@ export const AppProvider = ({ children }) => {
         totalItems,
         url,
         doctors,
+        doctorsLoading,
+        doctorsError,
+        refreshDoctors,
         booking
       }}
     >
@@ -213,7 +234,6 @@ export const AppProvider = ({ children }) => {
   );
 };
 
-// 3. Custom hook for easier usage
 export const useAppContext = () => {
   return useContext(AppContext);
 };
