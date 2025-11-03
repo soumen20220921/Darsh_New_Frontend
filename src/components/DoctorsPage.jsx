@@ -267,13 +267,11 @@ Booked on: ${new Date().toLocaleDateString()}
 
         <div className="p-4 sm:p-6">
           <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-dashed border-green-200 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-            {/* Decorative corners */}
             <div className="absolute top-0 left-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full -translate-x-1 -translate-y-1 sm:-translate-x-2 sm:-translate-y-2"></div>
             <div className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full translate-x-1 -translate-y-1 sm:translate-x-2 sm:-translate-y-2"></div>
             <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full -translate-x-1 translate-y-1 sm:-translate-x-2 sm:translate-y-2"></div>
             <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full translate-x-1 translate-y-1 sm:translate-x-2 sm:translate-y-2"></div>
             
-            {/* Watermark */}
             <div className="absolute inset-0 flex items-center justify-center opacity-5">
               <FaQrcode className="text-gray-400 text-6xl sm:text-9xl" />
             </div>
@@ -296,7 +294,6 @@ Booked on: ${new Date().toLocaleDateString()}
                 </div>
               </div>
 
-              {/* Patient and Doctor Info */}
               <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                 <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
                   <h4 className="font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
@@ -671,8 +668,25 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-const {url} = useAppContext();
-console.log(doctor)
+  const [imageError, setImageError] = useState(false);
+  
+  const { url } = useAppContext();
+
+  // Safety checks for doctor data
+  if (!doctor) {
+    return null;
+  }
+
+  const doctorName = doctor.name || 'Doctor Name Not Available';
+  const doctorSpecialization = doctor.specialization || 'Specialization Not Available';
+  const doctorExperience = doctor.experience || '0';
+  const doctorFees = doctor.fees || '0';
+  const doctorDescription = doctor.description || 'No description available.';
+  const doctorQualification = doctor.qualification || 'Qualification not specified';
+  const doctorLanguages = doctor.languages || ['Bengali', 'English' ];
+  const doctorLocation = doctor.location || '';
+  const doctorRating = doctor.rating || "4.8";
+
   const handleContactClick = (type) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -701,7 +715,7 @@ console.log(doctor)
         
         <p className="text-gray-600 text-center mb-3 sm:mb-4 text-sm sm:text-base">
           To schedule a phone consultation with {" "}
-          <span className="font-semibold">Dr. {doctor.name}</span>, please call the Doctor Assistant during their regular business hours.
+          <span className="font-semibold">Dr. {doctorName}</span>, please call the Doctor Assistant during their regular business hours.
         </p>
 
         <div className="bg-blue-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
@@ -732,6 +746,13 @@ console.log(doctor)
     </div>
   );
 
+  const getImageSrc = () => {
+    if (imageError || !doctor.image || !doctor.image._id) {
+      return "/default-doctor.jpg";
+    }
+    return `${url}/img/${doctor.image._id}`;
+  };
+
   return (
     <>
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft hover:shadow-card-hover transition-all duration-500 overflow-hidden border border-gray-100">
@@ -741,30 +762,35 @@ console.log(doctor)
               <div className="relative flex-shrink-0">
                 <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-2xl shadow-md border-2 border-white ${!isImageLoaded ? 'animate-pulse' : ''}`}>
                   <img
-                    src={`${url}/img/${doctor.image._id}` || "/default-doctor.jpg"}
-                    alt={doctor.name}
+                    src={getImageSrc()}
+                    alt={doctorName}
                     className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? 'block' : 'hidden'}`}
                     onLoad={() => setIsImageLoaded(true)}
+                    onError={(e) => {
+                      setIsImageLoaded(true);
+                      setImageError(true);
+                      e.target.src = "/default-doctor.jpg";
+                    }}
                   />
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold">
-                  {doctor.experience}+ yrs
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2  rounded-full text-xs font-bold">
+                  {doctorExperience}+ yrs
                 </div>
               </div>
               
               <div className="flex-grow min-w-0">
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 truncate">
-                  Dr. {doctor.name}
+                  Dr. {doctorName}
                 </h3>
                 <p className="text-blue-600 font-semibold flex items-center text-sm">
                   <FaStethoscope className="mr-2 flex-shrink-0" />
-                  <span className="truncate">{doctor.specialization}</span>
+                  <span className="truncate">{doctorSpecialization}</span>
                 </p>
                 <div className="flex items-center mt-1">
                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                     <FaStar className="text-yellow-500 mr-1 text-xs" />
                     <span className="text-sm font-semibold text-gray-700">
-                      {doctor.rating || "4.8"}
+                      {doctorRating}
                     </span>
                   </div>
                 </div>
@@ -774,13 +800,13 @@ console.log(doctor)
             <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
               <div className="flex items-center text-sm text-gray-600">
                 <FaUserMd className="mr-2 text-blue-500 flex-shrink-0" />
-                <span className="truncate">{doctor.qualification}</span>
+                <span className="truncate">{doctorQualification}</span>
               </div>
               
-              {doctor.location && (
+              {doctorLocation && (
                 <div className="flex items-center text-sm text-gray-600">
                   <FaMapMarkerAlt className="mr-2 text-red-500 flex-shrink-0" />
-                  <span className="truncate">{doctor.location}</span>
+                  <span className="truncate">{doctorLocation}</span>
                 </div>
               )}
 
@@ -794,9 +820,9 @@ console.log(doctor)
               <p className={`text-gray-600 text-sm leading-relaxed ${
                 showFullDescription ? '' : 'line-clamp-2'
               }`}>
-                {doctor.description}
+                {doctorDescription}
               </p>
-              {doctor.description && doctor.description.length > 100 && (
+              {doctorDescription && doctorDescription.length > 100 && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
                   className="text-blue-600 text-sm font-medium mt-1"
@@ -807,14 +833,14 @@ console.log(doctor)
             </div>
 
             <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-              {doctor.languages?.slice(0, 2).map((lang, index) => (
+              {doctorLanguages.slice(0, 2).map((lang, index) => (
                 <span key={index} className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                  {lang}
+                  Speak: {lang}
                 </span>
               ))}
-              {doctor.languages && doctor.languages.length > 2 && (
+              {doctorLanguages.length > 2 && (
                 <span className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                  +{doctor.languages.length - 2} more
+                  +{doctorLanguages.length - 2} more
                 </span>
               )}
             </div>
@@ -823,7 +849,7 @@ console.log(doctor)
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div>
                   <div className="text-xl sm:text-2xl font-bold text-green-600">
-                    ₹{doctor.fees}
+                    ₹{doctorFees}
                   </div>
                   <p className="text-xs text-gray-500">Consultation Fee</p>
                 </div>
@@ -856,14 +882,19 @@ console.log(doctor)
             <div className="relative flex-shrink-0">
               <div className={`w-24 h-24 sm:w-28 sm:h-28 bg-gray-200 rounded-2xl shadow-md border-4 border-white ${!isImageLoaded ? 'animate-pulse' : ''}`}>
                 <img
-                  src={`${url}/img/${doctor.image._id}`|| "/default-doctor.jpg"}
-                  alt={doctor.name}
+                  src={getImageSrc()}
+                  alt={doctorName}
                   className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? 'block' : 'hidden'}`}
                   onLoad={() => setIsImageLoaded(true)}
+                  onError={(e) => {
+                    setIsImageLoaded(true);
+                    setImageError(true);
+                    e.target.src = "/default-doctor.jpg";
+                  }}
                 />
               </div>
               <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                {doctor.experience}+ yrs
+                {doctorExperience}+ yrs
               </div>
             </div>
 
@@ -871,18 +902,18 @@ console.log(doctor)
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className="min-w-0">
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 truncate">
-                    Dr. {doctor.name}
+                    Dr. {doctorName}
                   </h3>
                   <p className="text-blue-600 font-semibold mb-2 flex items-center">
                     <FaStethoscope className="mr-2 flex-shrink-0" />
-                    <span className="truncate">{doctor.specialization}</span>
+                    <span className="truncate">{doctorSpecialization}</span>
                   </p>
                 </div>
                 <div className="flex items-center flex-shrink-0 ml-4">
                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                     <FaStar className="text-yellow-500 mr-1" />
                     <span className="text-sm font-semibold text-gray-700">
-                      {doctor.rating || "4.8"}
+                      {doctorRating}
                     </span>
                   </div>
                 </div>
@@ -891,30 +922,30 @@ console.log(doctor)
               <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-2 sm:mb-3">
                 <div className="flex items-center text-sm text-gray-600">
                   <FaUserMd className="mr-2 text-blue-500 flex-shrink-0" />
-                  <span className="truncate">{doctor.qualification}</span>
+                  <span className="truncate">{doctorQualification}</span>
                 </div>
-                {doctor.location && (
+                {doctorLocation && (
                   <div className="flex items-center text-sm text-gray-600">
                     <FaMapMarkerAlt className="mr-2 text-red-500 flex-shrink-0" />
-                    <span className="truncate">{doctor.location}</span>
+                    <span className="truncate">{doctorLocation}</span>
                   </div>
                 )}
               </div>
 
               <p className="text-gray-600 text-sm leading-relaxed mb-3 sm:mb-4 max-w-2xl line-clamp-2">
-                {doctor.description}
+                {doctorDescription}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <div className="flex flex-wrap gap-1 sm:gap-2">
-                  {doctor.languages?.slice(0, 4).map((lang, index) => (
+                  {doctorLanguages.slice(0, 4).map((lang, index) => (
                     <span key={index} className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
                       {lang}
                     </span>
                   ))}
-                  {doctor.languages && doctor.languages.length > 4 && (
+                  {doctorLanguages.length > 4 && (
                     <span className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                      +{doctor.languages.length - 4} more
+                      +{doctorLanguages.length - 4} more
                     </span>
                   )}
                 </div>
@@ -929,7 +960,7 @@ console.log(doctor)
             <div className="flex-shrink-0 w-48 sm:w-64 flex flex-col gap-3 sm:gap-4">
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1">
-                  ₹{doctor.fees}
+                  ₹{doctorFees}
                 </div>
                 <p className="text-sm text-gray-500">Consultation Fee</p>
               </div>
@@ -1135,13 +1166,13 @@ const DoctorsPage = () => {
     .sort((a, b) => {
       switch (sortBy) {
         case "experience":
-          return b.experience - a.experience;
+          return (b.experience || 0) - (a.experience || 0);
         case "fees":
-          return a.fees - b.fees;
+          return (a.fees || 0) - (b.fees || 0);
         case "rating":
           return (b.rating || 0) - (a.rating || 0);
         case "name":
-          return a.name?.localeCompare(b.name);
+          return (a.name || '').localeCompare(b.name || '');
         default:
           return 0;
       }

@@ -336,8 +336,17 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const amount = doctor.fees;
+
+  const getImageSrc = () => {
+    if (imageError || !doctor.image || !doctor.image._id) {
+      return "/default-doctor.jpg";
+    }
+    return `${url}/img/${doctor.image._id}`;
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -494,11 +503,21 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
           )}
 
           <div className="flex items-center bg-gray-50 p-3 sm:p-4 rounded-xl border">
-            <img
-              src={doctor.imageUrl}
-              alt={doctor.name}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-indigo-200 flex-shrink-0"
-            />
+            <div className="relative">
+              <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full object-cover border-2 border-indigo-200 flex-shrink-0 ${!imageLoaded ? 'animate-pulse' : ''}`}>
+                <img
+                  src={getImageSrc()}
+                  alt={doctor.name}
+                  className={`w-full h-full rounded-full object-cover ${imageLoaded ? 'block' : 'hidden'}`}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={(e) => {
+                    setImageLoaded(true);
+                    setImageError(true);
+                    e.target.src = "/default-doctor.jpg";
+                  }}
+                />
+              </div>
+            </div>
             <div className="ml-3 sm:ml-4 flex-1 min-w-0">
               <h3 className="font-semibold text-gray-800 text-sm sm:text-base md:text-lg truncate">
                 Dr. {doctor.name}
@@ -787,6 +806,10 @@ const DoctorDetailPage = () => {
   const { doctors, url, user, token, refreshDoctors, getBooking } = useAppContext();
   const navigate = useNavigate();
 
+
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   useEffect(() => {
     const status = searchParams.get('status');
     const transactionId = searchParams.get('transactionId');
@@ -798,6 +821,14 @@ const DoctorDetailPage = () => {
   }, [searchParams]);
 
   const doctor = useMemo(() => doctors?.find((d) => d._id === id), [doctors, id]);
+
+  
+  const getImageSrc = () => {
+    if (imageError || !doctor?.image || !doctor.image._id) {
+      return "/default-doctor.jpg";
+    }
+    return `${url}/img/${doctor.image._id}`;
+  };
 
   const handleBookAppointment = () => {
     if (!token) {
@@ -926,11 +957,19 @@ const DoctorDetailPage = () => {
         {/* Doctor Profile Card */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row items-center lg:items-start gap-4 sm:gap-6 lg:gap-8 transition hover:shadow-xl">
           <div className="relative flex-shrink-0">
-            <img
-              src={doctor.imageUrl}
-              alt={doctor.name}
-              className="w-32 h-32 sm:w-48 sm:h-48 lg:w-56 lg:h-56 object-cover rounded-xl sm:rounded-2xl shadow-md border-4 border-indigo-100"
-            />
+            <div className={`w-32 h-32 sm:w-48 sm:h-48 lg:w-56 lg:h-56 bg-gray-200 rounded-xl sm:rounded-2xl shadow-md border-4 border-indigo-100 ${!imageLoaded ? 'animate-pulse' : ''}`}>
+              <img
+                src={getImageSrc()}
+                alt={doctor.name}
+                className={`w-full h-full object-cover rounded-xl sm:rounded-2xl ${imageLoaded ? 'block' : 'hidden'}`}
+                onLoad={() => setImageLoaded(true)}
+                onError={(e) => {
+                  setImageLoaded(true);
+                  setImageError(true);
+                  e.target.src = "/default-doctor.jpg";
+                }}
+              />
+            </div>
             <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg">
               {doctor.experience}+ yrs exp
             </div>

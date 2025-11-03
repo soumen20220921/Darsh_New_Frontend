@@ -26,7 +26,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 import AllProducts from './pages/AllProducts';
 import DoctorsPage from "./components/DoctorsPage.jsx";
-import AppointmentTicket from "./components/AppointmentTicket.jsx";
+import AppointmentSuccessPage from "./components/AppointmentSuccessPage.jsx";
 import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
 
 const App = () => {
@@ -66,7 +66,7 @@ const App = () => {
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/failure" element={<PaymentFailed />} />
             <Route path="/doctors" element={<DoctorsPage />} />
-            <Route path="/AppointmentTicket" element={<AppointmentTicket />} />
+            <Route path="/AppointmentSuccessPage" element={<AppointmentSuccessPage />} />
             <Route path="/doctor/:id" element={<DoctorDetailPage />} />
             <Route
               path="/account"

@@ -40,12 +40,12 @@ const Categories = () => {
     { id: "2", name: "blouse", image: "/IMG/blouse.png" },
     { id: "3", name: "men", image: "/IMG/men.png" },
     { id: "4", name: "kids", image: "/IMG/kids.png" },
-    { id: "5", name: "home decor", image: "/IMG/jwellary.png" },
+    { id: "5", name: "home decor", image: "/IMG/home.png" },
     {
       id: "6",
       name: "others",
       image:
-        "/IMG/acceceries.png",
+        "/IMG/all.png",
     },
   ];
 

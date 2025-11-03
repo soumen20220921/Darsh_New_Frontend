@@ -5,8 +5,8 @@ import { Crown,  Sparkles, Star } from 'lucide-react';
 
  
 const carouselImages = [
-  { id: 1, src: "/IMG/saree.png", alt: "Cutting-edge Technology & Gadgets", headline: "Unleash Your Potential" },
-  { id: 2, src: "/IMG/all.png", alt: "Modern Fashion & Apparel", headline: "Style Reimagined" },
+  { id: 1, src: "/IMG/home.png", alt: "Cutting-edge Technology & Gadgets", headline: "Unleash Your Potential" },
+  { id: 2, src: "/IMG/saree.png", alt: "Modern Fashion & Apparel", headline: "Style Reimagined" },
   { id: 3, src: "/IMG/kids.png", alt: "Playful & Creative Children's Products", headline: "Adventure Awaits" },
   { id: 4, src: "/IMG/men.png", alt: "Premium Menswear & Accessories", headline: "Gentleman's Collection" },
   { id: 5, src: "/IMG/jwellary.png", alt: "Elegant & Traditional Luxury Accessories", headline: "Timeless Elegance" },
