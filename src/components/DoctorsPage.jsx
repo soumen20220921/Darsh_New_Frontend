@@ -671,7 +671,8 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-
+const {url} = useAppContext();
+console.log(doctor)
   const handleContactClick = (type) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -740,7 +741,7 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
               <div className="relative flex-shrink-0">
                 <div className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-2xl shadow-md border-2 border-white ${!isImageLoaded ? 'animate-pulse' : ''}`}>
                   <img
-                    src={doctor.imageUrl || "/default-doctor.jpg"}
+                    src={`${url}/img/${doctor.image._id}` || "/default-doctor.jpg"}
                     alt={doctor.name}
                     className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? 'block' : 'hidden'}`}
                     onLoad={() => setIsImageLoaded(true)}
@@ -855,7 +856,7 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
             <div className="relative flex-shrink-0">
               <div className={`w-24 h-24 sm:w-28 sm:h-28 bg-gray-200 rounded-2xl shadow-md border-4 border-white ${!isImageLoaded ? 'animate-pulse' : ''}`}>
                 <img
-                  src={doctor.imageUrl || "/default-doctor.jpg"}
+                  src={`${url}/img/${doctor.image._id}`|| "/default-doctor.jpg"}
                   alt={doctor.name}
                   className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? 'block' : 'hidden'}`}
                   onLoad={() => setIsImageLoaded(true)}
