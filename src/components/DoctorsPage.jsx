@@ -1268,7 +1268,7 @@ const DoctorsPage = () => {
             <FaTicketAlt className="mr-2" />
             My Appointments
             {login && booking && booking.length > 0 && (
-              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-xs">
+              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-xs">
                 {booking.length}
               </span>
             )}

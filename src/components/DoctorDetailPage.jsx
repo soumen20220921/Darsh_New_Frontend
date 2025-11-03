@@ -517,7 +517,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-2 flex items-center">
+              <label className="text-sm font-medium mb-2 flex items-center">
                 <FaUser className="mr-2 text-gray-500 flex-shrink-0" />
                 Full Name *
               </label>
@@ -545,7 +545,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
+              <label className="text-sm font-medium mb-2 flex items-center">
                 <FaPhone className="mr-2 text-gray-500 flex-shrink-0" />
                 Phone Number *
               </label>
@@ -576,7 +576,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
 
             {/* Age */}
             <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
+              <label className="text-sm font-medium mb-2 flex items-center">
                 <FaBirthdayCake className="mr-2 text-gray-500 flex-shrink-0" />
                 Age (Years) *
               </label>
@@ -602,7 +602,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
 
             {/* Gender */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-2 flex items-center">
+              <label className="text-sm font-medium mb-2 flex items-center">
                 <FaVenusMars className="mr-2 text-gray-500 flex-shrink-0" />
                 Gender *
               </label>
@@ -640,7 +640,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-gray-200">
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium mb-2 flex items-center">
+              <label className="text-sm font-medium mb-2 flex items-center">
                 <FaCalendarAlt className="mr-2 text-gray-500 flex-shrink-0" />
                 Appointment Date *
               </label>
