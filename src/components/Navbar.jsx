@@ -6,6 +6,7 @@ import {
   AiOutlineLogout,
   AiOutlineHome
 } from "react-icons/ai";
+import { Package } from "lucide-react";
 import { FiMenu } from "react-icons/fi";
 import { IoMdClose } from "react-icons/io";
 import { FaUserMd } from "react-icons/fa";
@@ -15,7 +16,7 @@ import LogoutModal from "../pages/LogoutModal";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { login, setLogin, totalItems } = useAppContext();
+  const { login, setLogin, totalItems, orderCount } = useAppContext();
   const [showModal, setShowModal] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
@@ -306,6 +307,36 @@ const Navbar = () => {
                   Log In / Sign Up
                 </button>
               </li>
+            )}
+             {login && (
+              <li
+              className="animate-stagger-in"
+              style={{ animationDelay: "200ms" }}
+            >
+              <button
+                type="button"
+                onClick={() => handleNavigation("/account?tab=3")}
+                className="group relative flex items-center gap-4 w-full px-4 py-3 rounded-xl
+                text-gray-800 font-semibold bg-white/50 border border-white/30 backdrop-blur-sm
+                hover:bg-white/80 hover:-translate-y-1
+                transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
+              >
+                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-green-100 text-green-600 shadow-inner">
+                  <Package size={22} />
+                </div>
+                Order
+                {orderCount > 0 && (
+                 
+                  <span
+                    className="ml-auto flex items-center justify-center h-7 w-7
+                  rounded-full bg-purple-600 text-white text-sm font-bold shadow-lg
+                  ring-2 ring-purple-400 animate-pulse"
+                  >
+                    {orderCount}
+                  </span>
+                )}
+              </button>
+            </li>
             )}
           </ul>
 

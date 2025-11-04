@@ -641,62 +641,169 @@ View online: ${window.location.href}
   );
 };
 
+
 const TicketsSection = () => {
   const { booking, login, doctors } = useAppContext();
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [view, setView] = useState('upcoming');
-  const [loadingDoctors, setLoadingDoctors] = useState({});
-
-  const getDoctorForAppointment = (appointment) => {
-    return doctors.find(doctor => doctor._id === appointment.doctorId);
-  };
+  
+  // Use URL search parameters instead of local state
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get('view') || "upcoming"; // upcoming, today, completed
 
   const now = new Date();
-  
-  const paidAppointments = booking?.filter(apt => apt.payStatus === 'paid') || [];
 
-  const upcomingAppointments = paidAppointments.filter(apt => {
+  // 🕒 Helper: Parse "HH:MM" + Half (AM/PM) into Date object (for today)
+  const parseAppointmentTime = (timeStr, half) => {
+    if (!timeStr) return now;
+    let [hours, minutes] = timeStr.split(":").map(Number);
+    if (half?.toLowerCase() === "pm" && hours < 12) hours += 12;
+    if (half?.toLowerCase() === "am" && hours === 12) hours = 0;
+
+    const d = new Date();
+    d.setHours(hours, minutes || 0, 0, 0);
+    return d;
+  };
+
+  // 🧠 Helper: Get doctor for each appointment
+  const getDoctorForAppointment = (appointment) =>
+    doctors.find((doctor) => doctor._id === appointment.doctorId);
+
+  // 🔹 Filter only paid appointments
+  const paidAppointments = booking?.filter((apt) => apt.payStatus === "paid") || [];
+
+  // 🧩 Split appointments into Today, Upcoming and Completed based on both date + time
+  const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Today's appointments (both upcoming and completed for today)
+  const todaysAppointments = paidAppointments.filter((apt) => {
     const aptDate = new Date(apt.Date);
-    return aptDate >= now;
+    const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+    return aptOnlyDate.getTime() === currentDate.getTime();
   });
 
-  const pastAppointments = paidAppointments.filter(apt => {
+  // Upcoming appointments (future dates only, excluding today)
+  const upcomingAppointments = paidAppointments.filter((apt) => {
     const aptDate = new Date(apt.Date);
-    return aptDate < now;
+    const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+    return aptOnlyDate > currentDate;
   });
 
-  const appointmentsToShow = view === 'upcoming' ? upcomingAppointments : pastAppointments;
+  // Completed appointments (past dates only, excluding today)
+  const pastAppointments = paidAppointments.filter((apt) => {
+    const aptDate = new Date(apt.Date);
+    const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+    return aptOnlyDate < currentDate;
+  });
 
-  const getStatusBadge = (appointment) => {
-    const aptDate = new Date(appointment.Date);
-    if (aptDate < now) {
-      return { text: 'Completed', color: 'bg-gray-100 text-gray-800', icon: FaCheckCircle };
-    } else {
-      return { text: 'Confirmed', color: 'bg-green-100 text-green-800', icon: FaCheckCircle };
+  // 👇 Choose which list to display based on current view
+  const getAppointmentsToShow = () => {
+    switch (view) {
+      case "today":
+        return todaysAppointments;
+      case "completed":
+        return pastAppointments;
+      case "upcoming":
+      default:
+        return upcomingAppointments;
     }
   };
 
+  const appointmentsToShow = getAppointmentsToShow();
+
+  // Function to update the view in URL
+  const setView = (newView) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('view', newView);
+    setSearchParams(newSearchParams);
+  };
+
+  // 🏷️ Status badge (more detailed for today's appointments)
+  const getStatusBadge = (appointment) => {
+    const aptDate = new Date(appointment.Date);
+    const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+    const aptTime = parseAppointmentTime(appointment.Time, appointment.Half);
+
+    // For today's appointments, show real-time status
+    if (aptOnlyDate.getTime() === currentDate.getTime()) {
+      if (aptTime <= now) {
+        return { 
+          text: "Completed Today", 
+          color: "bg-blue-100 text-blue-800", 
+          icon: FaCheckCircle 
+        };
+      } else if (aptTime.getTime() - now.getTime() <= 30 * 60 * 1000) { // Within 30 minutes
+        return { 
+          text: "Starting Soon", 
+          color: "bg-orange-100 text-orange-800", 
+          icon: FaClock 
+        };
+      } else {
+        return { 
+          text: "Today", 
+          color: "bg-green-100 text-green-800", 
+          icon: FaCalendarDay 
+        };
+      }
+    }
+    
+    // For past appointments
+    if (aptOnlyDate < currentDate) {
+      return { 
+        text: "Completed", 
+        color: "bg-gray-100 text-gray-800", 
+        icon: FaCheckCircle 
+      };
+    }
+    
+    // For future appointments
+    return { 
+      text: "Confirmed", 
+      color: "bg-green-100 text-green-800", 
+      icon: FaCheckCircle 
+    };
+  };
+
+  // 🗓️ Format readable date with day indicator
   const formatAppointmentDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Check if it's today
+      if (date.toDateString() === today.toDateString()) {
+        return "Today";
+      }
+      // Check if it's tomorrow
+      if (date.toDateString() === tomorrow.toDateString()) {
+        return "Tomorrow";
+      }
+
+      return date.toLocaleDateString("en-IN", {
+        weekday: 'short',
+        day: "numeric",
+        month: "short",
+        year: "numeric",
       });
     } catch (error) {
       return dateString;
     }
   };
 
+  // 🔒 Login prompt
   if (!login) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-6 sm:p-8 text-center border border-gray-200">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
           <FaTicketAlt className="text-orange-500 text-2xl sm:text-3xl" />
         </div>
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Login to View Tickets</h3>
-        <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Please login to see your appointment tickets and booking history</p>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+          Login to View Tickets
+        </h3>
+        <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
+          Please login to see your appointment tickets and booking history.
+        </p>
         <Link
           to="/auth"
           className="inline-flex items-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl hover:shadow-lg transition duration-200 text-sm sm:text-base"
@@ -708,16 +815,19 @@ const TicketsSection = () => {
     );
   }
 
+  // 📭 No appointments
   if (!booking || paidAppointments.length === 0) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-6 sm:p-8 text-center border border-gray-200">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
           <FaCalendarCheck className="text-blue-500 text-2xl sm:text-3xl" />
         </div>
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Paid Appointments</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+          No Paid Appointments
+        </h3>
         <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
-          {booking && booking.length > 0 
-            ? "You have appointments but no paid bookings yet." 
+          {booking && booking.length > 0
+            ? "You have appointments but no paid bookings yet."
             : "You haven't booked any appointments yet."}
         </p>
         <Link
@@ -731,8 +841,10 @@ const TicketsSection = () => {
     );
   }
 
+  // 🧾 Ticket List
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft border border-gray-200 overflow-hidden">
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -741,26 +853,38 @@ const TicketsSection = () => {
               My Appointments
             </h2>
             <p className="text-blue-100 mt-1 text-sm">
-              {upcomingAppointments.length} upcoming • {pastAppointments.length} completed
+              {todaysAppointments.length} today • {upcomingAppointments.length} upcoming • {pastAppointments.length} completed
             </p>
           </div>
+
+          {/* Three Tabs */}
           <div className="flex space-x-1 sm:space-x-2 mt-3 sm:mt-0">
             <button
-              onClick={() => setView('upcoming')}
+              onClick={() => setView("today")}
               className={`px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-semibold transition duration-200 text-xs sm:text-sm ${
-                view === 'upcoming' 
-                  ? 'bg-white text-blue-600' 
-                  : 'bg-blue-500/50 text-white hover:bg-blue-500/70'
+                view === "today"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500/50 text-white hover:bg-blue-500/70"
+              }`}
+            >
+              Today ({todaysAppointments.length})
+            </button>
+            <button
+              onClick={() => setView("upcoming")}
+              className={`px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-semibold transition duration-200 text-xs sm:text-sm ${
+                view === "upcoming"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500/50 text-white hover:bg-blue-500/70"
               }`}
             >
               Upcoming ({upcomingAppointments.length})
             </button>
             <button
-              onClick={() => setView('past')}
+              onClick={() => setView("completed")}
               className={`px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-semibold transition duration-200 text-xs sm:text-sm ${
-                view === 'past' 
-                  ? 'bg-white text-blue-600' 
-                  : 'bg-blue-500/50 text-white hover:bg-blue-500/70'
+                view === "completed"
+                  ? "bg-white text-blue-600"
+                  : "bg-blue-500/50 text-white hover:bg-blue-500/70"
               }`}
             >
               Completed ({pastAppointments.length})
@@ -769,6 +893,7 @@ const TicketsSection = () => {
         </div>
       </div>
 
+      {/* Appointment Cards */}
       <div className="p-4 sm:p-6">
         {appointmentsToShow.length === 0 ? (
           <div className="text-center py-6 sm:py-8">
@@ -776,12 +901,14 @@ const TicketsSection = () => {
               <FaCalendarCheck className="text-gray-400 text-xl sm:text-2xl" />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-2">
-              No {view === 'upcoming' ? 'Upcoming' : 'Completed'} Appointments
+              No {view === "today" ? "Today's" : view === "upcoming" ? "Upcoming" : "Completed"} Appointments
             </h3>
             <p className="text-gray-500 text-sm">
-              {view === 'upcoming' 
-                ? "You don't have any upcoming paid appointments." 
-                : "You haven't completed any paid appointments yet."}
+              {view === "today" 
+                ? "You don't have any appointments scheduled for today."
+                : view === "upcoming"
+                ? "You don't have any upcoming appointments."
+                : "You haven't completed any appointments yet."}
             </p>
           </div>
         ) : (
@@ -801,30 +928,36 @@ const TicketsSection = () => {
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between">
                     <div className="flex-1">
+                      {/* Doctor Info */}
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 sm:mb-3">
                         <div>
                           <h4 className="font-bold text-gray-900 text-base sm:text-lg">
-                            Dr. {doctor?.name || 'Loading doctor...'}
+                            Dr. {doctor?.name || "Loading doctor..."}
                           </h4>
                           <p className="text-blue-600 font-medium text-sm">
-                            {doctor?.specialization || 'Specialization not available'}
+                            {doctor?.specialization || "Specialization not available"}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2 sm:space-x-4 mt-1 sm:mt-0">
-                          <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold flex items-center ${statusBadge.color}`}>
+                          <div
+                            className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold flex items-center ${statusBadge.color}`}
+                          >
                             <StatusIcon className="mr-1" size={10} />
                             {statusBadge.text}
                           </div>
                           <span className="bg-green-100 text-green-800 px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold">
-                            #{appointment._id?.slice(-8).toUpperCase() || 'N/A'}
+                            #{appointment._id?.slice(-8).toUpperCase() || "N/A"}
                           </span>
                         </div>
                       </div>
 
+                      {/* Appointment Info */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
                         <div className="flex items-center text-gray-600">
                           <FaRegCalendarAlt className="mr-2 text-blue-500 flex-shrink-0" />
-                          <span className="truncate">{formatAppointmentDate(appointment.Date)}</span>
+                          <span className="truncate font-medium">
+                            {formatAppointmentDate(appointment.Date)}
+                          </span>
                         </div>
                         <div className="flex items-center text-gray-600">
                           <FaClock className="mr-2 text-green-500 flex-shrink-0" />
@@ -834,7 +967,7 @@ const TicketsSection = () => {
                         </div>
                         <div className="flex items-center text-gray-600">
                           <FaUserMd className="mr-2 text-purple-500 flex-shrink-0" />
-                          <span>Exp: {doctor?.experience || 'N/A'} yrs</span>
+                          <span>Exp: {doctor?.experience || "N/A"} yrs</span>
                         </div>
                         <div className="flex items-center text-green-600 font-semibold">
                           <FaRupeeSign size={10} className="mr-1 flex-shrink-0" />
@@ -842,6 +975,7 @@ const TicketsSection = () => {
                         </div>
                       </div>
 
+                      {/* Patient Info */}
                       <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-600 gap-1 sm:gap-2">
                         <div className="flex items-center">
                           <FaUser className="mr-2 text-gray-400 flex-shrink-0" />
@@ -854,6 +988,7 @@ const TicketsSection = () => {
                       </div>
                     </div>
 
+                    {/* View Ticket Button */}
                     <div className="flex space-x-1 justify-center mt-3 lg:mt-0 lg:ml-4">
                       <button
                         onClick={() => setSelectedAppointment(appointment)}
@@ -871,6 +1006,7 @@ const TicketsSection = () => {
         )}
       </div>
 
+      {/* Ticket Modal */}
       {selectedAppointment && (
         <AppointmentTicket
           appointment={selectedAppointment}
@@ -881,7 +1017,6 @@ const TicketsSection = () => {
     </div>
   );
 };
-
 const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -1328,6 +1463,10 @@ const DoctorsPage = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'doctors');
   
   const { doctors, login, doctorsLoading, doctorsError, booking } = useAppContext();
+  // Calculate paid appointments count
+const paidAppointmentsCount = login && booking 
+  ? booking.filter(apt => apt.payStatus === 'paid').length 
+  : 0;
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -1485,7 +1624,7 @@ const DoctorsPage = () => {
                 </div>
                 <div>
                   <p className="text-xs lg:text-sm text-gray-600">Total Appointments</p>
-                  <p className="text-xl lg:text-2xl font-bold text-green-700">{booking?.length || 0}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-green-700">{paidAppointmentsCount || 0}</p>
                 </div>
               </div>
             )}
@@ -1517,11 +1656,11 @@ const DoctorsPage = () => {
           >
             <FaTicketAlt className="mr-2" />
             My Appointments
-            {login && booking && booking.length > 0 && (
-              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-xs">
-                {booking.length}
-              </span>
-            )}
+            {paidAppointmentsCount > 0 && (
+    <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-xs">
+      {paidAppointmentsCount}
+    </span>
+  )}
           </button>
         </div>
 

@@ -20,18 +20,19 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  Move
+  Move,
+  Calendar,
+  LogIn
 } from "lucide-react";
 import { FaWhatsapp, FaTelegram, FaFacebook } from "react-icons/fa";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
 
-
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { allProduct, token, getCart,url  } = useAppContext();
+  const { allProduct, token, getCart, url } = useAppContext();
 
   const product = useMemo(() => allProduct?.find((p) => p._id === id), [allProduct, id]);
   const similarProducts = useMemo(
@@ -48,22 +49,53 @@ const ProductDetails = () => {
   const [isAdded, setIsAdded] = useState(false);
   const [showFAQ, setShowFAQ] = useState({});
   const [notification, setNotification] = useState({
-  message: '',
-  type: '',
-  visible: false,
-});
+    message: '',
+    type: '',
+    visible: false,
+  });
   const [countdown, setCountdown] = useState(null);
   const [zoomMode, setZoomMode] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState("");
 
   const stock = product ? Math.max(0, product.stock) : 0;  
   const isLowStock = stock > 0 && stock <= 5;
   const isOutOfStock = stock === 0;
 
-     useEffect(() => {
+  // Calculate delivery date
+  useEffect(() => {
+    const calculateDeliveryDate = () => {
+      const today = new Date();
+      const deliveryDays = 7; // 5-7 business days
+      
+      // Add business days (excluding weekends)
+      let count = 0;
+      const deliveryDate = new Date(today);
+      
+      while (count < deliveryDays) {
+        deliveryDate.setDate(deliveryDate.getDate() + 1);
+        // Check if it's a weekday (0 = Sunday, 6 = Saturday)
+        if (deliveryDate.getDay() !== 0 && deliveryDate.getDay() !== 6) {
+          count++;
+        }
+      }
+      
+      return deliveryDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
+
+    setDeliveryDate(calculateDeliveryDate());
+  }, []);
+
+  useEffect(() => {
     setIsAdded(false);
     setSelectedImage(0);
     setQuantity(1);
@@ -72,34 +104,32 @@ const ProductDetails = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  
   const showNotification = (message, type) => {
-  setNotification({ message, type, visible: true });
+    setNotification({ message, type, visible: true });
 
-  setTimeout(() => {
-    setNotification((prev) => ({ ...prev, visible: false }));
-  }, 3000); 
-};
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, visible: false }));
+    }, 3000); 
+  };
 
-useEffect(() => {
-  let timer;
-  if (isLowStock) {
-    setCountdown(120); 
-    showNotification("Hurry! Only a few left in stock ⚡", "warning");
-    timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }
+  useEffect(() => {
+    let timer;
+    if (isLowStock) {
+      setCountdown(120); 
+      showNotification("Hurry! Only a few left in stock ⚡", "warning");
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
 
-  return () => clearInterval(timer); 
-}, [isLowStock]);
-
+    return () => clearInterval(timer); 
+  }, [isLowStock]);
 
   const images = useMemo(
     () => product?.images?.map((img) => `${url}/img/${img}`) || [],
@@ -110,7 +140,7 @@ useEffect(() => {
     setZoomLevel(prev => Math.min(prev + 0.5, 3));
   };
 
-    const handleZoomOut = () => {
+  const handleZoomOut = () => {
     setZoomLevel(prev => {
       const newZoom = Math.max(prev - 0.5, 1);
       if (newZoom === 1) {
@@ -148,7 +178,6 @@ useEffect(() => {
     setIsDragging(false);
   };
 
-  // Touch events for mobile
   const handleTouchStart = (e) => {
     if (zoomLevel > 1) {
       setIsDragging(true);
@@ -172,7 +201,6 @@ useEffect(() => {
     setIsDragging(false);
   };
 
-  // Full screen zoom mode
   const toggleZoomMode = () => {
     setZoomMode(!zoomMode);
     if (!zoomMode) {
@@ -183,52 +211,61 @@ useEffect(() => {
       setPosition({ x: 0, y: 0 });
     }
   };
- 
 
   const handleAddToCart = useCallback(async () => {
-  if (!token) {
-    showNotification("Please login first to add items to your cart.", 'warning');
-    return;
-  }
-  if (!product) {
-    showNotification("Product data not found.", 'error');
-    return;
-  }
-  if (quantity > stock) {
-    showNotification(`Only ${product.stock} items left in stock.`, 'error');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const cartDetails = {
-      productId: id,
-      title: product.productName,
-      price: product.price * quantity,
-      qty: quantity,
-      imgSrc: product.images[0],
-    };
-
-    const response = await axios.post(
-       `${url}/api/cart/addToCart`,
-      cartDetails,
-      { headers: { Auth: token, "Content-Type": "application/json" } }
-    );
-
-    if (response.data.success) {
-      getCart();
-      showNotification("Item added to cart!", 'success');
-      setIsAdded(true);
-    } else {
-      showNotification(response.data.message || "Failed to add item.", 'error');
+    if (!token) {
+      setShowLoginPrompt(true);
+      return;
     }
-  } catch (error) {
-    console.error("Error adding to cart:", error);
-    showNotification("Something went wrong. Please try again.", 'error');
-  } finally {
-    setLoading(false);
-  }
-}, [token, product, quantity, id, getCart, url, stock]);
+    if (!product) {
+      showNotification("Product data not found.", 'error');
+      return;
+    }
+    if (quantity > stock) {
+      showNotification(`Only ${product.stock} items left in stock.`, 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cartDetails = {
+        productId: id,
+        title: product.productName,
+        price: product.price * quantity,
+        qty: quantity,
+        imgSrc: product.images[0],
+      };
+
+      const response = await axios.post(
+        `${url}/api/cart/addToCart`,
+        cartDetails,
+        { headers: { Auth: token, "Content-Type": "application/json" } }
+      );
+
+      if (response.data.success) {
+        getCart();
+        showNotification("Item added to cart!", 'success');
+        setIsAdded(true);
+      } else {
+        showNotification(response.data.message || "Failed to add item.", 'error');
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      showNotification("Something went wrong. Please try again.", 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [token, product, quantity, id, getCart, url, stock]);
+
+  const handleQuickLogin = () => {
+    setShowLoginPrompt(false);
+    navigate('/auth', { 
+      state: { 
+        from: `/productDetails/${id}`,
+        message: "Please login to add items to your cart"
+      } 
+    });
+  };
 
   const handleShare = async (platform) => {
     if (!product) return;
@@ -288,7 +325,6 @@ useEffect(() => {
   }
 
   const rating = product.rating ?? 4.4;
-  
 
   const faqs = [
     { q: "What is the warranty?", a:  " This product does not come with a manufacturer's warranty." },
@@ -296,17 +332,7 @@ useEffect(() => {
     { q: "Can I return the product?", a: "Yes! We offer easy 7-day returns. If you're not satisfied, simply follow our returns process for a smooth refund or replacement." },
   ];
 
-  // const priceDisplay = (
-  //   <div className="flex items-baseline gap-3">
-  //     <span className="text-2xl sm:text-3xl font-bold text-blue-600">₹{product.price}</span>
-  //     {product.originalPrice && (
-  //       <span className="text-sm line-through text-gray-400">₹{product.originalPrice}</span>
-  //     )}
-  //     {product.discount && <span className="text-sm text-green-600">{product.discount}% off</span>}
-  //   </div>
-  // );
-
-    const toggleFAQ = (index) => {
+  const toggleFAQ = (index) => {
     setShowFAQ(prev => ({
       ...prev,
       [index]: !prev[index]
@@ -334,7 +360,6 @@ useEffect(() => {
         }
       `}
           >
-            {/* Icon */}
             <div className="flex-shrink-0">
               {notification.type === "success" && (
                 <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
@@ -347,14 +372,12 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Message */}
             <div className="flex-1">
               <p className="text-sm sm:text-base font-medium text-gray-900 break-words">
                 {notification.message}
               </p>
             </div>
 
-            {/* Close Button */}
             <div className="flex-shrink-0">
               <motion.button
                 onClick={() =>
@@ -392,8 +415,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Main content area */}
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -402,7 +424,6 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
             {/* Image Gallery Section */}
             <div className="col-span-1">
-              {/* Main Image Container with Zoom Controls */}
               <div className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <div
                   className="relative h-80 sm:h-96 md:h-[500px] overflow-hidden cursor-zoom-in"
@@ -433,43 +454,6 @@ useEffect(() => {
                     />
                   </AnimatePresence>
 
-                  {/* <div className="absolute bottom-4 right-4 flex gap-2 bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleZoomIn();
-                      }}
-                      disabled={zoomLevel >= 3}
-                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                      aria-label="Zoom in"
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleZoomOut();
-                      }}
-                      disabled={zoomLevel <= 1}
-                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                      aria-label="Zoom out"
-                    >
-                      <ZoomOut className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleResetZoom();
-                      }}
-                      disabled={zoomLevel === 1}
-                      className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                      aria-label="Reset zoom"
-                    >
-                      <RotateCw className="h-4 w-4" />
-                    </button>
-                  </div> */}
-
-                  {/* Fullscreen Toggle Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -496,8 +480,6 @@ useEffect(() => {
                       <Move className="h-3 w-3" /> Drag to pan
                     </div>
                   )}
-
-                  
                 </div>
               </div>
 
@@ -610,6 +592,7 @@ useEffect(() => {
                   )}
                 </div>
 
+
                 {/* Quantity Selector */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -650,10 +633,7 @@ useEffect(() => {
                   </div>
                 </motion.div>
 
-
-
                 {/* Add to Cart Button */}
-               {/* Action buttons */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -728,9 +708,6 @@ useEffect(() => {
                   </div>
                 </motion.div>
 
-
-                
-
                 {/* Trust badges */}
                 <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
                   <div className="p-2 rounded-lg border flex flex-col items-center">
@@ -746,17 +723,30 @@ useEffect(() => {
                     <span>7 Days</span>
                   </div>
                 </div>
+                
+                {/* Delivery Date Information */}
+<motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="mb-6 mt-4 p-1 bg-blue-50 rounded-xl border border-blue-200"
+                >
 
-                {/* Delivery estimator */}
-                <div className="mt-4 text-sm bg-gray-50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>Estimated delivery</span>
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-blue-800 text-xs md:text-sm">
+                        Expected Delivery
+                      </p>
+                      <p className="text-blue-700 font-bold text-sm md:text-lg">
+                        {deliveryDate}
+                      </p>
+                      <p className="text-blue-600 text-[10px] md:text-xs mt-1">
+                        Order within next 2 hours for same day processing
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">
-                    5-7 business days to your location.
-                  </p>
-                </div>
+                </motion.div>
 
                 {/* Suggested bundle */}
                 <motion.div
@@ -781,54 +771,7 @@ useEffect(() => {
                       </div>
                     </div>
                   </div>
-                  {/* <button className="mt-3 w-full py-2 text-sm border rounded-lg">Add Bundle</button> */}
                 </motion.div>
-
-                {/* <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="mt-6 p-6 bg-gradient-to-br from-blue-50 via-white to-blue-50 border border-blue-100 rounded-3xl shadow-lg"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-bold text-gray-900">
-                      Bundle & Save
-                    </h4>
-                    <span className="text-blue-600 font-bold">+10% off</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="flex-shrink-0">
-                      <img
-                        src={images[0]}
-                        alt="main product"
-                        className="w-20 h-20 object-contain rounded-xl bg-white p-2 border border-gray-200"
-                      />
-                    </div>
-                    <Plus className="hidden sm:block text-gray-400 h-6 w-6" />
-                    <div className="flex-shrink-0">
-                      <img
-                        src="https://via.placeholder.com/100x100" // Placeholder for bundle item
-                        alt="accessory"
-                        className="w-20 h-20 object-contain rounded-xl bg-white p-2 border border-gray-200"
-                      />
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <p className="font-medium text-gray-800">
-                        Add a product accessory to your order
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Get both for a discounted price of{" "}
-                        <span className="text-blue-600 font-semibold">
-                          ₹{(product.price * 1.5).toFixed(2)}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <button className="mt-4 w-full py-3 text-sm font-semibold border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors">
-                    Add Bundle to Cart
-                  </button>
-                </motion.div> */}
-
               </div>
             </div>
           </div>
@@ -836,7 +779,6 @@ useEffect(() => {
           {/* Product Details Tabs */}
           <div className="mt-6 border-t border-gray-200">
             <div className="flex space-x-4 border-b overflow-x-auto mb-6">
-              
               <button
                 onClick={() => setActiveTab("description")}
                 className={`px-4 py-3 font-medium text-sm sm:text-base ${
@@ -873,7 +815,6 @@ useEffect(() => {
               {activeTab === "specifications" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <p>{product.specification || "No specifications provided."}</p>
-
                 </div>
               )}
 
@@ -883,40 +824,6 @@ useEffect(() => {
                     {product.description ||
                       "No description available for this product."}
                   </p>
-                </div>
-              )}
-
-              {activeTab === "reviews" && (
-                <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row items-start gap-6">
-                    <div className="bg-gray-50 p-6 rounded-xl md:w-1/3">
-                      <div className="text-center mb-4">
-                        <div className="text-4xl font-bold text-gray-900 mb-2">
-                          {rating}/5
-                        </div>
-                        <div className="flex justify-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-5 w-5 ${
-                                i < Math.floor(rating)
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">
-                          Based on 142 reviews
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                        Write a Review
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -966,7 +873,6 @@ useEffect(() => {
                     className="relative bg-white rounded-2xl shadow-md hover:shadow-xl p-3 sm:p-4 cursor-pointer group overflow-hidden border border-gray-100 hover:border-pink-300 transition-all"
                     onClick={() => navigate(`/productDetails/${item._id}`)}
                   >
-                    {/* Product Image */}
                     <div className="relative w-full h-32 sm:h-40 rounded-xl overflow-hidden flex items-center justify-center bg-gray-50">
                       <img
                         src={
@@ -977,12 +883,9 @@ useEffect(() => {
                         alt={item.productName}
                         className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
                       />
-
-                      {/* Hover overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
                     </div>
 
-                    {/* Product Info */}
                     <div className="mt-3 space-y-1">
                       <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate group-hover:text-pink-600 transition-colors">
                         {item.productName}
@@ -992,7 +895,6 @@ useEffect(() => {
                       </p>
                     </div>
 
-                    {/* Discount Tag */}
                     {item.originalPrice && item.price < item.originalPrice && (
                       <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded-full shadow-md animate-bounce">
                         -
@@ -1009,11 +911,71 @@ useEffect(() => {
               </div>
             </div>
           )}
-
         </motion.div>
       </div>
 
+      {/* Login Prompt Modal */}
       <AnimatePresence>
+        {showLoginPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4"
+            onClick={() => setShowLoginPrompt(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowLoginPrompt(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LogIn className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Login Required
+                </h3>
+                <p className="text-gray-600">
+                  Please login to add items to your cart and continue shopping.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleQuickLogin}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <LogIn className="h-5 w-5" />
+                  Login Now
+                </button>
+                <button
+                  onClick={() => setShowLoginPrompt(false)}
+                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+
+              <p className="text-center text-xs md:text-sm text-gray-500 mt-4">
+                New user? <span className="text-blue-600 font-semibold">Create an account in seconds</span>
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+     <AnimatePresence>
         {zoomMode && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1174,7 +1136,6 @@ useEffect(() => {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 };

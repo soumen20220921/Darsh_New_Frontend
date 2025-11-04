@@ -18,7 +18,7 @@ const PaymentConfirmationPage = () => {
   }, []);
 
   const goToHome = () => navigate("/");
-  const viewOrders = () => navigate("/account");
+  const viewOrders = () => navigate("/account?tab=3");
   const handleRating = (rate) => setRating(rate);
 
   const cardVariants = {

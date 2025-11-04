@@ -41,6 +41,18 @@ const AccountAppointments = () => {
     
     const aptDate = new Date(appointment.Date);
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+    
+    // Check if appointment is today
+    if (aptOnlyDate.getTime() === today.getTime()) {
+      return { 
+        text: 'Today', 
+        color: 'bg-blue-100 text-blue-800 border border-blue-200',
+        icon: '📌'
+      };
+    }
+    
     if (aptDate < now) {
       return { 
         text: 'Completed', 
@@ -55,12 +67,28 @@ const AccountAppointments = () => {
       };
     }
   };
+  const getTotalAppointmentCount = () => {
+    return booking.filter(apt => {
+      return apt.payStatus === 'paid';
+    }).length;
+  };
 
   const getUpcomingAppointmentCount = () => {
     return booking.filter(apt => {
       const aptDate = new Date(apt.Date);
       const now = new Date();
-      return (aptDate >= now || apt.payStatus !== 'paid') && apt.payStatus === 'paid';
+      return (aptDate >= now ) && apt.payStatus === 'paid';
+    }).length;
+  };
+
+  const getTodayAppointmentCount = () => {
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return booking.filter(apt => {
+      const aptDate = new Date(apt.Date);
+      const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+      return aptOnlyDate.getTime() === todayDate.getTime() && apt.payStatus === 'paid';
     }).length;
   };
 
@@ -121,12 +149,33 @@ const AccountAppointments = () => {
   }
 
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  // Today's appointments
+  const todaysAppointments = booking
+    .filter(apt => {
+      const aptDate = new Date(apt.Date);
+      const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+      return aptOnlyDate.getTime() === today.getTime() && apt.payStatus === 'paid';
+    })
+    .sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+  // Upcoming appointments (future dates, excluding today)
   const upcomingAppointments = booking
-    .filter(apt => new Date(apt.Date) >= now || apt.payStatus !== 'paid')
+    .filter(apt => {
+      const aptDate = new Date(apt.Date);
+      const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+      return aptOnlyDate > today && apt.payStatus === 'paid';
+    })
     .sort((a, b) => new Date(a.Date) - new Date(b.Date));
   
+  // Past appointments
   const pastAppointments = booking
-    .filter(apt => new Date(apt.Date) < now && apt.payStatus === 'paid')
+    .filter(apt => {
+      const aptDate = new Date(apt.Date);
+      const aptOnlyDate = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
+      return aptOnlyDate < today && apt.payStatus === 'paid';
+    })
     .sort((a, b) => new Date(b.Date) - new Date(a.Date));
 
   return (
@@ -171,7 +220,7 @@ const AccountAppointments = () => {
         className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
       >
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-blue-600">{booking.length}</div>
+          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-blue-600">{getTotalAppointmentCount()}</div>
           <div className="text-xs sm:text-sm text-blue-800 font-medium mt-1 sm:mt-2">Total Appointments</div>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -179,16 +228,115 @@ const AccountAppointments = () => {
           <div className="text-xs sm:text-sm text-green-800 font-medium mt-1 sm:mt-2">Upcoming</div>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-purple-600">{pastAppointments.length}</div>
-          <div className="text-xs sm:text-sm text-purple-800 font-medium mt-1 sm:mt-2">Completed</div>
+          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-purple-600">{getTodayAppointmentCount()}</div>
+          <div className="text-xs sm:text-sm text-purple-800 font-medium mt-1 sm:mt-2">Today</div>
         </div>
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-orange-600">
-            {booking.filter(apt => apt.payStatus !== 'paid').length}
-          </div>
-          <div className="text-xs sm:text-sm text-orange-800 font-medium mt-1 sm:mt-2">Pending Payment</div>
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-600">{pastAppointments.length}</div>
+          <div className="text-xs sm:text-sm text-gray-800 font-medium mt-1 sm:mt-2">Completed</div>
         </div>
       </motion.div>
+
+      {/* Today's Appointments Section */}
+      {todaysAppointments.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-4 sm:space-y-6"
+        >
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-1.5 sm:w-2 h-6 sm:h-8 bg-blue-500 rounded-full"></div>
+            <h3 className="sm:text-xl lg:text-2xl font-bold text-gray-900">Today's Appointments</h3>
+            <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
+              {todaysAppointments.length}
+            </span>
+          </div>
+          
+          <div className="grid gap-4 sm:gap-6">
+            {todaysAppointments.map((appointment, index) => {
+              const doctor = getDoctorForAppointment(appointment);
+              const statusBadge = getStatusBadge(appointment);
+              
+              return (
+                <motion.div
+                  key={appointment._id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg sm:hover:shadow-2xl hover:border-blue-300 transition-all duration-500 group"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-blue-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-base sm:text-lg lg:text-xl text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+                              Dr. {doctor?.name || 'Loading...'}
+                            </h4>
+                            <p className="text-blue-600 font-semibold text-sm sm:text-base mt-1 truncate">{doctor?.specialization}</p>
+                            <p className="text-gray-500 text-xs sm:text-sm mt-1 truncate">{doctor?.hospital}</p>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 w-fit ${statusBadge.color}`}>
+                          <span className="text-xs sm:text-sm">{statusBadge.icon}</span>
+                          <span className="hidden sm:inline">{statusBadge.text}</span>
+                          <span className="sm:hidden">{statusBadge.text.split(' ')[0]}</span>
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 text-gray-700">
+                        <div className="flex items-center gap-2 sm:gap-3 bg-blue-50 rounded-lg p-2 sm:p-3">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm text-gray-500">Date</div>
+                            <div className="font-semibold text-xs sm:text-sm truncate">Today</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 bg-blue-50 rounded-lg p-2 sm:p-3">
+                          <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm text-gray-500">Time</div>
+                            <div className="font-semibold text-xs sm:text-sm truncate">{formatTime(appointment.Time)} {appointment.Half}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 bg-blue-50 rounded-lg p-2 sm:p-3">
+                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm text-gray-500">Patient</div>
+                            <div className="font-semibold text-xs sm:text-sm truncate">{appointment.FullName}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 bg-blue-50 rounded-lg p-2 sm:p-3">
+                          <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm text-gray-500">Status</div>
+                            <div className="font-semibold text-xs sm:text-sm truncate capitalize">{appointment.payStatus}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 sm:gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate('/doctors?tab=tickets&view=today')}
+                        className="bg-blue-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl text-xs sm:text-sm"
+                      >
+                        View Details
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
 
       {upcomingAppointments.length > 0 && (
         <motion.div
@@ -281,7 +429,6 @@ const AccountAppointments = () => {
                       >
                         View Details
                       </motion.button>
-                      
                     </div>
                   </div>
                 </motion.div>
@@ -347,7 +494,7 @@ const AccountAppointments = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/doctors?tab=tickets')}
+                        onClick={() => navigate('/doctors?tab=tickets&view=completed')}
                         className="text-blue-600 hover:text-blue-800 font-semibold text-xs sm:text-sm"
                       >
                         View Record

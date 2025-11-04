@@ -325,7 +325,7 @@ const Cart = () => {
   };
 
   const handleAddAddress = () => {
-    navigate("/account", { state: { scrollToAddress: true } });
+    navigate("/account?tab=2", { state: { scrollToAddress: true } });
   };
 
   const handleConfirmAndPay = async () => {

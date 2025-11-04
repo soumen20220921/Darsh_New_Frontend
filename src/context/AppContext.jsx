@@ -9,6 +9,8 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState("");
   const [login, setLogin] = useState(false);
   const [totalItems, setTotalItems] = useState(0); 
+  const [orderCount, setOrderCount] = useState(0);
+
   
    const url = "https://api2.darshsaree.com"
   //  const url = "http://localhost:8001"
@@ -124,6 +126,8 @@ export const AppProvider = ({ children }) => {
 
       console.log("order", res.data);
       setOrder(res.data.orders || null);
+      const total = res.data.orders ? res.data.orders.length : 0;
+      setOrderCount(total);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setOrderError(err.response?.data?.message || "Failed to fetch orders");
@@ -218,6 +222,7 @@ export const AppProvider = ({ children }) => {
         getCart,
         order,
         getOrder,
+        orderCount,
         orderLoading,
         orderError,
         totalItems,
