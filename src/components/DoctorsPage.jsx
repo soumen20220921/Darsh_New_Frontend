@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { 
   FaStethoscope, 
   FaUserMd, 
@@ -162,10 +164,197 @@ const AppointmentTicket = ({ appointment, onClose, doctor }) => {
     }
   };
 
-  const downloadTicket = async () => {
+  const downloadTicketAsPDF = async () => {
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    try {
+      const pdfContainer = document.createElement('div');
+       pdfContainer.style.position = "absolute";
+       pdfContainer.style.left = "-9999px";
+       pdfContainer.style.width = "794px"; 
+       pdfContainer.style.padding = "40px";
+       pdfContainer.style.background = "white";
+       pdfContainer.style.fontFamily = "'Poppins', Arial, sans-serif";
+       pdfContainer.style.color = "#1f2937";
+      
+      const StatusBadge = getStatusBadge(appointment.payStatus);
+      const formattedDate = formatDate(appointment.Date);
+      const timeSlot = getTimeSlot(appointment.Half, appointment.Time);
+
+      pdfContainer.innerHTML = `
+        <div id="pdf-ticket" style="border: 2px solid #e5e7eb; border-radius: 16px; padding: 40px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); position: relative;">
+          <!-- Decorative corners -->
+          <div style="position: absolute; top: -2px; left: -2px; width: 16px; height: 16px; background: #10b981; border-radius: 4px 0 0 0;"></div>
+          <div style="position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; background: #10b981; border-radius: 0 4px 0 0;"></div>
+          <div style="position: absolute; bottom: -2px; left: -2px; width: 16px; height: 16px; background: #10b981; border-radius: 0 0 0 4px;"></div>
+          <div style="position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; background: #10b981; border-radius: 0 0 4px 0;"></div>
+          
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #059669 0%, #2563eb 100%); border-radius: 12px; color: white;">
+            <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">MEDICAL APPOINTMENT TICKET</div>
+            <div style="font-size: 14px; opacity: 0.9; margin-top: 6px;">
+            Booked via <a href="https://pomwb.com" style="color: #dcfce7; text-decoration: underline;">pomwb.com</a>
+          </div>
+          </div>
+
+          <!-- Status and Token -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 25px; gap: 15px;">
+          <div style="padding: 8px 18px; background: ${
+            StatusBadge.color.includes("green") ? "#dcfce7" : "#fef3c7"
+          }; color: ${
+        StatusBadge.color.includes("green") ? "#166534" : "#92400e"
+      }; border-radius: 20px; font-weight: 600; font-size: 13px;">
+            ${StatusBadge.text}
+          </div>
+          <div style="padding: 8px 18px; background: #e0f2fe; color: #1e40af; border-radius: 20px; font-weight: 600; font-size: 13px;">
+            Token ID: ${appointment._id?.slice(-8).toUpperCase() || "N/A"}
+          </div>
+        </div>
+
+
+          <!-- Two Column Layout -->
+           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+          <!-- Patient Info -->
+          <div style="background: white; border-radius: 12px; padding: 25px; border: 1px solid #e5e7eb;">
+            <h3 style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 10px;">
+              👤 Patient Information
+            </h3>
+            <div style="font-size: 14px; line-height: 1.6;">
+              <div><b>Name:</b> ${appointment.FullName}</div>
+              <div><b>Phone:</b> ${appointment.Phone}</div>
+              <div><b>User ID:</b> ${appointment.userId?.slice(-8) || "N/A"}</div>
+            </div>
+          </div>
+
+          <!-- Doctor Info -->
+          <div style="background: white; border-radius: 12px; padding: 25px; border: 1px solid #e5e7eb;">
+            <h3 style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 10px;">
+              ⚕️ Doctor Information
+            </h3>
+            <div style="font-size: 14px; line-height: 1.6;">
+              <div><b>Name:</b> Dr. ${doctor?.name || "Not specified"}</div>
+              <div><b>Specialization:</b> ${
+                doctor?.specialization || "Not specified"
+              }</div>
+              <div><b>Experience:</b> ${doctor?.experience || "N/A"} years</div>
+              ${
+                doctor?.qualification
+                  ? `<div><b>Qualification:</b> ${doctor.qualification}</div>`
+                  : ""
+              }
+            </div>
+          </div>
+        </div>
+
+          <!-- Appointment Details -->
+           <div style="background: #eff6ff; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+          <h3 style="font-size: 16px; font-weight: 600; color: #1e3a8a; margin-bottom: 10px;">
+            📅 Appointment Details
+          </h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px;">
+            <div><b>Date:</b> ${formattedDate}</div>
+            <div><b>Time Slot:</b> ${timeSlot}</div>
+            <div><b>Consultation Fee:</b> ₹${appointment.amount}</div>
+            <div><b>Transaction ID:</b> ${
+              appointment.transactionId?.slice(-12) || "N/A"
+            }</div>
+          </div>
+        </div>
+
+          <!-- Payment Information -->
+          <div style="background: #f3f4f6; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+          <h3 style="font-size: 16px; font-weight: 600; color: #059669; margin-bottom: 10px;">
+            💳 Payment Information
+          </h3>
+          <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; font-size: 14px;">
+            <div>
+              <b>Status:</b> ${
+                appointment.payStatus === "paid"
+                  ? "<span style='color:#059669;'>Payment Successful</span>"
+                  : "<span style='color:#b45309;'>Payment Pending</span>"
+              }
+            </div>
+            <div>
+              <b>Merchant ID:</b> ${appointment.marchentId?.slice(-8) || "N/A"}
+            </div>
+          </div>
+        </div>
+
+          <!-- Important Instructions -->
+          <div style="background: #fff7ed; border-left: 4px solid #d97706; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+          <h4 style="color: #92400e; font-weight: 600; font-size: 14px;">⚠️ Important Instructions</h4>
+          <ul style="font-size: 12px; margin-top: 10px; line-height: 1.6; color: #92400e;">
+            <li>Arrive at least 15 minutes before appointment time</li>
+            <li>Carry this ticket (digital or printed) and valid ID proof</li>
+            <li>Bring past prescriptions or reports if available</li>
+            <li>In case of emergencies, appointments may be delayed</li>
+            ${
+              appointment.payStatus !== "paid"
+                ? `<li style="color:#dc2626; font-weight:bold;">Please complete payment to confirm your appointment</li>`
+                : ""
+            }
+          </ul>
+        </div>
+
+
+          <!-- Footer -->
+        <div style="text-align:center; color:#6b7280; font-size:12px; border-top:1px solid #e5e7eb; padding-top:15px;">
+          <div>Generated on ${new Date().toLocaleString("en-IN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
+          <div style="margin-top:5px;">
+            Visit <a href="https://pomwb.com" style="color:#2563eb; text-decoration:underline;">pomwb.com</a> | 📞 Support: +91-7363054510
+          </div>
+        </div>
+      </div>
+      `;
+
+      document.body.appendChild(pdfContainer);
+
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+        pdf.setFillColor(248, 250, 252);
+    pdf.rect(0, 0, pdfWidth, pdfHeight, "F");
+    pdf.addImage(imgData, "PNG", 10, 10, pdfWidth - 20, pdfHeight - 20);
+      pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+      
+    pdf.setFontSize(36);
+    pdf.setTextColor(200);
+    pdf.setGState(new pdf.GState({ opacity: 0.1 }));
+    pdf.text("POMWB", pdfWidth / 2, pdfHeight / 1.9, { align: "center" });
+    pdf.setGState(new pdf.GState({ opacity: 1 }));
+
+    pdf.setFontSize(8);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text(`Generated securely by pomwb.com • ${new Date().toLocaleString()}`, 10, pdfHeight - 5);
+
+
+      pdf.save(`appointment-ticket-${appointment._id?.slice(-8) || 'POMWB'}.pdf`);
+
+      document.body.removeChild(pdfContainer);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      downloadTicketAsText(appointment, doctor);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const downloadTicketAsText = (appointment, doctor) => {
     const StatusBadge = getStatusBadge(appointment.payStatus);
     const ticketContent = `
 MEDICAL APPOINTMENT TICKET
@@ -210,24 +399,52 @@ Booked on: ${new Date().toLocaleDateString()}
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    setIsDownloading(false);
   };
 
-  const shareTicket = async () => {
+  const downloadTicket = async () => {
+    setIsDownloading(true);
+    try {
+      await downloadTicketAsPDF();
+    } catch (error) {
+      console.error('Download failed:', error);
+      downloadTicketAsText(appointment, doctor);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+ const shareTicket = async () => {
     const shareText = `My appointment with Dr. ${doctor?.name} on ${formatDate(appointment.Date)} at ${getTimeSlot(appointment.Half, appointment.Time)}. Token: #${appointment._id?.slice(-8).toUpperCase()}`;
     
-    if (navigator.share) {
+    const shareData = {
+      title: 'Medical Appointment Ticket',
+      text: shareText,
+      url: window.location.href,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
       try {
-        await navigator.share({
-          title: 'Medical Appointment Ticket',
-          text: shareText,
-        });
+        await navigator.share(shareData);
+        showNotification('Appointment shared successfully!', 'success');
       } catch (error) {
-        console.log('Error sharing:', error);
+        console.log('Sharing cancelled:', error);
       }
     } else {
-      navigator.clipboard.writeText(shareText);
-      alert('Appointment details copied to clipboard!');
+      const textToCopy = `
+Appointment Details:
+──────────────────
+Doctor: Dr. ${doctor?.name}
+Date: ${formatDate(appointment.Date)}
+Time: ${getTimeSlot(appointment.Half, appointment.Time)}
+Token: #${appointment._id?.slice(-8).toUpperCase()}
+Status: ${appointment.payStatus === 'paid' ? 'Confirmed' : 'Pending Payment'}
+
+View online: ${window.location.href}
+      `;
+      
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showNotification('Appointment details copied to clipboard!', 'success');
+      });
     }
   };
 
@@ -400,7 +617,7 @@ Booked on: ${new Date().toLocaleDateString()}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center disabled:opacity-50 text-sm sm:text-base"
             >
               <FaDownload className="mr-2" />
-              {isDownloading ? 'Downloading...' : 'Download Ticket'}
+              {isDownloading ? 'Generating PDF...' : 'Download PDF Ticket'}
             </button>
             <button
               onClick={shareTicket}
@@ -435,23 +652,22 @@ const TicketsSection = () => {
   };
 
   const now = new Date();
-  const upcomingAppointments = booking?.filter(apt => {
-    const aptDate = new Date(apt.Date);
-    return aptDate >= now || apt.payStatus !== 'paid';
-  }) || [];
+  
+  const paidAppointments = booking?.filter(apt => apt.payStatus === 'paid') || [];
 
-  const pastAppointments = booking?.filter(apt => {
+  const upcomingAppointments = paidAppointments.filter(apt => {
     const aptDate = new Date(apt.Date);
-    return aptDate < now && apt.payStatus === 'paid';
-  }) || [];
+    return aptDate >= now;
+  });
+
+  const pastAppointments = paidAppointments.filter(apt => {
+    const aptDate = new Date(apt.Date);
+    return aptDate < now;
+  });
 
   const appointmentsToShow = view === 'upcoming' ? upcomingAppointments : pastAppointments;
 
   const getStatusBadge = (appointment) => {
-    if (appointment.payStatus !== 'paid') {
-      return { text: 'Payment Pending', color: 'bg-yellow-100 text-yellow-800', icon: FaClock };
-    }
-    
     const aptDate = new Date(appointment.Date);
     if (aptDate < now) {
       return { text: 'Completed', color: 'bg-gray-100 text-gray-800', icon: FaCheckCircle };
@@ -492,14 +708,18 @@ const TicketsSection = () => {
     );
   }
 
-  if (!booking || booking.length === 0) {
+  if (!booking || paidAppointments.length === 0) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-6 sm:p-8 text-center border border-gray-200">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
           <FaCalendarCheck className="text-blue-500 text-2xl sm:text-3xl" />
         </div>
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Appointments Yet</h3>
-        <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">You haven't booked any appointments yet. Book your first consultation!</p>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Paid Appointments</h3>
+        <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
+          {booking && booking.length > 0 
+            ? "You have appointments but no paid bookings yet." 
+            : "You haven't booked any appointments yet."}
+        </p>
         <Link
           to="/doctors"
           className="inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-xl hover:shadow-lg transition duration-200 text-sm sm:text-base"
@@ -560,8 +780,8 @@ const TicketsSection = () => {
             </h3>
             <p className="text-gray-500 text-sm">
               {view === 'upcoming' 
-                ? "You don't have any upcoming appointments." 
-                : "You haven't completed any appointments yet."}
+                ? "You don't have any upcoming paid appointments." 
+                : "You haven't completed any paid appointments yet."}
             </p>
           </div>
         ) : (
@@ -609,7 +829,7 @@ const TicketsSection = () => {
                         <div className="flex items-center text-gray-600">
                           <FaClock className="mr-2 text-green-500 flex-shrink-0" />
                           <span className="truncate">
-                            {appointment.Half === 'First Half' ? 'Morning' : 'Evening'} ({appointment.Time})
+                            {appointment.Half} ({appointment.Time})
                           </span>
                         </div>
                         <div className="flex items-center text-gray-600">
@@ -642,7 +862,6 @@ const TicketsSection = () => {
                         <FaTicketAlt className="mr-2" />
                         View Ticket
                       </button>
-                      
                     </div>
                   </div>
                 </motion.div>
@@ -672,7 +891,6 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
   
   const { url } = useAppContext();
 
-  // Safety checks for doctor data
   if (!doctor) {
     return null;
   }
@@ -721,7 +939,7 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
         <div className="bg-blue-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-1">
-              📞 9999999999
+              📞 +91 7363054510
             </div>
             <p className="text-blue-500 text-xs sm:text-sm">Business Hours</p>
           </div>
@@ -729,7 +947,7 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
 
         <div className="space-y-2 sm:space-y-3">
           <button
-            onClick={() => window.open(`tel:9999999999`, '_self')}
+            onClick={() => window.open(`tel:+917363054510`, '_self')}
             className="w-full bg-green-600 text-white font-semibold py-2 sm:py-3 px-4 rounded-xl hover:bg-green-700 transition duration-200 text-sm sm:text-base"
           >
             Call Now

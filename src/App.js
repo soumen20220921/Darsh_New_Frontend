@@ -28,11 +28,79 @@ import AllProducts from './pages/AllProducts';
 import DoctorsPage from "./components/DoctorsPage.jsx";
 import AppointmentSuccessPage from "./components/AppointmentSuccessPage.jsx";
 import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
+import { useState, useEffect } from 'react';
+import { FaUserDoctor } from "react-icons/fa6";
+
+
+const ScrollToTopButton = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  const toggleVisibility = () => {
+    if (window.pageYOffset > 300) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
+
+  return (
+    <>
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-indigo-500 to-pink-500 hover:bg-blue-700 text-white w-10 h-10 md:w-12 md:h-12  rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+          aria-label="Scroll to top"
+        >
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+      )}
+    </>
+  );
+};
+
+const FloatingDoctorButton = () => {
+  const context = useAppContext();
+
+  const handleDoctorClick = () => {
+    window.location.href = '/doctors';
+  };
+
+  return (
+   <button
+  onClick={handleDoctorClick}
+  className="fixed bottom-6 left-6 z-50 bg-gradient-to-br from-indigo-500 to-pink-500 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-105"
+  aria-label="Consult with Doctors"
+>
+<FaUserDoctor />
+
+  <span className="text-sm font-medium hidden sm:inline">Consult Doctor</span>
+</button>
+  );
+};
 
 const App = () => {
   const context = useAppContext();
 
-  
   return (
     <AppProvider>
       <Router>
@@ -74,6 +142,10 @@ const App = () => {
             />
             <Route path="/cart" element={context.login ? <Cart /> : <Auth />} />
           </Routes>
+          
+          <ScrollToTopButton />
+          <FloatingDoctorButton />
+          
           <Footer />
         </div>
       </Router>

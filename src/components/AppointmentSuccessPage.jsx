@@ -9,7 +9,7 @@ const AppointmentSuccessPage = () => {
   const navigate = useNavigate();
 
   const goToHome = () => navigate("/");
-  const viewAppointments = () => navigate("/appointments");
+  const viewAppointments = () => navigate("/doctors?tab=tickets");
   const handleRating = (rate) => setRating(rate);
 
   // Animation variants
