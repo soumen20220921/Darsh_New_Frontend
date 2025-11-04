@@ -425,7 +425,7 @@ Booked on: ${new Date().toLocaleDateString()}
     if (navigator.share && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        showNotification('Appointment shared successfully!', 'success');
+        // showNotification('Appointment shared successfully!', 'success');
       } catch (error) {
         console.log('Sharing cancelled:', error);
       }
@@ -443,7 +443,7 @@ View online: ${window.location.href}
       `;
       
       navigator.clipboard.writeText(textToCopy).then(() => {
-        showNotification('Appointment details copied to clipboard!', 'success');
+        // showNotification('Appointment details copied to clipboard!', 'success');
       });
     }
   };
