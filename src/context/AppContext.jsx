@@ -10,8 +10,8 @@ export const AppProvider = ({ children }) => {
   const [login, setLogin] = useState(false);
   const [totalItems, setTotalItems] = useState(0); 
   
-  //  const url = "https://api2.darshsaree.com"
-   const url = "http://localhost:8001"
+   const url = "https://api2.darshsaree.com"
+  //  const url = "http://localhost:8001"
   const token = localStorage.getItem("token");
   const user = {
     name: localStorage.getItem("name"),
