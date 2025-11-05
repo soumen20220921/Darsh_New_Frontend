@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const LoginRequiredModal = ({ onClose, onLogin, onContinueAsGuest }) => {
   const navigate = useNavigate();
   
+
   const handleLogin = () => {
     onClose();
     navigate("/auth", { state: { returnUrl: window.location.pathname } });
