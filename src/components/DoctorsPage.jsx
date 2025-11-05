@@ -28,8 +28,9 @@ import {
   FaMobileAlt,
   FaRupeeSign,
   FaCheckCircle,
+  FaCalendarDay,
 } from "react-icons/fa";
-import { Stethoscope, CalendarHeart, Users, FileText, ArrowLeft, X } from "lucide-react";
+import { Stethoscope, CalendarHeart, Users} from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 

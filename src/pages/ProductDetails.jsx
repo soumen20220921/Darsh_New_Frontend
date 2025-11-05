@@ -678,6 +678,7 @@ const ProductDetails = () => {
                         <Check className="h-6 w-6" /> Added
                       </button>
                       <Link
+                        onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
                         to="/cart"
                         className="flex-1 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-xl flex items-center justify-center gap-3 font-semibold hover:bg-blue-50 transition-colors"
                       >

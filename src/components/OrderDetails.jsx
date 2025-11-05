@@ -420,9 +420,9 @@ const OrderDetails = ({ order, onClose }) => {
                         {item.title}
                       </h3>
                       <div className="flex items-center space-x-2 md:space-x-4 mt-2 text-sm text-gray-600">
-                        <span className="whitespace-nowrap ">{(item.price / item.qty).toLocaleString()} each</span>
+                        <span className="whitespace-nowrap ">₹{(item.price / item.qty).toLocaleString()} each</span>
                         <span>•</span>
-                        <span className="font-medium text-gray-900">₹{item.price.toLocaleString()}</span>
+                        <span className="font-medium text-gray-900">Qty:{item.price.toLocaleString()}</span>
                       </div>
                     </div>
 

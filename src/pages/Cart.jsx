@@ -108,7 +108,8 @@ const OrderConfirmationModal = ({
                 <p className="text-gray-500">Ph: {address.Phone}</p>
               </div>
               <Link
-                to="/account"
+                to="/account?tab=2"
+                 onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
                 className="absolute top-2 right-2 p-1 text-gray-600 rounded-full hover:bg-gray-200 transition"
               >
                 <SquarePen size={16} />
@@ -325,7 +326,7 @@ const Cart = () => {
   };
 
   const handleAddAddress = () => {
-    navigate("/account?tab=2", { state: { scrollToAddress: true } });
+    navigate("/account?tab=2", { state: { scrollToAddress: true } },window.scrollTo(0, 0));
   };
 
   const handleConfirmAndPay = async () => {
@@ -374,24 +375,35 @@ const Cart = () => {
 
   if (cart?.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
-        <div className="bg-white/70 backdrop-blur-lg rounded-full shadow-xl p-8 mb-6 animate-bounce-slow">
-          <ShoppingBag className="h-16 w-16 text-blue-500" />
+      <section
+        role="status"
+        aria-live="polite"
+        className="min-h-[90vh] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-12"
+      >
+        <div className="w-full max-w-3xl mx-auto text-center">
+          <div className="mx-auto bg-white/70 backdrop-blur-lg rounded-full shadow-xl p-6 sm:p-8 mb-6 animate-bounce-slow w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+            <ShoppingBag className="h-10 w-10 sm:h-16 sm:w-16 text-blue-500" />
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 mb-2 animate-fadeIn">
+            Your Cart is Empty
+          </h2>
+
+          <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-xl mx-auto animate-fadeIn delay-200">
+            Looks like you haven't added anything yet. Explore our collection and
+            add your favorites!
+          </p>
+
+          <div className="flex justify-center">
+            <Link
+              to="/"
+              className="w-full sm:w-auto block text-center px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transform transition-all duration-300 font-semibold text-base sm:text-lg focus:outline-none focus:ring-4 focus:ring-blue-200"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         </div>
-        <h2 className="text-3xl font-extrabold text-gray-800 mb-2 animate-fadeIn">
-          Your Cart is Empty
-        </h2>
-        <p className="text-gray-600 mb-6 max-w-md animate-fadeIn delay-200">
-          Looks like you haven't added anything yet. Explore our collection and
-          add your favorites!
-        </p>
-        <Link
-          to="/"
-          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transform transition-all duration-300 font-semibold text-lg"
-        >
-          Continue Shopping
-        </Link>
-      </div>
+      </section>
     );
   }
 
@@ -540,7 +552,8 @@ const Cart = () => {
                     Shipping Address
                   </h3>
                   <Link
-                    to="/account"
+                    to="/account?tab=2"
+                     onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
                   >
                     <SquarePen className="h-4 w-4" />

@@ -20,7 +20,6 @@ import CancellationAndRefund from './pages/PageFooter/CancellationAndRefund.js';
 import ShippingAndDelivery from './pages/PageFooter/ShippingAndDelivery.js';
 import TermsAndConditions from './pages/PageFooter/TermsAndConditions.js';
 import PrivacyPolicy from './pages/PageFooter/PrivacyPolicy';
-import ScrollToTop from './components/ScrollToTop';
 import DevelopersPage from './pages/DevelopersPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
@@ -60,7 +59,7 @@ const ScrollToTopButton = () => {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-indigo-500 to-pink-500 hover:bg-blue-700 text-white w-10 h-10 md:w-12 md:h-12  rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-indigo-500 to-pink-500  text-white w-10 h-10 md:w-12 md:h-12  rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
           aria-label="Scroll to top"
         >
           <svg 
@@ -104,7 +103,6 @@ const App = () => {
   return (
     <AppProvider>
       <Router>
-        <ScrollToTop />
         <div className="min-h-screen bg-gray-50">
           <Navbar />
           <Routes>
