@@ -1,0 +1,405 @@
+
+@keyframes wheel-rotate {
+  50% {
+    transform: rotate(360deg);
+    animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  }
+  100% {
+    transform: rotate(960deg);
+  }
+}
+
+@keyframes clock-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes box-top-anim {
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes umbrella-anim {
+  25% {
+    transform: translateY(10px) rotate(5deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes cup-rotate {
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes pillow-anim {
+  25% {
+    transform: rotate(10deg) translateY(5px);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+}
+
+@keyframes stripe-anim {
+  25% {
+    transform: translate(10px, 0) rotate(-10deg);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes bike-anim {
+  0% {
+    transform: translateX(-1300px);
+  }
+  50% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
+  }
+  100% {
+    transform: translateX(1300px);
+  }
+}
+
+@keyframes ruck-anim {
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes circle-anim {
+  50% {
+    transform: scale(0.2) rotateX(360deg) rotateY(360deg);
+  }
+}
+
+@keyframes four-anim {
+  50% {
+    transform: scale(0.98);
+  }
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Animation classes */
+.wheel {
+  animation: wheel-rotate 6s ease infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.clock-hand-1 {
+  animation: clock-rotate 3s linear infinite;
+  transform-origin: bottom;
+  transform-box: fill-box;
+}
+
+.clock-hand-2 {
+  animation: clock-rotate 6s linear infinite;
+  transform-origin: bottom;
+  transform-box: fill-box;
+}
+
+#box-top {
+  animation: box-top-anim 2s linear infinite;
+  transform-origin: right top;
+  transform-box: fill-box;
+}
+
+#umbrella {
+  animation: umbrella-anim 6s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+#cup {
+  animation: cup-rotate 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  transform-origin: top left;
+  transform-box: fill-box;
+}
+
+#pillow {
+  animation: pillow-anim 3s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+#stripe {
+  animation: stripe-anim 3s linear infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+#bike {
+  animation: bike-anim 8s ease-in-out infinite;
+}
+
+#rucksack {
+  animation: ruck-anim 3s linear infinite;
+  transform-origin: top;
+  transform-box: fill-box;
+}
+
+.circle {
+  animation: circle-anim ease infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+  perspective: 0px;
+}
+
+.circle.c1 {
+  animation-duration: 2s;
+}
+
+.circle.c2 {
+  animation-duration: 3s;
+}
+
+.circle.c3 {
+  animation-duration: 1s;
+}
+
+.circle.c4 {
+  animation-duration: 1s;
+}
+
+.circle.c5 {
+  animation-duration: 2s;
+}
+
+.circle.c6 {
+  animation-duration: 3s;
+}
+
+.four.a {
+  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
+  animation-duration: 3s;
+  transform-origin: bottom left;
+  transform-box: fill-box;
+}
+
+.four.b {
+  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
+  animation-duration: 3s;
+  transform-origin: bottom right;
+  transform-box: fill-box;
+}
+
+#ou {
+  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
+  animation-duration: 6s;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.animate-slide {
+  animation: slide 8s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Animation delay utilities */
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animation-delay-700 {
+  animation-delay: 700ms;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1000ms;
+}
+
+.animation-delay-1200 {
+  animation-delay: 1200ms;
+}
+
+.animation-delay-1500 {
+  animation-delay: 1500ms;
+}
+
+/* Color classes matching the original design */
+.cls-1 {
+  fill: #ffc541;
+}
+
+.cls-2 {
+  fill: #4e4066;
+}
+
+.cls-3 {
+  fill: #6f5b92;
+}
+
+.cls-4 {
+  fill: #f78d5e;
+}
+
+.cls-5 {
+  fill: #fa976c;
+}
+
+.cls-6,
+.cls-7,
+.cls-8 {
+  fill: #b65c32;
+}
+
+.cls-10,
+.cls-6 {
+  opacity: 0.6;
+}
+
+.cls-7 {
+  opacity: 0.4;
+}
+
+.cls-9 {
+  fill: #f4b73b;
+}
+
+.cls-11 {
+  fill: #f9c358;
+}
+
+.cls-12 {
+  fill: #9b462c;
+}
+
+.cls-13 {
+  fill: #aa512e;
+}
+
+.cls-14 {
+  fill: #7d6aa5;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+  .wheel {
+    animation-duration: 8s;
+  }
+  
+  #bike {
+    animation-duration: 12s;
+  }
+  
+  .circle {
+    animation-duration: 4s;
+  }
+  
+  #umbrella {
+    animation-duration: 8s;
+  }
+}
+
+@media (max-width: 480px) {
+  #bike {
+    animation-duration: 15s;
+  }
+}
+
+/* Smooth transitions for all animated elements */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Focus states for accessibility */
+button:focus {
+  outline: 2px solid #ffc541;
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .wheel,
+  .clock-hand-1,
+  .clock-hand-2,
+  #box-top,
+  #umbrella,
+  #cup,
+  #pillow,
+  #stripe,
+  #bike,
+  #rucksack,
+  .circle,
+  .four.a,
+  .four.b,
+  #ou {
+    animation: none !important;
+  }
+}
+
+
+/* Selection styles */
+::selection {
+  background: rgba(255, 197, 65, 0.3);
+}
+
+::-moz-selection {
+  background: rgba(255, 197, 65, 0.3);
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}

@@ -11,7 +11,7 @@ import Footer from "./components/Footer";
 import Categories from "./pages/Categories.jsx"
 import HotSalesPage from './pages/HotSalesPage';
 import NewArrivalsPage from './pages/NewArrivalsPage';
-import Pagenotfound from './pages/PageFooter/Pagenotfound';
+// import Pagenotfound from './pages/PageFooter/Pagenotfound';
 import AboutPage from './pages/PageFooter/AboutPage.jsx';
 import ContactUs from './pages/PageFooter/ContactUs';
 import Disclaimer from './pages/PageFooter/Disclaimer';
@@ -23,12 +23,15 @@ import PrivacyPolicy from './pages/PageFooter/PrivacyPolicy';
 import DevelopersPage from './pages/DevelopersPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
+import ServiceBookingLayout   from './pages/ServiceBookingLayout';
 import AllProducts from './pages/AllProducts';
 import DoctorsPage from "./components/DoctorsPage.jsx";
 import AppointmentSuccessPage from "./components/AppointmentSuccessPage.jsx";
 import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
 import { useState, useEffect } from 'react';
 import { FaUserDoctor } from "react-icons/fa6";
+import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
+
 
 
 const ScrollToTopButton = () => {
@@ -81,7 +84,7 @@ const FloatingDoctorButton = () => {
   const context = useAppContext();
 
   const handleDoctorClick = () => {
-    window.location.href = '/doctors';
+    window.location.href = '/ServiceBookingLayout';
   };
 
   return (
@@ -92,7 +95,7 @@ const FloatingDoctorButton = () => {
 >
 <FaUserDoctor />
 
-  <span className="text-sm font-medium hidden sm:inline">Consult Doctor</span>
+  <span className="text-sm font-medium hidden sm:inline">Services Consult</span>
 </button>
   );
 };
@@ -112,7 +115,9 @@ const App = () => {
             <Route path="/allproducts" element={<AllProducts />} />
             <Route path="/productDetails/:id" element={<ProductDetails />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="*" element={<Pagenotfound />} />
+            {/* <Route path="/*" element={<Pagenotfound />} /> */}
+            <Route path="*" element={<Animated404Page />} />
+            <Route path="ServiceBookingLayout" element={<ServiceBookingLayout />} />
             <Route path="/aboutus" element={<AboutPage />} />
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/Categories/:name" element={<Categories />} />

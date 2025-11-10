@@ -203,9 +203,9 @@ const Navbar = () => {
           />
           
           <DesktopNavItem 
-            path="/doctors" 
+            path="/ServiceBookingLayout" 
             icon={FaStethoscope} 
-            label="Doctors" 
+            label="Services" 
             gradient="from-green-500 to-teal-500"
             iconGradient="from-green-500 to-teal-500"
           />
@@ -372,7 +372,7 @@ const Navbar = () => {
 
               <li className="animate-stagger-in" style={{ animationDelay: "300ms" }}>
                 <button
-                  onClick={() => handleNavigation("/doctors")}
+                  onClick={() => handleNavigation("/ServiceBookingLayout")}
                   className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
                     text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
                     hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
@@ -382,7 +382,7 @@ const Navbar = () => {
                   <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-teal-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
                     <FaStethoscope size={22} />
                   </div>
-                  <span className="flex-1 text-left text-base whitespace-nowrap">Doctor Appointment</span>
+                  <span className="flex-1 text-left text-base whitespace-nowrap">Services Consult</span>
                   <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
                     →
                   </div>
