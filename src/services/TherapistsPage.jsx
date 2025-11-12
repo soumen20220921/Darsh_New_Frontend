@@ -30,7 +30,9 @@ import {
   FaAward,
   FaUsers,
   FaSpa,
-  FaLaptop
+  FaCalendarPlus,
+  FaSun,
+  FaMoon 
 } from "react-icons/fa";
 import { Users, CalendarHeart, MessageCircle, Shield } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
@@ -1002,8 +1004,20 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [availableSlots, setAvailableSlots] = useState({ morning: 0, evening: 0 });
 
   const { url } = useAppContext();
+
+  // Initialize available slots from therapist data
+  useEffect(() => {
+    if (therapist) {
+      setAvailableSlots({
+        morning: parseInt(therapist.morningSlot) || 0,
+        evening: parseInt(therapist.eveningSlot) || 0
+      });
+    }
+  }, [therapist]);
 
   if (!therapist) return null;
 
@@ -1057,7 +1071,194 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
     }
   };
 
-  // Small reusable info item: icon, label, value
+  const SlotAvailability = () => {
+    const getSlotStatus = (count) => {
+      if (count === 0) return { text: "No slots", color: "text-red-500", bg: "bg-red-50", border: "border-red-200" };
+      if (count <= 2) return { text: `${count} slot${count > 1 ? 's' : ''} left`, color: "text-orange-500", bg: "bg-orange-50", border: "border-orange-200" };
+      return { text: `${count} slots avail`, color: "text-green-500", bg: "bg-green-50", border: "border-green-200" };
+    };
+
+    const morningStatus = getSlotStatus(availableSlots.morning);
+    const eveningStatus = getSlotStatus(availableSlots.evening);
+
+    return (
+      <div className="mt-4 sm:mt-14  bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl p-3 border border-blue-200/60 shadow-sm">
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+      <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl shadow-sm">
+        <FaCalendarPlus className="text-white text-sm sm:text-base" />
+      </div>
+      <div>
+        <h4 className="font-bold text-gray-900 text-sm sm:text-base">Available Slots Today</h4>
+        <p className="text-xs text-gray-500 mt-0.5">Real-time availability</p>
+      </div>
+    </div>
+    
+    <div className={`px-2 py-1 rounded-full text-xs font-semibold ${
+      availableSlots.morning > 0 || availableSlots.evening > 0 
+        ? 'bg-green-100 text-green-700 border border-green-200' 
+        : 'bg-gray-100 text-gray-600 border border-gray-200'
+    }`}>
+      {availableSlots.morning > 0 || availableSlots.evening > 0 ? 'Available' : 'Fully Booked'}
+    </div>
+  </div>
+  
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4">
+    <div className={`group relative overflow-hidden rounded-xl p-4 transition-all duration-300 ${
+      morningStatus.bg
+    } ${morningStatus.border} hover:shadow-md hover:scale-[1.02]`}>
+      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-200/20 to-orange-200/10 rounded-full -translate-y-4 translate-x-4"></div>
+      
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`p-3 rounded-xl shadow-sm ${
+            availableSlots.morning > 0 ? 'bg-yellow-100' : 'bg-gray-100'
+          }`}>
+            <FaSun className={`text-lg ${
+              availableSlots.morning > 0 ? 'text-yellow-600' : 'text-gray-400'
+            }`} />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-bold text-gray-900 text-sm truncate">Morning Session</span>
+              {availableSlots.morning <= 2 && availableSlots.morning > 0 && (
+                <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold whitespace-nowrap">
+                  Filling Fast
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-600 flex items-center gap-1.5">
+              <FaClock className="text-gray-400" />
+              <span>9:00 AM - 12:00 PM</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-end ml-3">
+          <div className={`text-lg font-bold ${morningStatus.color}`}>
+            {availableSlots.morning}
+          </div>
+          <div className={`text-[10px] font-semibold whitespace-nowrap ${morningStatus.color}`}>
+            {availableSlots.morning === 1 ? 'slot' : 'slots'}
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-3 flex items-center justify-between">
+        <span className={`text-xs  font-medium ${morningStatus.color}`}>
+          {morningStatus.text}
+        </span>
+        {availableSlots.morning > 0 && (
+          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                availableSlots.morning >= 5 ? 'bg-green-400' : 
+                availableSlots.morning >= 3 ? 'bg-yellow-400' : 'bg-orange-400'
+              }`}
+              style={{ 
+                width: `${Math.min((availableSlots.morning / 10) * 100, 100)}%` 
+              }}
+            ></div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className={`group relative overflow-hidden rounded-xl p-4 transition-all duration-300 ${
+      eveningStatus.bg
+    } ${eveningStatus.border} hover:shadow-md hover:scale-[1.02]`}>
+      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-200/20 to-purple-200/10 rounded-full -translate-y-4 translate-x-4"></div>
+      
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`p-3 rounded-xl shadow-sm ${
+            availableSlots.evening > 0 ? 'bg-indigo-100' : 'bg-gray-100'
+          }`}>
+            <FaMoon className={`text-lg ${
+              availableSlots.evening > 0 ? 'text-indigo-600' : 'text-gray-400'
+            }`} />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-bold text-gray-900 text-sm truncate">Evening Session</span>
+              {availableSlots.evening <= 2 && availableSlots.evening > 0 && (
+                <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold whitespace-nowrap">
+                  Filling Fast
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-600 flex items-center gap-1.5">
+              <FaClock className="text-gray-400" />
+              <span>5:00 PM - 8:00 PM</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-end ml-3">
+          <div className={`text-lg font-bold ${eveningStatus.color}`}>
+            {availableSlots.evening}
+          </div>
+          <div className={`text-[10px] font-semibold whitespace-nowrap ${eveningStatus.color}`}>
+            {availableSlots.evening === 1 ? 'slot' : 'slots'}
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-3 flex items-center justify-between">
+        <span className={`text-xs font-medium ${eveningStatus.color}`}>
+          {eveningStatus.text}
+        </span>
+        {availableSlots.evening > 0 && (
+          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                availableSlots.evening >= 5 ? 'bg-green-400' : 
+                availableSlots.evening >= 3 ? 'bg-yellow-400' : 'bg-orange-400'
+              }`}
+              style={{ 
+                width: `${Math.min((availableSlots.evening / 10) * 100, 100)}%` 
+              }}
+            ></div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200/60">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <span className="text-xs font-medium text-gray-700">Quick Book:</span>
+        <span className="text-xs text-gray-600">
+          {availableSlots.morning > 0 || availableSlots.evening > 0 
+            ? "Reserve your slot now" 
+            : "Check back tomorrow for new slots"
+          }
+        </span>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-gray-500 whitespace-nowrap">Next available:</span>
+        <span className={`text-xs whitespace-nowrap font-bold px-2 py-1 rounded-full ${
+          availableSlots.morning > 0 
+            ? 'bg-green-100 text-green-700' 
+            : availableSlots.evening > 0 
+            ? 'bg-blue-100 text-blue-700' 
+            : 'bg-gray-100 text-gray-600'
+        }`}>
+          {availableSlots.morning > 0 ? "Today Morning" : 
+           availableSlots.evening > 0 ? "Today Evening" : "Tomorrow"}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+    );
+  };
+
   const InfoItem = ({ icon: Icon, label, value, compact = false }) => (
     <div className={`flex items-start gap-3 ${compact ? "sm:items-center" : ""} min-w-0`}>
       <div className="flex-shrink-0 p-2 bg-white/60 rounded-lg border border-gray-100 shadow-sm">
@@ -1142,8 +1343,8 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                   />
                 </div>
                 {therapistBadge && (
-                  <div className="absolute -bottom-1 -right-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${getBadgeColor(therapistBadge)}`}>
+                  <div className="absolute -bottom-2 -right-1">
+                    <span className={`px-2 py-0 rounded-full text-xs whitespace-nowrap font-bold ${getBadgeColor(therapistBadge)}`}>
                       {therapistBadge}
                     </span>
                   </div>
@@ -1154,14 +1355,14 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 truncate">
                   {therapistName}
                 </h3>
-                <p className="text-purple-600 font-semibold flex items-center text-sm">
-                  <FaUser className="mr-2 flex-shrink-0" />
+                {/* <p className="text-purple-600 font-semibold flex items-center text-sm">
+
                   <span className="truncate">{therapistSpecialties[0]}</span>
-                </p>
+                </p> */}
                 <div className="flex items-center mt-2">
                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                     <FaStar className="text-yellow-500 mr-1 text-xs" />
-                    <span className="text-sm font-semibold text-gray-700">{therapistRating}</span>
+                    <span className="text-sm font-semibold text-gray-700">{therapistRating}</span>({therapistClientsServed})
                   </div>
                 </div>
               </div>
@@ -1171,34 +1372,24 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
               <InfoItem icon={FaAward} label="Certification" value={therapistCertification} compact />
               <InfoItem icon={FaClock} label="Response" value={therapistResponseTime} compact />
               <InfoItem icon={FaUsers} label="Clients" value={`${therapistClientsServed}+ served`} compact />
-              <InfoItem icon={FaStar} label="Experience / Rating" value={`${therapistExperience} • ${therapistRating}`} compact />
+              <InfoItem icon={FaStar} label="Experience" value={`${therapistExperience}`} compact />
             </div>
 
-            <div className="mb-3 sm:mb-4">
-              <p className={`text-gray-600 text-sm leading-relaxed ${showFullDescription ? "" : "line-clamp-2"}`}>
-                {therapistDescription}
-              </p>
-              {therapistDescription && therapistDescription.length > 100 && (
-                <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-purple-600 text-sm font-medium mt-1">
-                  {showFullDescription ? "Read Less" : "Read More"}
-                </button>
-              )}
-            </div>
 
             <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-              {therapistSpecialties.slice(0, 2).map((specialty, index) => (
-                <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded-full text-xs border border-purple-200">
-                  {specialty}
-                </span>
-              ))}
-              {therapistSpecialties.length > 2 && (
-                <span className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                  +{therapistSpecialties.length - 2} more
-                </span>
-              )}
+              {therapistSpecialties.slice().map((specialty, index) => (
+                    <div className="flex">
+                    <h3>Specialties:</h3>
+                    <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded-full text-xs border border-purple-200">
+                      {specialty}
+                    </span>
+                    </div>
+                  ))}
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-3 sm:p-4">
+            <SlotAvailability />
+
+            <div className="bg-gray-50 rounded-2xl p-3 sm:p-4 mt-4">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div>
                   <div className="text-xl sm:text-2xl font-bold text-green-600">₹{therapistFee}</div>
@@ -1254,10 +1445,10 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className="min-w-0">
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 truncate">{therapistName}</h3>
-                  <p className="text-purple-600 font-semibold mb-2 flex items-center">
+                  {/* <p className="text-purple-600 font-semibold mb-2 flex items-center">
                     <FaUser className="mr-2 flex-shrink-0" />
                     <span className="truncate">{therapistSpecialties.join(", ")}</span>
-                  </p>
+                  </p> */}
                 </div>
 
                 <div className="flex items-center flex-shrink-0 ml-4">
@@ -1265,6 +1456,7 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                     <FaStar className="text-yellow-500 mr-1" />
                     <span className="text-sm font-semibold text-gray-700">{therapistRating}</span>
                   </div>
+                  ({therapistClientsServed})
                 </div>
               </div>
 
@@ -1275,20 +1467,17 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                 <InfoItem icon={FaStar} label="Experience" value={therapistExperience} />
               </div>
 
-              <p className="text-gray-600 text-sm leading-relaxed mb-3 sm:mb-4 max-w-2xl line-clamp-2">{therapistDescription}</p>
 
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <div className="flex flex-wrap gap-1 sm:gap-2">
-                  {therapistSpecialties.slice(0, 4).map((specialty, index) => (
+                  {therapistSpecialties.slice().map((specialty, index) => (
+                    <div className="flex">
+                    <h3>Specialties:</h3>
                     <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded-full text-xs border border-purple-200">
                       {specialty}
                     </span>
+                    </div>
                   ))}
-                  {therapistSpecialties.length > 4 && (
-                    <span className="bg-gray-50 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                      +{therapistSpecialties.length - 4} more
-                    </span>
-                  )}
                 </div>
 
                 <div className="flex items-center text-sm text-green-600 font-semibold ml-auto">
@@ -1296,6 +1485,8 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                   <span>{therapistClientsServed}+ clients</span>
                 </div>
               </div>
+
+              <SlotAvailability />
             </div>
 
             <div className="flex-shrink-0 w-48 sm:w-64 flex flex-col gap-3 sm:gap-4">
@@ -1322,6 +1513,22 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
               >
                 {isLoggedIn ? "Book Service" : "Login to Book"}
               </Link>
+
+              <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+                <div className="text-center text-xs text-blue-700 font-semibold">
+                  {availableSlots.morning > 0 || availableSlots.evening > 0 ? (
+                    <>
+                      <FaCalendarCheck className="inline mr-1" />
+                      Slots Available Today
+                    </>
+                  ) : (
+                    <>
+                      <FaClock className="inline mr-1" />
+                      Check Tomorrow
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

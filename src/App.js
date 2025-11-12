@@ -23,15 +23,15 @@ import PrivacyPolicy from './pages/PageFooter/PrivacyPolicy';
 import DevelopersPage from './pages/DevelopersPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
-import ServiceBookingLayout   from './pages/ServiceBookingLayout';
+import ServiceBookingLayout   from './services/ServiceBookingLayout';
 import AllProducts from './pages/AllProducts';
-import DoctorsPage from "./components/DoctorsPage.jsx";
-import AppointmentSuccessPage from "./components/AppointmentSuccessPage.jsx";
-import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
+import DoctorsPage from "./services/DoctorsPage.jsx";
+import AppointmentSuccessPage from "./services/AppointmentSuccessPage.jsx";
+import DoctorDetailPage from "./services/DoctorDetailPage.jsx";
 import { useState, useEffect } from 'react';
 import { FaUserDoctor } from "react-icons/fa6";
 import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
-import TherapistDetail from "./pages/TherapistDetail.jsx";
+import TherapistDetail from "./services/TherapistDetail.jsx";
 
 
 
