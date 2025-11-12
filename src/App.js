@@ -31,6 +31,7 @@ import DoctorDetailPage from "./components/DoctorDetailPage.jsx";
 import { useState, useEffect } from 'react';
 import { FaUserDoctor } from "react-icons/fa6";
 import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
+import TherapistDetail from "./pages/TherapistDetail.jsx";
 
 
 
@@ -139,6 +140,7 @@ const App = () => {
             <Route path="/doctors" element={<DoctorsPage />} />
             <Route path="/AppointmentSuccessPage" element={<AppointmentSuccessPage />} />
             <Route path="/doctor/:id" element={<DoctorDetailPage />} />
+            <Route path="/therapist/:id" element={<TherapistDetail />} />
             <Route
               path="/account"
               element={context.login ? <Account /> : <Auth />}

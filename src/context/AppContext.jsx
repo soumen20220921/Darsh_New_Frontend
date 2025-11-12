@@ -12,8 +12,8 @@ export const AppProvider = ({ children }) => {
   const [orderCount, setOrderCount] = useState(0);
 
   
-   const url = "https://api2.darshsaree.com"
-  //  const url = "http://localhost:8001"
+  //  const url = "https://api2.darshsaree.com"
+   const url = "http://localhost:8001"
   const token = localStorage.getItem("token");
   const user = {
     name: localStorage.getItem("name"),
@@ -156,6 +156,50 @@ export const AppProvider = ({ children }) => {
       setDoctorsLoading(false);
     }
   };
+  const [therapists, setTherapists] = useState([]);
+  const [therapistsLoading, setTherapistsLoading] = useState(true);
+  const [therapistsError, setTherapistsError] = useState(null);
+
+  const fetchTherapists = async () => {
+    try {
+      setTherapistsLoading(true);
+      setTherapistsError(null);
+      const res = await axios.get(`${url}/api/therapist/all`);
+      console.log("Therapists data:", res.data);
+      
+      const therapistsData = res.data.therapists || res.data || [];
+      setTherapists(Array.isArray(therapistsData) ? therapistsData : []);
+    } catch (err) {
+      console.error("Error fetching therapists:", err);
+      setTherapistsError(
+        err.response?.data?.message || 
+        "Failed to load therapists. Please try again later."
+      );
+      setTherapists([]); 
+    } finally {
+      setTherapistsLoading(false);
+    }
+  };
+
+  const [therapistBookings, setTherapistBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+
+  const fetchTherapistBookings = async () => {
+    if (!token) return;
+    
+    setBookingsLoading(true);
+    try {
+      const res = await axios.get(`${url}/api/booking/therapist-bookings`, {
+        headers: { Auth: token }
+      });
+      setTherapistBookings(res.data.bookings || []);
+    } catch (err) {
+      console.error("Error fetching therapist bookings:", err);
+      setTherapistBookings([]);
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
 
   const [booking, setBooking] = useState(null);
 
@@ -182,14 +226,16 @@ export const AppProvider = ({ children }) => {
       try {
         await Promise.all([
           getProduct(),
-          fetchDoctors() 
+          fetchDoctors(),
+          fetchTherapists()  
         ]);
 
         if (token) {
           await Promise.all([
             getCart(),
             getOrder(),
-            getBooking()
+            getBooking(),
+            fetchTherapistBookings()
           ]);
         }
       } catch (error) {
@@ -202,6 +248,13 @@ export const AppProvider = ({ children }) => {
 
   const refreshDoctors = () => {
     fetchDoctors();
+  };
+   const refreshTherapists = () => {
+    fetchTherapists();
+  };
+
+  const refreshBookings = () => {
+    fetchTherapistBookings();
   };
 
   return (
@@ -231,7 +284,15 @@ export const AppProvider = ({ children }) => {
         doctorsLoading,
         doctorsError,
         refreshDoctors,
-        booking
+         therapists,
+        therapistsLoading,
+        therapistsError,
+        refreshTherapists,
+        therapistBookings,
+        bookingsLoading,
+        refreshBookings,
+        booking,
+        getBooking,
       }}
     >
       {children}
