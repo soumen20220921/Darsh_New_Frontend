@@ -117,7 +117,7 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             {/* <Route path="/*" element={<Pagenotfound />} /> */}
             <Route path="*" element={<Animated404Page />} />
-            <Route path="ServiceBookingLayout" element={<ServiceBookingLayout />} />
+            <Route path="/ServiceBookingLayout" element={<ServiceBookingLayout />} />
             <Route path="/aboutus" element={<AboutPage />} />
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/Categories/:name" element={<Categories />} />

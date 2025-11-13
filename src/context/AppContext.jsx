@@ -12,8 +12,8 @@ export const AppProvider = ({ children }) => {
   const [orderCount, setOrderCount] = useState(0);
 
   
-   const url = "https://api2.darshsaree.com"
-  //  const url = "http://localhost:8001"
+  //  const url = "https://api2.darshsaree.com"
+   const url = "http://localhost:8001"
   const token = localStorage.getItem("token");
   const user = {
     name: localStorage.getItem("name"),
