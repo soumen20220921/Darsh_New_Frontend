@@ -2,7 +2,8 @@ import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ServiceBookingPage from './ServiceBookingPage';
 import DoctorBookingPage from './DoctorBookingPage';
-import BeautyBookingPage from './BeautyBookingPage';
+// import BeautyBookingPage from './BeautyBookingPage';
+import TherapistsPage from './TherapistsPage';
 import AstrologerBookingPage from './AstrologerBookingPage';
 
 const ServiceBookingLayout = () => {
@@ -25,7 +26,7 @@ const ServiceBookingLayout = () => {
       case 'healthcare':
         return <DoctorBookingPage service={selectedService} onBack={handleBackToServices} />;
       case 'beauty':
-        return <BeautyBookingPage service={selectedService} onBack={handleBackToServices} />;
+        return <TherapistsPage service={selectedService} onBack={handleBackToServices} />;
       case 'astrology':
         return <AstrologerBookingPage service={selectedService} onBack={handleBackToServices} />;
       default:

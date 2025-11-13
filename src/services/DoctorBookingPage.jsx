@@ -1,5 +1,5 @@
 import React from 'react';
-import DoctorsPage from '../components/DoctorsPage';
+import DoctorsPage from './DoctorsPage';
 import { ArrowLeft } from 'lucide-react';
 
 const DoctorBookingPage = ({ service, onBack }) => {
