@@ -42,6 +42,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const API_BASE = "http://localhost:8001/api";
+const url = API_BASE;
 
 const LoginRequiredModal = ({ onClose, onLogin, onContinueAsGuest, expert }) => {
   const navigate = useNavigate();
@@ -511,27 +512,41 @@ const BookingModal = ({ expert, onClose, user, onSubmit }) => {
       return;
     }
 
+    // const bookingData = {
+    //   FullName: clientName,
+    //   Phone: phone,
+    //   Age: age,
+    //   Gender: gender,
+    //   Date: date,
+    //   Time: time,
+    //   serviceType,
+    //   amount,
+    //   ...(serviceType === "home" && {
+    //     address: {
+    //       fullAddress: address,
+    //       landmark,
+    //       pincode,
+    //       city,
+    //       state
+    //     },
+    //     needsConfirmationCall,
+    //     specialInstructions: specialInstructions || undefined
+    //   })
+    // };
+
     const bookingData = {
-      FullName: clientName,
-      Phone: phone,
-      Age: age,
-      Gender: gender,
-      Date: date,
-      Time: time,
-      serviceType,
-      amount,
-      ...(serviceType === "home" && {
-        address: {
-          fullAddress: address,
-          landmark,
-          pincode,
-          city,
-          state
-        },
-        needsConfirmationCall,
-        specialInstructions: specialInstructions || undefined
-      })
-    };
+       userId :user.id,
+        FullName:clientName,
+        amount:expert.fee,
+        Phone:phone,
+        Date:date,
+        Half:"morning",
+        Time:"12-2 pm",
+        Address:"there will be address of the user",
+        TharapistId:expert._id
+    }
+
+    // console.log(bookingData,user)
 
     await onSubmit(bookingData);
   };
@@ -615,7 +630,7 @@ const BookingModal = ({ expert, onClose, user, onSubmit }) => {
             <div className="relative">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full object-cover border-2 border-purple-200 flex-shrink-0">
                 <img
-                  src={expert.image?.id ? `${url}/img/${expert.image._id}` : "/default-expert.jpg"}
+                  // src={expert.image?.id ? `${url}/img/${expert.image._id}` : "/default-expert.jpg"}
                   alt={expert.name}
                   className="w-full h-full rounded-full object-cover"
                 />
@@ -1239,23 +1254,39 @@ const ExpertDetail = () => {
 
   const handleBookingSubmit = async (bookingData) => {
     try {
-      setShowProcessingModal(true);
-      setShowBookingModal(false);
+      // setShowProcessingModal(true);
+      // setShowBookingModal(false);
 
       // Simulate payment processing
-      setTimeout(() => {
-        const appointment = {
+      // setTimeout(() => {
+      //   const appointment = {
+      //     ...bookingData,
+      //     transactionId: "S" + Date.now(),
+      //     MUID :"MUID" + Date.now()
+      //   };
+        
+      //   setLatestAppointment(appointment);
+      //   setShowProcessingModal(false);
+      //   setShowSuccessModal(true);
+      //   toast.success("Service booked successfully!");
+      // }, 2000);
+
+         const appointment = {
           ...bookingData,
           transactionId: "S" + Date.now(),
-          amount: expert.fee
+          MUID :"MUID" + Date.now()
         };
+       const response = await axios.post(`${url}/api/phonepe/payment3`, appointment);
+      
+      if (response?.data?.redirectUrl) {
+        localStorage.setItem('pendingAppointment', JSON.stringify({
+          ...appointment
+        }));
         
-        setLatestAppointment(appointment);
-        setShowProcessingModal(false);
-        setShowSuccessModal(true);
-        toast.success("Service booked successfully!");
-      }, 2000);
-
+        window.location.href = response.data.redirectUrl;
+      } else {
+        throw new Error('No redirect URL received');
+      }
     } catch (error) {
       console.error("Booking Error:", error);
       setShowProcessingModal(false);
@@ -1343,7 +1374,7 @@ const ExpertDetail = () => {
           <div className="relative flex-shrink-0">
             <div className={`w-32 h-32 sm:w-48 sm:h-48 lg:w-56 lg:h-56 bg-gray-200 rounded-xl sm:rounded-2xl shadow-md border-4 border-purple-100 ${!isImageLoaded ? 'animate-pulse' : ''}`}>
               <img
-                src={getImageSrc()}
+                // src={getImageSrc()}
                 alt={expert.name}
                 className={`w-full h-full object-cover rounded-xl sm:rounded-2xl ${isImageLoaded ? 'block' : 'hidden'}`}
                 onLoad={() => setIsImageLoaded(true)}
@@ -1537,7 +1568,7 @@ const ExpertDetail = () => {
                         <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
                           {similarExpert.image && similarExpert.image._id ? (
                             <img
-                              src={`${url}/img/${similarExpert.image._id}`}
+                              // src={`${url}/img/${similarExpert.image._id}`}
                               alt={similarExpert.name}
                               className="w-full h-full object-cover"
                             />

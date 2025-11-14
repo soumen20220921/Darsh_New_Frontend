@@ -1331,7 +1331,7 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
                   }`}
                 >
                   <img
-                    src={getImageSrc()}
+                    // src={getImageSrc()}
                     alt={therapistName}
                     className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? "block" : "hidden"}`}
                     onLoad={() => setIsImageLoaded(true)}
@@ -1421,7 +1421,7 @@ const ExpertCard = ({ therapist, isLoggedIn, onLoginRequired }) => {
             <div className="relative flex-shrink-0">
               <div className={`w-24 h-24 sm:w-28 sm:h-28 bg-gray-200 rounded-2xl shadow-md border-4 border-white ${!isImageLoaded ? "animate-pulse" : ""}`}>
                 <img
-                  src={getImageSrc()}
+                  // src={getImageSrc()}
                   alt={therapistName}
                   className={`w-full h-full object-cover rounded-2xl ${isImageLoaded ? "block" : "hidden"}`}
                   onLoad={() => setIsImageLoaded(true)}
