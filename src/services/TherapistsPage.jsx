@@ -643,7 +643,7 @@ View online: ${window.location.href}
 };
 
 const ServicesSection = () => {
-  const { booking, login, therapists } = useAppContext();
+  const { therapistBookings, login, therapists } = useAppContext();
   const [selectedSession, setSelectedSession] = useState(null);
   
   const [searchParams, setSearchParams] = useSearchParams();
@@ -665,7 +665,7 @@ const ServicesSection = () => {
   const getTherapistForSession = (session) =>
     therapists.find((therapist) => therapist._id === session.therapistId);
 
-  const paidSessions = booking?.filter((session) => session.payStatus === "paid") || [];
+  const paidSessions = therapistBookings?.filter((session) => session.payStatus === "paid") || [];
 
   const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -797,7 +797,7 @@ const ServicesSection = () => {
     );
   }
 
-  if (!booking || paidSessions.length === 0) {
+  if (!therapistBookings || paidSessions.length === 0) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-soft p-6 sm:p-8 text-center border border-gray-200">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -807,7 +807,7 @@ const ServicesSection = () => {
           No Beauty & Wellness Services
         </h3>
         <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
-          {booking && booking.length > 0
+          {therapistBookings && therapistBookings.length > 0
             ? "You have services but no paid bookings yet."
             : "You haven't booked any beauty & wellness services yet."}
         </p>
@@ -1652,10 +1652,10 @@ const BeautyWellnessPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'experts');
   
-  const { therapists, login, therapistsLoading, therapistsError, booking } = useAppContext();
+  const { therapists, login, therapistsLoading, therapistsError, therapistBookings } = useAppContext();
   
-  const paidSessionsCount = login && booking 
-    ? booking.filter(session => session.payStatus === 'paid').length 
+  const paidSessionsCount = login && therapistBookings 
+    ? therapistBookings.filter(session => session.payStatus === 'paid').length 
     : 0;
 
   useEffect(() => {
