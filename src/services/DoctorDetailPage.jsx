@@ -325,471 +325,292 @@ const PaymentProcessingModal = ({ onClose }) => {
   );
 };
 
+
+
+
 const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
+
+  const [alreadyBooked, setAlreadyBooked] = useState([]);
+  useEffect(() => {
+   try {
+    const fetchBookedSlots = async () => {
+      const response = await axios.get(`${url}/api/phonepe/get-already-booked?doctorId=${doctor._id}`);
+     const slots = response.data.slots || [];
+
+setAlreadyBooked(slots);
+
+// alert("Fetched booked slots: " + slots.join(", "));
+    };
+    fetchBookedSlots();
+   } catch (error) {
+    alert("Error fetching booked slots: " + error.message);
+   }
+  }, []);
+
+  // STEP
+  const [step, setStep] = useState(1);
+
+  // FORM
   const [patientName, setPatientName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [date, setDate] = useState("");
-  const [day, setDay] = useState("");
-  const [half, setHalf] = useState("");
-  const [time, setTime] = useState("");
+
+  // CALENDAR
+  const [year] = useState(2026);
+  const [month, setMonth] = useState(2);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
 
   const amount = doctor.fees;
 
-  const getImageSrc = () => {
-    if (imageError || !doctor.image || !doctor.image._id) {
-      return "/default-doctor.jpg";
-    }
-    return `${url}/img/${doctor.image._id}`;
-  };
+  //////////////////////////////////////////////////////////
+  // CALENDAR DATA
+  //////////////////////////////////////////////////////////
 
-  const validateForm = () => {
-    const newErrors = {};
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
 
-    if (!phone) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^\d{10}$/.test(phone)) {
-      newErrors.phone = "Phone number must be exactly 10 digits";
-    }
+  const times = ["10:30 PM", "11:00 PM", "11:30 PM", "12:00 AM"];
 
-    if (!age) {
-      newErrors.age = "Age is required";
-    } else if (age < 1 || age > 120) {
-      newErrors.age = "Age must be between 1 and 120 years";
-    }
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-    if (!gender) {
-      newErrors.gender = "Gender is required";
-    }
+  //////////////////////////////////////////////////////////
+  // BOOKED SLOTS CONVERT
+  //////////////////////////////////////////////////////////
 
-    if (!date) {
-      newErrors.date = "Appointment date is required";
-    }
-
-    if (!half) {
-      newErrors.half = "Session is required";
-    }
-
-    if (!time) {
-      newErrors.time = "Time slot is required";
-    }
-
-    if (!patientName.trim()) {
-      newErrors.patientName = "Full name is required";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    const today = new Date().toISOString().split("T")[0];
-
-    if (selectedDate < today) {
-      alert("Past dates are not allowed. Please select a valid date.");
-      setDate("");
-      setDay("");
-      return;
-    }
-
-    setDate(selectedDate);
-
-    const weekday = new Date(selectedDate).toLocaleDateString("en-US", {
-      weekday: "long",
-    });
-
-    if (weekday === "Saturday" || weekday === "Sunday") {
-      alert("Weekends are not allowed. Please select a weekday.");
-      setDate("");
-      setDay("");
-      return;
-    }
-
-    setDay(weekday);
-    setErrors(prev => ({ ...prev, date: "" }));
-  };
-
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setPhone(value);
-    if (value.length === 10) {
-      setErrors(prev => ({ ...prev, phone: "" }));
-    }
-  };
-
-  const handleAgeChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-    setAge(value);
-    if (value && value >= 1 && value <= 120) {
-      setErrors(prev => ({ ...prev, age: "" }));
-    }
-  };
-
-  const handleGenderChange = (e) => {
-    setGender(e.target.value);
-    setErrors(prev => ({ ...prev, gender: "" }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
-
-    const bookingData = {
-      FullName: patientName,
-      Phone: phone,
-      Age: age,
-      Gender: gender,
-      Date: date,
-      Half: half,
-      Time: time,
-      amount
+  const convertSlotsToObjects = (slots) => {
+    const monthMap = {
+      January: 0, February: 1, March: 2, April: 3,
+      May: 4, June: 5, July: 6, August: 7,
+      September: 8, October: 9, November: 10, December: 11,
     };
 
-    await onSubmit(bookingData);
+    return slots.map((slot) => {
+      const [datePart, time] = slot.split(" - ");
+      const [day, monthName, year] = datePart.split(" ");
+
+      return {
+        year: Number(year),
+        month: monthMap[monthName],
+        day: Number(day),
+        time,
+      };
+    });
   };
 
+  const bookedSlots = convertSlotsToObjects(alreadyBooked);
+
+  const isBooked = (day, time) =>
+    bookedSlots.some(
+      (b) =>
+        b.year === year &&
+        b.month === month &&
+        b.day === day &&
+        b.time === time
+    );
+
+  //////////////////////////////////////////////////////////
+  // VALIDATION
+  //////////////////////////////////////////////////////////
+
+  const validateForm = () => {
+    if (!patientName || !phone || !age || !gender) {
+      alert("Fill all fields");
+      return false;
+    }
+    return true;
+  };
+
+  //////////////////////////////////////////////////////////
+  // FINAL SUBMIT
+  //////////////////////////////////////////////////////////
+
+  const handleSubmit = async () => {
+    if (!selectedDay || !selectedTime) {
+      alert("Select slot");
+      return;
+    }
+
+    const slot = `${selectedDay} ${months[month]} ${year} - ${selectedTime}`;
+
+    try {
+      setLoading(true);
+
+      const bookingData = {
+        FullName: patientName,
+        Phone: phone,
+        Age: age,
+        Gender: gender,
+        Slot: slot,
+        amount,
+      };
+
+      await onSubmit(bookingData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //////////////////////////////////////////////////////////
+  // UI
+  //////////////////////////////////////////////////////////
+
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 sm:p-6 rounded-t-2xl sticky top-0 z-10">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold flex items-center truncate">
-              <FaCalendarAlt className="mr-2 flex-shrink-0" />
-              <span className="truncate">Book Appointment</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-indigo-100 truncate">
-              with Dr. {doctor.name}
-              {user && (
-                <span className="ml-1 sm:ml-2 text-indigo-200">
-                  • Logged in
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="hover:bg-white/20 p-1 sm:p-2 rounded-full transition flex-shrink-0 ml-2"
-          >
-            <FaTimes size={18} className="sm:w-auto" />
-          </button>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+      <motion.div className="bg-white w-full max-w-4xl rounded-xl overflow-hidden">
+
+        {/* HEADER */}
+        <div className="flex justify-between p-4 bg-indigo-600 text-white">
+          <h2 className="flex items-center">
+            <FaCalendarAlt className="mr-2" />
+            Book Appointment
+          </h2>
+          <FaTimes onClick={onClose} className="cursor-pointer" />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 sm:p-6 space-y-4 sm:space-y-6"
-        >
-          {user && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
-              <p className="text-green-700 text-xs sm:text-sm font-medium flex items-center">
-                <FaCheckCircle className="mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  You are logged in as {user.name}
-                </span>
-              </p>
-            </div>
-          )}
+        {/* STEP 1 */}
+        {step === 1 && (
+          <div className="p-6 space-y-4">
+            <input
+              placeholder="Full Name"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              className="w-full border p-3 rounded"
+            />
 
-          <div className="flex items-center bg-gray-50 p-3 sm:p-4 rounded-xl border">
-            <div className="relative">
-              <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full object-cover border-2 border-indigo-200 flex-shrink-0 ${!imageLoaded ? 'animate-pulse' : ''}`}>
-                <img
-                  src={getImageSrc()}
-                  alt={doctor.name}
-                  className={`w-full h-full rounded-full object-cover ${imageLoaded ? 'block' : 'hidden'}`}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={(e) => {
-                    setImageLoaded(true);
-                    setImageError(true);
-                    e.target.src = "/default-doctor.jpg";
-                  }}
-                />
+            <input
+              placeholder="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border p-3 rounded"
+            />
+
+            <input
+              placeholder="Age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="w-full border p-3 rounded"
+            />
+
+            <div className="flex gap-2">
+              {["Male", "Female", "Other"].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGender(g)}
+                  className={`flex-1 p-2 border ${
+                    gender === g ? "bg-indigo-600 text-white" : ""
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                if (!validateForm()) return;
+                setStep(2);
+              }}
+              className="w-full bg-indigo-600 text-white p-3 rounded"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {/* STEP 2 → CALENDAR */}
+        {step === 2 && (
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* LEFT CALENDAR */}
+            <div>
+              <div className="flex justify-between mb-4">
+                <h2>{months[month]} {year}</h2>
+                <div>
+                  <button onClick={() => setMonth(month - 1)}>{"<"}</button>
+                  <button onClick={() => setMonth(month + 1)}>{">"}</button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={i}></div>
+                ))}
+
+                {days.map((day) => (
+                  <button
+                    key={day}
+                    onClick={() => setSelectedDay(day)}
+                    className={`p-2 rounded ${
+                      selectedDay === day
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-800 text-sm sm:text-base md:text-lg truncate">
-                Dr. {doctor.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                {doctor.specialization}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {doctor.experience}+ years experience
-              </p>
-            </div>
-            <div className="ml-auto text-green-600 font-bold text-lg sm:text-xl flex-shrink-0 pl-2">
-              ₹{amount}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaUser className="mr-2 text-gray-500 flex-shrink-0" />
-                Full Name *
-              </label>
-              <input
-                type="text"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.patientName
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200"
-                }`}
-                value={patientName}
-                onChange={(e) => {
-                  setPatientName(e.target.value);
-                  setErrors((prev) => ({ ...prev, patientName: "" }));
-                }}
-                placeholder="Enter patient's full name"
-                required
-              />
-              {errors.patientName && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.patientName}
-                </p>
-              )}
-            </div>
-
+            {/* RIGHT TIMES */}
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaPhone className="mr-2 text-gray-500 flex-shrink-0" />
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.phone ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={phone}
-                onChange={handlePhoneChange}
-                placeholder="10-digit mobile number"
-                maxLength="10"
-                required
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.phone}
-                </p>
-              )}
-              {phone.length === 10 && (
-                <p className="text-green-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaCheckCircle className="mr-1 flex-shrink-0" /> Valid phone
-                  number
-                </p>
-              )}
-            </div>
+              <h3>Select Time</h3>
 
-            {/* Age */}
-            <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaBirthdayCake className="mr-2 text-gray-500 flex-shrink-0" />
-                Age (Years) *
-              </label>
-              <input
-                type="number"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.age ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={age}
-                onChange={handleAgeChange}
-                placeholder="Enter age"
-                min="1"
-                max="120"
-                required
-              />
-              {errors.age && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.age}
-                </p>
-              )}
-            </div>
+              <div className="space-y-2 mt-4">
+                {times.map((time) => {
+                  const booked = selectedDay && isBooked(selectedDay, time);
 
-            {/* Gender */}
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaVenusMars className="mr-2 text-gray-500 flex-shrink-0" />
-                Gender *
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                {["Male", "Female", "Other", "Prefer not to say"].map(
-                  (option) => (
+                  return (
                     <button
-                      key={option}
-                      type="button"
-                      className={`p-3 sm:p-4 border rounded-xl text-center transition text-xs sm:text-sm ${
-                        gender === option
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : `border-gray-200 hover:border-indigo-300 ${
-                              errors.gender ? "border-red-500 bg-red-50" : ""
-                            }`
+                      key={time}
+                      disabled={booked}
+                      onClick={() => setSelectedTime(time)}
+                      className={`w-full p-2 rounded ${
+                        booked
+                          ? "bg-red-200"
+                          : selectedTime === time
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-100"
                       }`}
-                      onClick={() =>
-                        handleGenderChange({ target: { value: option } })
-                      }
                     >
-                      {option}
+                      {time}
                     </button>
-                  )
-                )}
+                  );
+                })}
               </div>
-              {errors.gender && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.gender}
+
+              {selectedDay && selectedTime && (
+                <p className="mt-4 text-green-600 flex items-center">
+                  <FaInfoCircle className="mr-2" />
+                  {selectedDay} {months[month]} - {selectedTime}
                 </p>
               )}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-4 border-t border-gray-200">
-            {/* Date */}
-            <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaCalendarAlt className="mr-2 text-gray-500 flex-shrink-0" />
-                Appointment Date *
-              </label>
-              <input
-                type="date"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.date ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={date}
-                onChange={handleDateChange}
-                required
-              />
-              {errors.date && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.date}
-                </p>
-              )}
-            </div>
-
-            {/* Session */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Session *
-              </label>
-              <select
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.half ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={half}
-                onChange={(e) => {
-                  setHalf(e.target.value);
-                  setErrors((prev) => ({ ...prev, half: "" }));
-                }}
-                required
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="mt-4 w-full bg-green-600 text-white p-3 rounded"
               >
-                <option value="">Select Session</option>
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
-              </select>
-              {errors.half && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.half}
-                </p>
-              )}
+                {loading ? "Processing..." : `Confirm ₹${amount}`}
+              </button>
             </div>
 
-            {/* Time Slot */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Time Slot *
-              </label>
-              <select
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm sm:text-base ${
-                  errors.time ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={time}
-                onChange={(e) => {
-                  setTime(e.target.value);
-                  setErrors((prev) => ({ ...prev, time: "" }));
-                }}
-                required
-              >
-                <option value="">Select Time</option>
-                {half === "Morning" && (
-                  <>
-                    <option value="09:00 AM">09:00 AM</option>
-                    <option value="10:00 AM">10:00 AM</option>
-                    <option value="11:00 AM">11:00 AM</option>
-                  </>
-                )}
-                {half === "Evening" && (
-                  <>
-                    <option value="05:00 PM">05:00 PM</option>
-                    <option value="06:00 PM">06:00 PM</option>
-                    <option value="07:00 PM">07:00 PM</option>
-                  </>
-                )}
-              </select>
-              {errors.time && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.time}
-                </p>
-              )}
-            </div>
+            <button
+              onClick={() => setStep(1)}
+              className="col-span-full text-indigo-600"
+            >
+              ← Back
+            </button>
           </div>
-
-          {day && (
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 sm:p-4">
-              <p className="font-semibold text-indigo-700 text-sm sm:text-base flex items-center">
-                <FaInfoCircle className="mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  Selected: {day}, {date} • {half} {time}
-                </span>
-              </p>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 sm:py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center text-sm sm:text-base md:text-lg ${
-              loading
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:from-green-700 hover:to-emerald-700"
-            }`}
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
-                Processing Payment...
-              </>
-            ) : (
-              <>
-                <FaCheckCircle className="mr-2 flex-shrink-0" />
-                <span>Confirm & Pay ₹{amount}</span>
-              </>
-            )}
-          </button>
-
-          <p className="text-[9px] sm:text-xs md:text-sm text-center text-gray-500 flex items-center justify-center">
-            <FaShieldAlt className="mr-1 flex-shrink-0 text-[10px] sm:text-xs" />
-            <span>
-              Your personal and payment information is secure and encrypted.
-            </span>
-          </p>
-        </form>
+        )}
       </motion.div>
     </div>
   );
@@ -892,6 +713,8 @@ const DoctorDetailPage = () => {
         MUID,
         transactionId,
       };
+
+      alert("data to be sent to backend: " + JSON.stringify(data));
 
       const response = await axios.post(`${url}/api/phonepe/payment2`, data);
       
