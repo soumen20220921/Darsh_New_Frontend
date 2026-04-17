@@ -45,7 +45,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
-const API_BASE = "http://localhost:8001/api";
+const API_BASE = "https://api3.pomwb.com/api";
 const url = API_BASE;
 
 const LoginRequiredModal = ({ onClose, onLogin, onContinueAsGuest, expert }) => {
