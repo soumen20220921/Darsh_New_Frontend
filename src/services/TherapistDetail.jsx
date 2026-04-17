@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
   FaUser, 
@@ -26,6 +26,10 @@ import {
   FaTicketAlt,
   FaDownload,
   FaSpa,
+    FaPlus,
+  FaMinus,
+  FaCalendarCheck,
+  FaCalendarAlt
 } from "react-icons/fa";
 import { 
   Star, 
@@ -348,722 +352,321 @@ const PaymentProcessingModal = ({ onClose }) => {
   );
 };
 
-const BookingModal = ({ expert, onClose, user, onSubmit }) => {
-  const [clientName, setClientName] = useState(user?.name || "");
+const BookingModal = ({ expert, onClose, user, url, onSubmit }) => {
+  const [alreadyBooked, setAlreadyBooked] = useState([]);
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      try {
+        const response = await axios.get(`${url}/api/phonepe/get-already-booked?doctorId=${expert._id}`);
+        const slots = response.data.slots || [];
+        setAlreadyBooked(slots);
+      } catch (error) {
+        console.error("Error fetching booked slots:", error);
+      }
+    };
+    fetchBookedSlots();
+  }, [expert._id, url]);
+
+  const [step, setStep] = useState(1);
+  const [patientName, setPatientName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [date, setDate] = useState("");
-  const [serviceType, setServiceType] = useState("salon");
-  const [time, setTime] = useState("");
+  const [year] = useState(2026);
+  const [month, setMonth] = useState(2);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  
-  const [address, setAddress] = useState("");
-  const [landmark, setLandmark] = useState("");
-  const [pincode, setPincode] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [needsConfirmationCall, setNeedsConfirmationCall] = useState(false);
-  const [specialInstructions, setSpecialInstructions] = useState("");
 
-  const amount = expert.fee;
+  const amount = expert.fees;
+
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  const times = ["10:30 PM", "11:00 PM", "11:30 PM", "12:00 AM"];
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  const convertSlotsToObjects = (slots) => {
+    const monthMap = {
+      January: 0, February: 1, March: 2, April: 3,
+      May: 4, June: 5, July: 6, August: 7,
+      September: 8, October: 9, November: 10, December: 11,
+    };
+    return slots.map((slot) => {
+      const [datePart, time] = slot.split(" - ");
+      const [day, monthName, year] = datePart.split(" ");
+      return {
+        year: Number(year),
+        month: monthMap[monthName],
+        day: Number(day),
+        time,
+      };
+    });
+  };
+
+  const bookedSlots = convertSlotsToObjects(alreadyBooked);
+  const isBooked = (day, time) =>
+    bookedSlots.some(
+      (b) =>
+        b.year === year &&
+        b.month === month &&
+        b.day === day &&
+        b.time === time
+    );
 
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!phone) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^\d{10}$/.test(phone)) {
-      newErrors.phone = "Phone number must be exactly 10 digits";
+    if (!patientName || !phone || !age || !gender) {
+      alert("Please fill all fields");
+      return false;
     }
-
-    if (!age) {
-      newErrors.age = "Age is required";
-    } else if (age < 1 || age > 120) {
-      newErrors.age = "Age must be between 1 and 120 years";
+    if (phone.length < 10) {
+      alert("Please enter a valid 10-digit phone number");
+      return false;
     }
-
-    if (!gender) {
-      newErrors.gender = "Gender is required";
+    const ageNum = Number(age);
+    if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+      alert("Please enter a valid age between 1 and 120");
+      return false;
     }
-
-    if (!date) {
-      newErrors.date = "Service date is required";
-    }
-
-    if (!time) {
-      newErrors.time = "Time slot is required";
-    }
-
-    if (!clientName.trim()) {
-      newErrors.clientName = "Full name is required";
-    }
-
-    if (serviceType === "home") {
-      if (!address.trim()) {
-        newErrors.address = "Full address is required for home service";
-      }
-      if (!pincode.trim()) {
-        newErrors.pincode = "Pincode is required";
-      } else if (!/^\d{6}$/.test(pincode)) {
-        newErrors.pincode = "Pincode must be exactly 6 digits";
-      }
-      if (!city.trim()) {
-        newErrors.city = "City is required";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    const today = new Date().toISOString().split("T")[0];
-
-    if (selectedDate < today) {
-      toast.error("Past dates are not allowed. Please select a valid date.");
-      setDate("");
+  const handleSubmit = async () => {
+    if (!selectedDay || !selectedTime) {
+      alert("Please select a date and time slot");
       return;
     }
-
-    setDate(selectedDate);
-    setErrors(prev => ({ ...prev, date: "" }));
-  };
-
-  const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setPhone(value);
-    if (value.length === 10) {
-      setErrors(prev => ({ ...prev, phone: "" }));
+    const slot = `${selectedDay} ${months[month]} ${year} - ${selectedTime}`;
+    try {
+      setLoading(true);
+      const bookingData = {
+        FullName: patientName,
+        Phone: phone,
+        Age: String(age), // backend expects string (unchanged)
+        Gender: gender,
+        Slot: slot,
+        amount,
+      };
+      await onSubmit(bookingData);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Age stepper handlers
+  const increaseAge = () => {
+    const newAge = Math.min(Number(age) + 1, 120);
+    setAge(String(newAge));
+  };
+  const decreaseAge = () => {
+    const newAge = Math.max(Number(age) - 1, 1);
+    setAge(String(newAge));
+  };
   const handleAgeChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-    setAge(value);
-    if (value && value >= 1 && value <= 120) {
-      setErrors(prev => ({ ...prev, age: "" }));
-    }
-  };
-
-  const handlePincodeChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setPincode(value);
-    if (value.length === 6) {
-      setErrors(prev => ({ ...prev, pincode: "" }));
-      fetchCityFromPincode(value);
-    }
-  };
-
-  const fetchCityFromPincode = async (pincode) => {
-    if (pincode.length === 6) {
-      setTimeout(() => {
-        const cityMap = {
-          '110001': 'New Delhi',
-          '400001': 'Mumbai',
-          '700001': 'Kolkata',
-          '560001': 'Bangalore',
-        };
-        setCity(cityMap[pincode] || '');
-        setState(cityMap[pincode] ? `${cityMap[pincode]} State` : '');
-      }, 500);
-    }
-  };
-
-  const handleGenderChange = (value) => {
-    setGender(value);
-    setErrors(prev => ({ ...prev, gender: "" }));
-  };
-
-  const handleServiceTypeChange = (type) => {
-    setServiceType(type);
-    if (type === "salon") {
-      setErrors(prev => ({
-        ...prev,
-        address: undefined,
-        pincode: undefined,
-        city: undefined
-      }));
-    }
-  };
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          toast.success("Location detected! Please verify your address.");
-          setAddress("Location detected via GPS - please verify and complete address details");
-        },
-        (error) => {
-          toast.error("Unable to get your location. Please enter manually.");
-        }
-      );
-    } else {
-      toast.error("Geolocation is not supported by your browser.");
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) {
+    let val = e.target.value;
+    if (val === "") {
+      setAge("");
       return;
     }
-
-    // const bookingData = {
-    //   FullName: clientName,
-    //   Phone: phone,
-    //   Age: age,
-    //   Gender: gender,
-    //   Date: date,
-    //   Time: time,
-    //   serviceType,
-    //   amount,
-    //   ...(serviceType === "home" && {
-    //     address: {
-    //       fullAddress: address,
-    //       landmark,
-    //       pincode,
-    //       city,
-    //       state
-    //     },
-    //     needsConfirmationCall,
-    //     specialInstructions: specialInstructions || undefined
-    //   })
-    // };
-
-    const bookingData = {
-       userId :user.id,
-        FullName:clientName,
-        amount:expert.fee,
-        Phone:phone,
-        Date:date,
-        Half:"morning",
-        Time:"12-2 pm",
-        Address:"there will be address of the user",
-        TharapistId:expert._id
+    let num = Number(val);
+    if (!isNaN(num)) {
+      num = Math.min(120, Math.max(1, num));
+      setAge(String(num));
     }
-
-    // console.log(bookingData,user)
-
-    await onSubmit(bookingData);
   };
-
-  const generateTimeSlots = () => {
-    const slots = [];
-    
-    for (let i = 0; i < 6; i++) {
-      const hour = 9 + Math.floor(i / 2);
-      const minute = i % 2 === 0 ? '00' : '30';
-      const timeString = `${hour}:${minute} AM`;
-      slots.push({
-        time: timeString,
-        displayTime: timeString
-      });
-    }
-    
-    for (let i = 0; i < 6; i++) {
-      const hour = 17 + Math.floor(i / 2);
-      const minute = i % 2 === 0 ? '00' : '30';
-      const displayHour = hour > 12 ? hour - 12 : hour;
-      const timeString = `${displayHour}:${minute} PM`;
-      slots.push({
-        time: timeString,
-        displayTime: timeString
-      });
-    }
-    
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl max-h-[95vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-center bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 sm:p-6 rounded-t-2xl sticky top-0 z-10">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold flex items-center truncate">
-              <FaCalendar className="mr-2 flex-shrink-0" />
-              <span className="truncate">Book Beauty & Wellness Service</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-purple-100 truncate">
-              with {expert.name}
-              {user && (
-                <span className="ml-1 sm:ml-2 text-purple-200">
-                  • Logged in
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="hover:bg-white/20 p-1 sm:p-2 rounded-full transition flex-shrink-0 ml-2"
-          >
-            <FaTimes size={18} className="sm:w-auto" />
-          </button>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+      <motion.div className="bg-white w-full max-w-4xl rounded-xl overflow-hidden my-4">
+        {/* Header */}
+        <div className="flex justify-between items-center p-4 bg-indigo-600 text-white">
+          <h2 className="flex items-center text-base sm:text-lg font-semibold">
+            <FaCalendarAlt className="mr-2" />
+            Book Appointment
+          </h2>
+          <FaTimes onClick={onClose} className="cursor-pointer text-xl" />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="p-4 sm:p-6 space-y-4 sm:space-y-6"
-        >
-          {user && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4">
-              <p className="text-green-700 text-xs sm:text-sm font-medium flex items-center">
-                <FaCheckCircle className="mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  You are logged in as {user.name}
-                </span>
-              </p>
-            </div>
-          )}
-
-          <div className="flex items-center bg-gray-50 p-3 sm:p-4 rounded-xl border">
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full object-cover border-2 border-purple-200 flex-shrink-0">
-                <img
-                  // src={expert.image?.id ? `${url}/img/${expert.image._id}` : "/default-expert.jpg"}
-                  alt={expert.name}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              </div>
-            </div>
-            <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-800 text-sm sm:text-base md:text-lg truncate">
-                {expert.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
-                {expert.certification}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {expert.experience}+ years experience
-              </p>
-            </div>
-            <div className="ml-auto text-green-600 font-bold text-lg sm:text-xl flex-shrink-0 pl-2">
-              ₹{amount}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaUser className="mr-2 text-gray-500 flex-shrink-0" />
-                Full Name *
-              </label>
+        {/* Step 1: Patient Details */}
+        {step === 1 && (
+          <div className="p-4 sm:p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input
                 type="text"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-purple-500 outline-none transition text-sm sm:text-base ${
-                  errors.clientName
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-200"
-                }`}
-                value={clientName}
-                onChange={(e) => {
-                  setClientName(e.target.value);
-                  setErrors((prev) => ({ ...prev, clientName: "" }));
-                }}
-                placeholder="Enter your full name"
-                required
+                placeholder="Enter full name"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
-              {errors.clientName && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.clientName}
-                </p>
-              )}
             </div>
-
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaPhone className="mr-2 text-gray-500 flex-shrink-0" />
-                Phone Number *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
               <input
                 type="tel"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-purple-500 outline-none transition text-sm sm:text-base ${
-                  errors.phone ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={phone}
-                onChange={handlePhoneChange}
                 placeholder="10-digit mobile number"
-                maxLength="10"
-                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
               />
-              {errors.phone && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.phone}
-                </p>
-              )}
-              {phone.length === 10 && (
-                <p className="text-green-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaCheckCircle className="mr-1 flex-shrink-0" /> Valid phone
-                  number
-                </p>
-              )}
             </div>
-
             <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaBirthdayCake className="mr-2 text-gray-500 flex-shrink-0" />
-                Age (Years) *
-              </label>
-              <input
-                type="number"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-purple-500 outline-none transition text-sm sm:text-base ${
-                  errors.age ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={age}
-                onChange={handleAgeChange}
-                placeholder="Enter age"
-                min="1"
-                max="120"
-                required
-              />
-              {errors.age && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.age}
-                </p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaVenusMars className="mr-2 text-gray-500 flex-shrink-0" />
-                Gender *
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-                {["Male", "Female", "Other", "Prefer not to say"].map(
-                  (option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`p-3 sm:p-4 border rounded-xl text-center transition text-xs sm:text-sm ${
-                        gender === option
-                          ? "bg-purple-600 text-white border-purple-600"
-                          : `border-gray-200 hover:border-purple-300 ${
-                              errors.gender ? "border-red-500 bg-red-50" : ""
-                            }`
-                      }`}
-                      onClick={() => handleGenderChange(option)}
-                    >
-                      {option}
-                    </button>
-                  )
-                )}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={decreaseAge}
+                  disabled={!age || Number(age) <= 1}
+                  className="p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <FaMinus />
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={age}
+                  onChange={handleAgeChange}
+                  className="flex-1 border border-gray-300 p-3 rounded-lg text-center focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={increaseAge}
+                  disabled={!age || Number(age) >= 120}
+                  className="p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <FaPlus />
+                </button>
               </div>
-              {errors.gender && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.gender}
-                </p>
-              )}
             </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-4">
-            <label className="block text-sm font-medium mb-3">
-              Service Type *
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className={`p-4 border-2 rounded-xl text-center transition flex flex-col items-center gap-2 ${
-                  serviceType === "salon"
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "border-gray-200 hover:border-purple-300 bg-white"
-                }`}
-                onClick={() => handleServiceTypeChange("salon")}
-              >
-                <FaSpa className="text-lg" />
-                <span className="text-sm font-medium">Salon Service</span>
-                <span className="text-xs opacity-75">Visit expert's location</span>
-              </button>
-              <button
-                type="button"
-                className={`p-4 border-2 rounded-xl text-center transition flex flex-col items-center gap-2 ${
-                  serviceType === "home"
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "border-gray-200 hover:border-purple-300 bg-white"
-                }`}
-                onClick={() => handleServiceTypeChange("home")}
-              >
-                <FaHome className="text-lg" />
-                <span className="text-sm font-medium">Home Service</span>
-                <span className="text-xs opacity-75">Expert visits you</span>
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <div className="flex flex-wrap gap-3">
+                {["Male", "Female", "Other"].map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGender(g)}
+                    className={`px-5 py-2 rounded-lg border transition ${
+                      gender === g
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-gray-100 border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {serviceType === "home" && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-4 bg-blue-50 border border-blue-200 rounded-xl p-4"
+            <button
+              onClick={() => {
+                if (validateForm()) setStep(2);
+              }}
+              className="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
             >
-              <h4 className="font-semibold text-blue-800 flex items-center">
-                <FaMapMarkerAlt className="mr-2" />
-                Home Service Location Details
-              </h4>
+              Next: Select Slot
+            </button>
+          </div>
+        )}
 
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-2 flex items-center">
-                    Full Address *
-                  </label>
+        {/* Step 2: Calendar & Time */}
+        {step === 2 && (
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Calendar */}
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">{months[month]} {year}</h3>
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className={`flex-1 border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${
-                        errors.address ? "border-red-500 bg-red-50" : "border-gray-200"
-                      }`}
-                      value={address}
-                      onChange={(e) => {
-                        setAddress(e.target.value);
-                        setErrors((prev) => ({ ...prev, address: "" }));
-                      }}
-                      placeholder="House no., Building, Street, Area"
-                      required
-                    />
                     <button
-                      type="button"
-                      onClick={getCurrentLocation}
-                      className="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition flex items-center text-sm whitespace-nowrap"
+                      onClick={() => setMonth((m) => Math.max(0, m - 1))}
+                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      disabled={month === 0}
                     >
-                      <FaMapMarkerAlt className="mr-2" />
-                      Use GPS
+                      ◀
+                    </button>
+                    <button
+                      onClick={() => setMonth((m) => Math.min(11, m + 1))}
+                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      disabled={month === 11}
+                    >
+                      ▶
                     </button>
                   </div>
-                  {errors.address && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <FaExclamationTriangle className="mr-1" />
-                      {errors.address}
-                    </p>
-                  )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium mb-2">Landmark</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"
-                      value={landmark}
-                      onChange={(e) => setLandmark(e.target.value)}
-                      placeholder="Nearby landmark (optional)"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2">Pincode *</label>
-                    <input
-                      type="text"
-                      className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${
-                        errors.pincode ? "border-red-500 bg-red-50" : "border-gray-200"
-                      }`}
-                      value={pincode}
-                      onChange={handlePincodeChange}
-                      placeholder="6-digit pincode"
-                      maxLength="6"
-                      required
-                    />
-                    {errors.pincode && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center">
-                        <FaExclamationTriangle className="mr-1" />
-                        {errors.pincode}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium mb-2">City *</label>
-                    <input
-                      type="text"
-                      className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${
-                        errors.city ? "border-red-500 bg-red-50" : "border-gray-200"
-                      }`}
-                      value={city}
-                      onChange={(e) => {
-                        setCity(e.target.value);
-                        setErrors((prev) => ({ ...prev, city: "" }));
-                      }}
-                      placeholder="Your city"
-                      required
-                    />
-                    {errors.city && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center">
-                        <FaExclamationTriangle className="mr-1" />
-                        {errors.city}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2">State *</label>
-                    <input
-                      type="text"
-                      className="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      placeholder="Your state"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
-                  <input
-                    type="checkbox"
-                    id="confirmationCall"
-                    checked={needsConfirmationCall}
-                    onChange={(e) => setNeedsConfirmationCall(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="confirmationCall" className="text-sm text-gray-700">
-                    Request confirmation call before service
-                    <span className="block text-xs text-gray-500">
-                      Expert will call to confirm address and timing
-                    </span>
-                  </label>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2">Special Instructions</label>
-                  <textarea
-                    className="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm resize-none"
-                    value={specialInstructions}
-                    onChange={(e) => setSpecialInstructions(e.target.value)}
-                    placeholder="Any specific instructions for the expert, parking info, gate code, etc."
-                    rows="3"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {serviceType === "salon" && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-green-50 border border-green-200 rounded-xl p-4"
-            >
-              <h4 className="font-semibold text-green-800 flex items-center mb-2">
-                <FaMapMarkerAlt className="mr-2" />
-                Salon Location
-              </h4>
-              <p className="text-green-700 text-sm">
-                You will visit the expert's salon at their professional location.
-                Address details will be shared in the confirmation.
-              </p>
-            </motion.div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pt-4 border-t border-gray-200">
-            <div>
-              <label className="text-sm font-medium mb-2 flex items-center">
-                <FaCalendar className="mr-2 text-gray-500 flex-shrink-0" />
-                Service Date *
-              </label>
-              <input
-                type="date"
-                className={`w-full border rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-purple-500 outline-none transition text-sm sm:text-base ${
-                  errors.date ? "border-red-500 bg-red-50" : "border-gray-200"
-                }`}
-                value={date}
-                onChange={handleDateChange}
-                required
-              />
-              {errors.date && (
-                <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                  <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                  {errors.date}
-                </p>
-              )}
-            </div>
-
-            {date && (
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Available Time Slots *
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {timeSlots.map((slot, index) => (
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
+                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
+                    <div key={d} className="text-xs sm:text-sm font-medium text-gray-500">{d}</div>
+                  ))}
+                  {Array.from({ length: firstDay }).map((_, i) => (
+                    <div key={`empty-${i}`} className="p-2"></div>
+                  ))}
+                  {days.map((day) => (
                     <button
-                      key={index}
-                      type="button"
-                      onClick={() => setTime(slot.time)}
-                      className={`p-3 border rounded-xl text-center transition text-xs ${
-                        time === slot.time
-                          ? "bg-purple-600 text-white border-purple-600"
-                          : "border-gray-200 hover:border-purple-300"
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      className={`p-2 sm:p-3 rounded-lg text-sm sm:text-base transition ${
+                        selectedDay === day
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-100 hover:bg-gray-200"
                       }`}
                     >
-                      {slot.displayTime}
+                      {day}
                     </button>
                   ))}
                 </div>
-                {errors.time && (
-                  <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
-                    <FaExclamationTriangle className="mr-1 flex-shrink-0" />{" "}
-                    {errors.time}
+              </div>
+
+              {/* Time slots */}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-3">Select Time</h3>
+                <div className="space-y-2">
+                  {times.map((time) => {
+                    const booked = selectedDay && isBooked(selectedDay, time);
+                    return (
+                      <button
+                        key={time}
+                        disabled={booked}
+                        onClick={() => setSelectedTime(time)}
+                        className={`w-full p-3 rounded-lg text-sm sm:text-base transition ${
+                          booked
+                            ? "bg-red-100 text-red-500 cursor-not-allowed line-through"
+                            : selectedTime === time
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-100 hover:bg-gray-200"
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedDay && selectedTime && (
+                  <p className="mt-4 text-green-600 flex items-center text-sm">
+                    <FaInfoCircle className="mr-2" />
+                    {selectedDay} {months[month]} - {selectedTime}
                   </p>
                 )}
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="mt-6 w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  {loading ? "Processing..." : `Confirm & Pay ₹${amount}`}
+                </button>
               </div>
-            )}
-          </div>
-
-          {date && time && (
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 sm:p-4">
-              <p className="font-semibold text-purple-700 text-sm sm:text-base flex items-center">
-                <FaInfoCircle className="mr-2 flex-shrink-0" />
-                <span className="truncate">
-                  Selected: {new Date(date).toLocaleDateString()} • {time} • {serviceType === "salon" ? "Salon Service" : "Home Service"}
-                  {serviceType === "home" && needsConfirmationCall && " • Confirmation Call Requested"}
-                </span>
-              </p>
             </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 sm:py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center text-sm sm:text-base md:text-lg ${
-              loading
-                ? "opacity-70 cursor-not-allowed"
-                : "hover:from-green-700 hover:to-emerald-700"
-            }`}
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
-                Processing Payment...
-              </>
-            ) : (
-              <>
-                <FaCheckCircle className="mr-2 flex-shrink-0" />
-                <span>Confirm & Pay ₹{amount}</span>
-              </>
-            )}
-          </button>
-
-          <p className="text-[9px] sm:text-xs md:text-sm text-center text-gray-500 flex items-center justify-center">
-            <FaShieldAlt className="mr-1 flex-shrink-0 text-[10px] sm:text-xs" />
-            <span>
-              Your personal and payment information is secure and encrypted.
-            </span>
-          </p>
-        </form>
+            <button
+              onClick={() => setStep(1)}
+              className="mt-6 text-indigo-600 hover:underline text-sm"
+            >
+              ← Back to Patient Details
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );
@@ -1099,11 +702,12 @@ const Section = ({ title, children, className = "" }) => (
 const ExpertDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { login, url, user, token } = useAppContext();
+  const { login, url, user, token ,therapists} = useAppContext();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+   const [showModal, setShowModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -1116,6 +720,9 @@ const ExpertDetail = () => {
   const [reviews, setReviews] = useState([]);
   const [similarExperts, setSimilarExperts] = useState([]);
   const [latestAppointment, setLatestAppointment] = useState(null);
+
+
+    const therapist = useMemo(() => therapists?.find((d) => d._id === id), [therapists, id]);
 
   const fetchExpertDetails = async () => {
     try {
@@ -1252,37 +859,26 @@ const ExpertDetail = () => {
     setShowBookingModal(true);
   };
 
-  const handleBookingSubmit = async (bookingData) => {
+ const handleBookingSubmit = async (bookingData) => {
     try {
-      // setShowProcessingModal(true);
-      // setShowBookingModal(false);
-
-      // Simulate payment processing
-      // setTimeout(() => {
-      //   const appointment = {
-      //     ...bookingData,
-      //     transactionId: "S" + Date.now(),
-      //     MUID :"MUID" + Date.now()
-      //   };
-        
-      //   setLatestAppointment(appointment);
-      //   setShowProcessingModal(false);
-      //   setShowSuccessModal(true);
-      //   toast.success("Service booked successfully!");
-      // }, 2000);
-
-         const appointment = {
-          ...bookingData,
-          transactionId: "S" + Date.now(),
-          MUID :"MUID" + Date.now()
-        };
-       const response = await axios.post(`${url}/api/phonepe/payment3`, appointment);
-      
+      setShowProcessingModal(true);
+      setShowModal(false);
+      const transactionId = "T" + Date.now();
+      const MUID = "MUID" + Date.now();
+      const userId = user?.id;
+      const data = {
+        ...bookingData,
+        userId,
+        TherapistId: therapist._id,
+        MUID,
+        transactionId,
+      };
+      const response = await axios.post(`${url}/api/phonepe/payment3`, data);
       if (response?.data?.redirectUrl) {
         localStorage.setItem('pendingAppointment', JSON.stringify({
-          ...appointment
+          ...data,
+          expert: therapist
         }));
-        
         window.location.href = response.data.redirectUrl;
       } else {
         throw new Error('No redirect URL received');
@@ -1290,10 +886,9 @@ const ExpertDetail = () => {
     } catch (error) {
       console.error("Booking Error:", error);
       setShowProcessingModal(false);
-      toast.error("Booking failed. Please try again.");
+      alert("Booking failed. Please try again.");
     }
   };
-
   const handleViewServices = () => {
     setShowSuccessModal(false);
     navigate('/therapists?tab=services');

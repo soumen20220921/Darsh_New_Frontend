@@ -333,26 +333,40 @@ const PaymentProcessingModal = ({ onClose }) => {
 // ---------- BookingModal (fully responsive with improved age input) ----------
 const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
   const [alreadyBooked, setAlreadyBooked] = useState([]);
+
+  // ✅ Current date
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const currentDate = today.getDate();
+
+  const [year, setYear] = useState(currentYear);
+  const [month, setMonth] = useState(currentMonth);
+
+  // ✅ FIXED API CALL (safe)
   useEffect(() => {
-    const fetchBookedSlots = async () => {
+    const alreadyBookedSlots = async () => {
       try {
-        const response = await axios.get(`${url}/api/phonepe/get-already-booked?doctorId=${doctor._id}`);
-        const slots = response.data.slots || [];
-        setAlreadyBooked(slots);
+        if (!doctor?._id) return; // ✅ fix
+
+        const res = await axios.get(
+          `${url}/api/phonepe/getBookedSlots?doctorId=${doctor._id}`
+        );
+
+        setAlreadyBooked(res.data.slots || []);
       } catch (error) {
-        console.error("Error fetching booked slots:", error);
+        console.error(error);
       }
     };
-    fetchBookedSlots();
-  }, [doctor._id, url]);
+
+    alreadyBookedSlots();
+  }, [doctor?._id, url]); // ✅ fix
 
   const [step, setStep] = useState(1);
   const [patientName, setPatientName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
-  const [year] = useState(2026);
-  const [month, setMonth] = useState(2);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -363,18 +377,21 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
   ];
+
   const times = ["10:30 PM", "11:00 PM", "11:30 PM", "12:00 AM"];
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+  // Convert slots
   const convertSlotsToObjects = (slots) => {
     const monthMap = {
       January: 0, February: 1, March: 2, April: 3,
       May: 4, June: 5, July: 6, August: 7,
       September: 8, October: 9, November: 10, December: 11,
     };
+
     return slots.map((slot) => {
       const [datePart, time] = slot.split(" - ");
       const [day, monthName, year] = datePart.split(" ");
@@ -388,6 +405,7 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
   };
 
   const bookedSlots = convertSlotsToObjects(alreadyBooked);
+
   const isBooked = (day, time) =>
     bookedSlots.some(
       (b) =>
@@ -397,70 +415,55 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
         b.time === time
     );
 
+  // ✅ Improved validation
   const validateForm = () => {
     if (!patientName || !phone || !age || !gender) {
       alert("Please fill all fields");
       return false;
     }
-    if (phone.length < 10) {
-      alert("Please enter a valid 10-digit phone number");
-      return false;
-    }
+
     const ageNum = Number(age);
     if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-      alert("Please enter a valid age between 1 and 120");
+      alert("Enter valid age (1-120)");
       return false;
     }
+
     return true;
   };
 
   const handleSubmit = async () => {
     if (!selectedDay || !selectedTime) {
-      alert("Please select a date and time slot");
+      alert("Please select date & time");
       return;
     }
+
     const slot = `${selectedDay} ${months[month]} ${year} - ${selectedTime}`;
+
     try {
       setLoading(true);
-      const bookingData = {
+      await onSubmit({
         FullName: patientName,
         Phone: phone,
-        Age: String(age), // backend expects string (unchanged)
+        Age: String(age),
         Gender: gender,
         Slot: slot,
         amount,
-      };
-      await onSubmit(bookingData);
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Age stepper handlers
-  const increaseAge = () => {
-    const newAge = Math.min(Number(age) + 1, 120);
-    setAge(String(newAge));
-  };
-  const decreaseAge = () => {
-    const newAge = Math.max(Number(age) - 1, 1);
-    setAge(String(newAge));
-  };
-  const handleAgeChange = (e) => {
-    let val = e.target.value;
-    if (val === "") {
-      setAge("");
-      return;
-    }
-    let num = Number(val);
-    if (!isNaN(num)) {
-      num = Math.min(120, Math.max(1, num));
-      setAge(String(num));
-    }
-  };
+  const increaseAge = () =>
+    setAge(String(Math.min(Number(age || 1) + 1, 120)));
+
+  const decreaseAge = () =>
+    setAge(String(Math.max(Number(age || 1) - 1, 1)));
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
       <motion.div className="bg-white w-full max-w-4xl rounded-xl overflow-hidden my-4">
+
         {/* Header */}
         <div className="flex justify-between items-center p-4 bg-indigo-600 text-white">
           <h2 className="flex items-center text-base sm:text-lg font-semibold">
@@ -470,179 +473,186 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
           <FaTimes onClick={onClose} className="cursor-pointer text-xl" />
         </div>
 
-        {/* Step 1: Patient Details */}
+        {/* Step 1 */}
         {step === 1 && (
           <div className="p-4 sm:p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input
+              placeholder="Full Name"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              className="w-full border p-3 rounded-lg"
+            />
+
+            <input
+              placeholder="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border p-3 rounded-lg"
+            />
+
+            {/* Age */}
+            <div className="flex items-center gap-2">
+              <button onClick={decreaseAge}><FaMinus /></button>
               <input
-                type="text"
-                placeholder="Enter full name"
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                className="border p-3 rounded-lg text-center w-full"
               />
+              <button onClick={increaseAge}><FaPlus /></button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="tel"
-                placeholder="10-digit mobile number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-              <div className="flex items-center gap-2">
+
+            {/* Gender */}
+            <div className="flex gap-3">
+              {["Male", "Female", "Other"].map((g) => (
                 <button
-                  type="button"
-                  onClick={decreaseAge}
-                  disabled={!age || Number(age) <= 1}
-                  className="p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
+                  key={g}
+                  onClick={() => setGender(g)}
+                  className={`px-5 py-2 rounded-lg border ${
+                    gender === g
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100"
+                  }`}
                 >
-                  <FaMinus />
+                  {g}
                 </button>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={age}
-                  onChange={handleAgeChange}
-                  className="flex-1 border border-gray-300 p-3 rounded-lg text-center focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={increaseAge}
-                  disabled={!age || Number(age) >= 120}
-                  className="p-3 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
-                >
-                  <FaPlus />
-                </button>
-              </div>
+              ))}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-              <div className="flex flex-wrap gap-3">
-                {["Male", "Female", "Other"].map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => setGender(g)}
-                    className={`px-5 py-2 rounded-lg border transition ${
-                      gender === g
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "bg-gray-100 border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
+
             <button
-              onClick={() => {
-                if (validateForm()) setStep(2);
-              }}
-              className="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+              onClick={() => validateForm() && setStep(2)}
+              className="w-full bg-indigo-600 text-white p-3 rounded-lg"
             >
-              Next: Select Slot
+              Next
             </button>
           </div>
         )}
 
-        {/* Step 2: Calendar & Time */}
+        {/* Step 2 */}
         {step === 2 && (
           <div className="p-4 sm:p-6">
             <div className="flex flex-col lg:flex-row gap-6">
+
               {/* Calendar */}
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">{months[month]} {year}</h3>
+                  <h3>{months[month]} {year}</h3>
+
                   <div className="flex gap-2">
+                    {/* Prev */}
                     <button
-                      onClick={() => setMonth((m) => Math.max(0, m - 1))}
-                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                      disabled={month === 0}
+                      onClick={() => {
+                        if (month === 0) {
+                          if (year > currentYear) {
+                            setMonth(11);
+                            setYear((y) => y - 1);
+                          }
+                        } else {
+                          setMonth((m) => m - 1);
+                        }
+                      }}
+                      disabled={month === currentMonth && year === currentYear}
+                      className="px-3 py-1 bg-gray-200 rounded"
                     >
                       ◀
                     </button>
+
+                    {/* Next */}
                     <button
-                      onClick={() => setMonth((m) => Math.min(11, m + 1))}
-                      className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                      disabled={month === 11}
+                      onClick={() => {
+                        if (month === 11) {
+                          setMonth(0);
+                          setYear((y) => y + 1);
+                        } else {
+                          setMonth((m) => m + 1);
+                        }
+                      }}
+                      className="px-3 py-1 bg-gray-200 rounded"
                     >
                       ▶
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
-                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
-                    <div key={d} className="text-xs sm:text-sm font-medium text-gray-500">{d}</div>
-                  ))}
-                  {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`} className="p-2"></div>
-                  ))}
-                  {days.map((day) => (
-                    <button
-                      key={day}
-                      onClick={() => setSelectedDay(day)}
-                      className={`p-2 sm:p-3 rounded-lg text-sm sm:text-base transition ${
-                        selectedDay === day
-                          ? "bg-indigo-600 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Time slots */}
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-3">Select Time</h3>
-                <div className="space-y-2">
-                  {times.map((time) => {
-                    const booked = selectedDay && isBooked(selectedDay, time);
+                <div className="grid grid-cols-7 gap-2 text-center">
+                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
+                    <div key={d} className="text-sm text-gray-500">{d}</div>
+                  ))}
+
+                  {Array.from({ length: firstDay }).map((_, i) => (
+                    <div key={`empty-${i}`}></div> // ✅ fixed key
+                  ))}
+
+                  {days.map((day) => {
+                    const isPast =
+                      (year === currentYear &&
+                        month === currentMonth &&
+                        day < currentDate) ||
+                      (year < currentYear) ||
+                      (year === currentYear && month < currentMonth);
+
                     return (
                       <button
-                        key={time}
-                        disabled={booked}
-                        onClick={() => setSelectedTime(time)}
-                        className={`w-full p-3 rounded-lg text-sm sm:text-base transition ${
-                          booked
-                            ? "bg-red-100 text-red-500 cursor-not-allowed line-through"
-                            : selectedTime === time
+                        key={day}
+                        disabled={isPast}
+                        onClick={() => setSelectedDay(day)}
+                        className={`p-2 rounded-lg ${
+                          isPast
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : selectedDay === day
                             ? "bg-indigo-600 text-white"
                             : "bg-gray-100 hover:bg-gray-200"
                         }`}
                       >
-                        {time}
+                        {day}
                       </button>
                     );
                   })}
                 </div>
-                {selectedDay && selectedTime && (
-                  <p className="mt-4 text-green-600 flex items-center text-sm">
-                    <FaInfoCircle className="mr-2" />
-                    {selectedDay} {months[month]} - {selectedTime}
-                  </p>
-                )}
+              </div>
+
+              {/* Time */}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-3">Select Time</h3>
+
+                {times.map((time) => {
+                  const booked = selectedDay
+                    ? isBooked(selectedDay, time)
+                    : false; // ✅ fixed
+
+                  return (
+                    <button
+                      key={time}
+                      disabled={booked}
+                      onClick={() => setSelectedTime(time)}
+                      className={`w-full p-3 mb-2 rounded-lg ${
+                        booked
+                          ? "bg-red-100 text-red-500 line-through"
+                          : selectedTime === time
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-100 hover:bg-gray-200"
+                      }`}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
+
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="mt-6 w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                  className="mt-6 w-full bg-green-600 text-white p-3 rounded-lg"
                 >
                   {loading ? "Processing..." : `Confirm & Pay ₹${amount}`}
                 </button>
               </div>
             </div>
+
             <button
               onClick={() => setStep(1)}
-              className="mt-6 text-indigo-600 hover:underline text-sm"
+              className="mt-6 text-indigo-600 text-sm"
             >
-              ← Back to Patient Details
+              ← Back
             </button>
           </div>
         )}

@@ -373,24 +373,24 @@ const ServiceBookingPage = ({ onServiceClick }) => {
       category: "healthcare",
       features: ["Certified Doctors", "Online Consultation", "Prescription Services", "Health Records"],
     },
-    {
-      title: "Beauty & Wellness",
-      description: "Premium beauty treatments, spa services, and wellness therapies for complete relaxation and rejuvenation.",
-      icon: <Sparkle />,
-      price: 65,
-      rating: "4.9",
-      category: "beauty",
-      features: ["Expert Therapists", "Premium Products", "Custom Packages", "Relaxing Environment"],
-    },
-    {
-      title: "Astrologer Consultation",
-      description: "Get personalized astrological guidance and predictions from experienced astrologers for life decisions and future planning.",
-      icon: <Telescope />,
-      price: 49,
-      rating: "4.8",
-      category: "astrology",
-      features: ["Experienced Astrologers", "Birth Chart Analysis", "Personalized Predictions", "Remedial Solutions"],
-    },
+    // {
+    //   title: "Beauty & Wellness",
+    //   description: "Premium beauty treatments, spa services, and wellness therapies for complete relaxation and rejuvenation.",
+    //   icon: <Sparkle />,
+    //   price: 65,
+    //   rating: "4.9",
+    //   category: "beauty",
+    //   features: ["Expert Therapists", "Premium Products", "Custom Packages", "Relaxing Environment"],
+    // },
+    // {
+    //   title: "Astrologer Consultation",
+    //   description: "Get personalized astrological guidance and predictions from experienced astrologers for life decisions and future planning.",
+    //   icon: <Telescope />,
+    //   price: 49,
+    //   rating: "4.8",
+    //   category: "astrology",
+    //   features: ["Experienced Astrologers", "Birth Chart Analysis", "Personalized Predictions", "Remedial Solutions"],
+    // },
   ];
 
   const categories = [
