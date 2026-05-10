@@ -357,10 +357,10 @@
 }
 
 /* Focus states for accessibility */
-button:focus {
+/* button:focus {
   outline: 2px solid #ffc541;
   outline-offset: 2px;
-}
+} */
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {

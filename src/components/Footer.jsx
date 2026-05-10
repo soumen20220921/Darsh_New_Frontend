@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Shield, Truck, Code, Github, Star, CheckCircle } from 'lucide-react';
+import {  Mail, Phone, MapPin, Shield, Truck, Star, CheckCircle } from 'lucide-react';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -62,7 +62,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center justify-center md:justify-start space-x-3">
                 <MapPin className="h-5 w-5 text-blue-400 animate-bounce delay-200" />
-                <span className="text-gray-300">Nilkuthidanga, puruli,West bengal,723101</span>
+                <span className="text-gray-300">Nilkuthidanga, Purulia,West bengal,723101</span>
               </div>
             </div>
 

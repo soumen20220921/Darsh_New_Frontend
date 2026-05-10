@@ -11,10 +11,10 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaSignInAlt,
-  FaPhone,
-  FaUser,
-  FaVenusMars,
-  FaBirthdayCake,
+  // FaPhone,
+  // FaUser,
+  // FaVenusMars,
+  // FaBirthdayCake,
   FaInfoCircle,
   FaArrowLeft,
   FaTicketAlt,
@@ -461,202 +461,358 @@ const BookingModal = ({ doctor, onClose, user, url, onSubmit }) => {
     setAge(String(Math.max(Number(age || 1) - 1, 1)));
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
-      <motion.div className="bg-white w-full max-w-4xl rounded-xl overflow-hidden my-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div className="min-h-screen flex items-center justify-center p-3 sm:p-5">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-5xl bg-white rounded-[20px] sm:rounded-[30px] overflow-hidden shadow-2xl"
+        >
+          {/* Header */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-5 sm:p-7 text-white">
+            <div className="flex justify-between items-center relative z-10">
+              <div>
+                <h2 className="text-xl sm:text-3xl font-bold flex items-center gap-3">
+                  <FaCalendarAlt />
+                  Book Appointment
+                </h2>
 
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 bg-indigo-600 text-white">
-          <h2 className="flex items-center text-base sm:text-lg font-semibold">
-            <FaCalendarAlt className="mr-2" />
-            Book Appointment
-          </h2>
-          <FaTimes onClick={onClose} className="cursor-pointer text-xl" />
-        </div>
+                <p className="text-white/80 mt-2 text-sm sm:text-base">
+                  Complete your booking in 2 simple steps
+                </p>
+              </div>
 
-        {/* Step 1 */}
-        {step === 1 && (
-          <div className="p-4 sm:p-6 space-y-4">
-            <input
-              placeholder="Full Name"
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
-              className="w-full border p-3 rounded-lg"
-            />
-
-            <input
-              placeholder="Phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full border p-3 rounded-lg"
-            />
-
-            {/* Age */}
-            <div className="flex items-center gap-2">
-              <button onClick={decreaseAge}><FaMinus /></button>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="border p-3 rounded-lg text-center w-full"
-              />
-              <button onClick={increaseAge}><FaPlus /></button>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition"
+              >
+                <FaTimes />
+              </button>
             </div>
 
-            {/* Gender */}
-            <div className="flex gap-3">
-              {["Male", "Female", "Other"].map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGender(g)}
-                  className={`px-5 py-2 rounded-lg border ${
-                    gender === g
-                      ? "bg-indigo-600 text-white"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
+            <div className="mt-6 flex items-center gap-3">
+              <div
+                className={`h-2 rounded-full flex-1 ${
+                  step >= 1 ? "bg-white" : "bg-white/30"
+                }`}
+              ></div>
 
-            <button
-              onClick={() => validateForm() && setStep(2)}
-              className="w-full bg-indigo-600 text-white p-3 rounded-lg"
-            >
-              Next
-            </button>
+              <div
+                className={`h-2 rounded-full flex-1 ${
+                  step >= 2 ? "bg-white" : "bg-white/30"
+                }`}
+              ></div>
+            </div>
           </div>
-        )}
 
-        {/* Step 2 */}
-        {step === 2 && (
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-col lg:flex-row gap-6">
+          {/* STEP 1 */}
+          {step === 1 && (
+            <div className="p-4 sm:p-8 lg:p-10">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-8">
 
-              {/* Calendar */}
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-4">
-                  <h3>{months[month]} {year}</h3>
+                {/* LEFT */}
+                <div className="space-y-5">
+                  <div>
+                    <label className="block mb-2 text-sm font-semibold text-gray-700">
+                      Full Name
+                    </label>
 
-                  <div className="flex gap-2">
-                    {/* Prev */}
-                    <button
-                      onClick={() => {
-                        if (month === 0) {
-                          if (year > currentYear) {
-                            setMonth(11);
-                            setYear((y) => y - 1);
-                          }
-                        } else {
-                          setMonth((m) => m - 1);
-                        }
-                      }}
-                      disabled={month === currentMonth && year === currentYear}
-                      className="px-3 py-1 bg-gray-200 rounded"
-                    >
-                      ◀
-                    </button>
+                    <input
+                      placeholder="Enter patient name"
+                      value={patientName}
+                      onChange={(e) => setPatientName(e.target.value)}
+                      className="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 outline-none focus:border-indigo-500"
+                    />
+                  </div>
 
-                    {/* Next */}
-                    <button
-                      onClick={() => {
-                        if (month === 11) {
-                          setMonth(0);
-                          setYear((y) => y + 1);
-                        } else {
-                          setMonth((m) => m + 1);
-                        }
-                      }}
-                      className="px-3 py-1 bg-gray-200 rounded"
-                    >
-                      ▶
-                    </button>
+                  <div>
+                    <label className="block mb-2 text-sm font-semibold text-gray-700">
+                      Phone Number
+                    </label>
+
+                    <input
+                      placeholder="Enter phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  {/* AGE */}
+                  <div>
+                    <label className="block mb-2 text-sm font-semibold text-gray-700">
+                      Age
+                    </label>
+
+                    <div className="flex items-center rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                      <button
+                        onClick={decreaseAge}
+                        className="w-14 h-14 flex items-center justify-center hover:bg-gray-100"
+                      >
+                        <FaMinus />
+                      </button>
+
+                      <input
+                        type="number"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        className="flex-1 text-center bg-transparent outline-none"
+                      />
+
+                      <button
+                        onClick={increaseAge}
+                        className="w-14 h-14 flex items-center justify-center hover:bg-gray-100"
+                      >
+                        <FaPlus />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-2 text-center">
-                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-                    <div key={d} className="text-sm text-gray-500">{d}</div>
-                  ))}
+                {/* RIGHT */}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <label className="block mb-4 text-sm font-semibold text-gray-700">
+                      Select Gender
+                    </label>
 
-                  {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={`empty-${i}`}></div> // ✅ fixed key
-                  ))}
+                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                      {["Male", "Female", "Other"].map((g) => (
+                        <button
+                          key={g}
+                          onClick={() => setGender(g)}
+                          className={`rounded-2xl p-3 sm:p-5 text-sm sm:text-base border-2 font-semibold transition-all duration-300 ${
+                            gender === g
+                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-lg scale-105"
+                              : "bg-white border-gray-200 hover:border-indigo-300"
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  {days.map((day) => {
-                    const isPast =
-                      (year === currentYear &&
-                        month === currentMonth &&
-                        day < currentDate) ||
-                      (year < currentYear) ||
-                      (year === currentYear && month < currentMonth);
+                  {/* Doctor Card */}
+                  <div className="mt-6 sm:mt-8 rounded-3xl bg-gradient-to-r from-indigo-50 to-purple-50 p-4 sm:p-6 border border-indigo-100">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                      <img
+                        src={`${url}/img/${doctor.image._id}`}
+                        alt=""
+                        className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow"
+                      />
 
-                    return (
-                      <button
-                        key={day}
-                        disabled={isPast}
-                        onClick={() => setSelectedDay(day)}
-                        className={`p-2 rounded-lg ${
-                          isPast
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                            : selectedDay === day
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
+                      <div className="text-center sm:text-left">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                          {doctor.name}
+                        </h3>
+
+                        <p className="text-gray-500 text-sm sm:text-base">
+                          {doctor.speciality}
+                        </p>
+
+                        <p className="mt-2 text-lg sm:text-xl font-bold text-indigo-600">
+                          ₹{amount}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => validateForm() && setStep(2)}
+                    className="mt-6 sm:mt-8 h-12 sm:h-14 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-semibold text-sm sm:text-lg hover:scale-[1.02] transition-all duration-300 shadow-lg px-4"
+                  >
+                    Continue Booking →
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Time */}
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-3">Select Time</h3>
+          {/* STEP 2 */}
+          {step === 2 && (
+            <div className="p-4 sm:p-8 lg:p-10">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-8">
 
-                {times.map((time) => {
-                  const booked = selectedDay
-                    ? isBooked(selectedDay, time)
-                    : false; // ✅ fixed
+                {/* Calendar */}
+                <div className="bg-gradient-to-b from-gray-50 to-white rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {months[month]} {year}
+                    </h3>
 
-                  return (
-                    <button
-                      key={time}
-                      disabled={booked}
-                      onClick={() => setSelectedTime(time)}
-                      className={`w-full p-3 mb-2 rounded-lg ${
-                        booked
-                          ? "bg-red-100 text-red-500 line-through"
-                          : selectedTime === time
-                          ? "bg-indigo-600 text-white"
-                          : "bg-gray-100 hover:bg-gray-200"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  );
-                })}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          if (month === 0) {
+                            if (year > currentYear) {
+                              setMonth(11);
+                              setYear((y) => y - 1);
+                            }
+                          } else {
+                            setMonth((m) => m - 1);
+                          }
+                        }}
+                        disabled={
+                          month === currentMonth && year === currentYear
+                        }
+                        className="w-10 h-10 rounded-xl bg-white shadow border"
+                      >
+                        ◀
+                      </button>
 
-                <button
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="mt-6 w-full bg-green-600 text-white p-3 rounded-lg"
-                >
-                  {loading ? "Processing..." : `Confirm & Pay ₹${amount}`}
-                </button>
+                      <button
+                        onClick={() => {
+                          if (month === 11) {
+                            setMonth(0);
+                            setYear((y) => y + 1);
+                          } else {
+                            setMonth((m) => m + 1);
+                          }
+                        }}
+                        className="w-10 h-10 rounded-xl bg-white shadow border"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                      <div
+                        key={d}
+                        className="text-center text-xs sm:text-sm font-semibold text-gray-500"
+                      >
+                        {d}
+                      </div>
+                    ))}
+
+                    {Array.from({ length: firstDay }).map((_, i) => (
+                      <div key={i}></div>
+                    ))}
+
+                    {days.map((day) => {
+                      const isPast =
+                        (year === currentYear &&
+                          month === currentMonth &&
+                          day < currentDate) ||
+                        (year < currentYear) ||
+                        (year === currentYear &&
+                          month < currentMonth);
+
+                      return (
+                        <button
+                          key={day}
+                          disabled={isPast}
+                          onClick={() => setSelectedDay(day)}
+                          className={`aspect-square rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 text-xs sm:text-base ${
+                            isPast
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : selectedDay === day
+                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-105"
+                              : "bg-white border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50"
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div className="bg-gradient-to-b from-indigo-50 to-white rounded-3xl p-5 sm:p-6 border border-indigo-100 shadow-sm">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                    Select Time Slot
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {times.map((time) => {
+                      const booked = selectedDay
+                        ? isBooked(selectedDay, time)
+                        : false;
+
+                      return (
+                        <button
+                          key={time}
+                          disabled={booked}
+                          onClick={() => setSelectedTime(time)}
+                          className={`h-14 sm:h-16 rounded-2xl text-sm sm:text-base font-semibold transition-all duration-300 px-2 ${
+                            booked
+                              ? "bg-red-100 text-red-500 line-through cursor-not-allowed"
+                              : selectedTime === time
+                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg scale-[1.03]"
+                              : "bg-white border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50"
+                          }`}
+                        >
+                          {time}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Summary */}
+                  <div className="mt-8 rounded-3xl bg-white p-6 border border-gray-100 shadow-sm">
+                    <h4 className="font-bold text-lg mb-4">
+                      Booking Summary
+                    </h4>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Doctor</span>
+                        <span className="font-semibold">
+                          {doctor.name}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Date</span>
+                        <span className="font-semibold">
+                          {selectedDay || "--"} {months[month]} {year}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Time</span>
+                        <span className="font-semibold">
+                          {selectedTime || "--"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between pt-3 border-t text-lg">
+                        <span className="font-bold">Total</span>
+
+                        <span className="font-bold text-indigo-600">
+                          ₹{amount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="mt-6 sm:mt-8 w-full h-14 sm:h-16 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm sm:text-lg font-bold shadow-lg hover:scale-[1.02] transition-all duration-300 px-4"
+                  >
+                    {loading
+                      ? "Processing..."
+                      : `Confirm & Pay ₹${amount}`}
+                  </button>
+
+                  <button
+                    onClick={() => setStep(1)}
+                    className="mt-4 w-full text-indigo-600 font-medium hover:underline"
+                  >
+                    ← Back to Details
+                  </button>
+                </div>
               </div>
             </div>
-
-            <button
-              onClick={() => setStep(1)}
-              className="mt-6 text-indigo-600 text-sm"
-            >
-              ← Back
-            </button>
-          </div>
-        )}
-      </motion.div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 };
