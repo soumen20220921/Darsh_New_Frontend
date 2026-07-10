@@ -41,6 +41,12 @@ const ProductDetails = () => {
     [allProduct, product]
   );
 
+  const sizes =
+  product?.size
+    ?.split(",")
+    .map((item) => item.trim())
+    .filter(Boolean) || [];
+    
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
@@ -61,6 +67,7 @@ const ProductDetails = () => {
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("");
+  const [size, setSize] = useState("");
 
   const stock = product ? Math.max(0, product.stock) : 0;  
   const isLowStock = stock > 0 && stock <= 5;
@@ -213,6 +220,11 @@ const ProductDetails = () => {
   };
 
   const handleAddToCart = useCallback(async () => {
+    
+    if (sizes.length > 0 && !size) {
+    showNotification("Please select a size", "error");
+    return;
+  }
     if (!token) {
       setShowLoginPrompt(true);
       return;
@@ -233,6 +245,7 @@ const ProductDetails = () => {
         title: product.productName,
         price: product.price * quantity,
         qty: quantity,
+        size: size || null,
         imgSrc: product.images[0],
       };
 
@@ -255,7 +268,7 @@ const ProductDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, product, quantity, id, getCart, url, stock]);
+  }, [token, product, quantity, id, getCart, url, stock, size]);
 
   const handleQuickLogin = () => {
     setShowLoginPrompt(false);
@@ -559,7 +572,31 @@ const ProductDetails = () => {
                       </span>
                     )}
                   </div>
+{sizes.length > 0 && (
+  <div className="mb-6">
+    <label className="block text-lg font-semibold mb-3">
+      Select Size
+    </label>
 
+    <div className="flex flex-wrap gap-3">
+      {sizes.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => setSize(item)}
+          className={`px-5 py-2 rounded-lg border font-medium transition-all
+            ${
+              size === item
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:text-blue-600"
+            }`}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
                   {/* Stock Information */}
                   <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
                     {isOutOfStock ? (

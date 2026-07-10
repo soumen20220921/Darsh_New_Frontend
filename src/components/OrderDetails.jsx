@@ -69,12 +69,12 @@ const OrderDetails = ({ order, onClose }) => {
 
   const getStatusInfo = () => {
     if (order.orderReject) {
-      return { 
-        status: "Rejected", 
-        color: "red", 
-        step: 0, 
+      return {
+        status: "Rejected",
+        color: "red",
+        step: 0,
         icon: XCircle,
-        gradient: "from-red-500 to-red-600"
+        gradient: "from-red-500 to-red-600",
       };
     }
     if (order.trackingId) {
@@ -83,24 +83,24 @@ const OrderDetails = ({ order, onClose }) => {
         color: "blue",
         step: 3,
         icon: Truck,
-        gradient: "from-blue-500 to-cyan-600"
+        gradient: "from-blue-500 to-cyan-600",
       };
     }
     if (order.orderAccept) {
-      return { 
-        status: "Accepted & Processing", 
-        color: "green", 
-        step: 2, 
+      return {
+        status: "Accepted & Processing",
+        color: "green",
+        step: 2,
         icon: Package,
-        gradient: "from-green-500 to-emerald-600"
+        gradient: "from-green-500 to-emerald-600",
       };
     }
-    return { 
-      status: "Order Placed", 
-      color: "purple", 
-      step: 1, 
+    return {
+      status: "Order Placed",
+      color: "purple",
+      step: 1,
       icon: CheckCircle,
-      gradient: "from-purple-500 to-indigo-600"
+      gradient: "from-purple-500 to-indigo-600",
     };
   };
 
@@ -116,7 +116,7 @@ const OrderDetails = ({ order, onClose }) => {
   };
 
   const handleImageError = (index) => {
-    setImageError(prev => ({ ...prev, [index]: true }));
+    setImageError((prev) => ({ ...prev, [index]: true }));
   };
 
   const handleShareOrder = async () => {
@@ -128,7 +128,7 @@ const OrderDetails = ({ order, onClose }) => {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Sharing cancelled');
+        console.log("Sharing cancelled");
       }
     } else {
       handleCopy();
@@ -136,29 +136,29 @@ const OrderDetails = ({ order, onClose }) => {
   };
 
   const statusSteps = [
-    { 
-      label: "Placed", 
-      icon: CheckCircle, 
+    {
+      label: "Placed",
+      icon: CheckCircle,
       index: 1,
       description: "Order received and confirmed",
       mobileDesc: "Confirmed",
-      time: order.orderDate
+      time: order.orderDate,
     },
-    { 
-      label: "Accepted", 
-      icon: Package, 
+    {
+      label: "Accepted",
+      icon: Package,
       index: 2,
       description: "Order accepted and being processed",
       mobileDesc: "Processing",
-      time: order.orderAccept ? order.orderDate : "Pending"
+      time: order.orderAccept ? order.orderDate : "Pending",
     },
-    { 
-      label: "Shipped", 
-      icon: Truck, 
+    {
+      label: "Shipped",
+      icon: Truck,
       index: 3,
       description: "Package dispatched with tracking",
       mobileDesc: "Shipped",
-      time: order.trackingId ? "Dispatched" : "Pending"
+      time: order.trackingId ? "Dispatched" : "Pending",
     },
   ];
 
@@ -187,13 +187,13 @@ const OrderDetails = ({ order, onClose }) => {
                 </h1>
                 <p className="text-xs text-gray-500 flex items-center">
                   <CalendarDays className="h-3 w-3 mr-1" />
-                  {new Date(order.orderDate).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                  {new Date(order.orderDate).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -212,15 +212,16 @@ const OrderDetails = ({ order, onClose }) => {
                   <div>
                     <p className="text-xs text-gray-500">Est. Delivery</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {estimatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {estimatedDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </p>
                   </div>
                 </div>
               )}
             </div>
           </div>
-
-         
         </div>
       </div>
 
@@ -229,16 +230,19 @@ const OrderDetails = ({ order, onClose }) => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-6 mb-6 animate-fade-in-up">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <div className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}>
+              <div
+                className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}
+              >
                 <StatusIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">{status}</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {status}
+                </h2>
                 <p className="text-sm text-gray-600">
-                  {order.orderReject 
-                    ? "Contact support for assistance" 
-                    : `Step ${step} of ${statusSteps.length} completed`
-                  }
+                  {order.orderReject
+                    ? "Contact support for assistance"
+                    : `Step ${step} of ${statusSteps.length} completed`}
                 </p>
               </div>
             </div>
@@ -264,24 +268,26 @@ const OrderDetails = ({ order, onClose }) => {
                 <div className="absolute top-4 left-0 right-0 h-1.5 bg-gray-200 rounded-full z-0 overflow-hidden">
                   <div
                     className={`h-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-full transition-all duration-1000 ease-out ${
-                      progressWidth > 0 ? 'shadow-lg' : ''
+                      progressWidth > 0 ? "shadow-lg" : ""
                     }`}
                     style={{ width: `${progressWidth}%` }}
                   >
                     {progressWidth > 0 && progressWidth < 100 && (
-                      <div className="absolute top-0 h-full w-8 bg-white opacity-70 animate-shine rounded-full" 
-                        style={{ left: `${progressWidth - 4}%` }}></div>
+                      <div
+                        className="absolute top-0 h-full w-8 bg-white opacity-70 animate-shine rounded-full"
+                        style={{ left: `${progressWidth - 4}%` }}
+                      ></div>
                     )}
                   </div>
                 </div>
-                
+
                 {/* Steps */}
                 <div className="relative flex justify-between items-start z-10">
                   {statusSteps.map((s, index) => {
                     const StepIcon = s.icon;
                     const isCompleted = step >= s.index;
                     const isCurrent = step === s.index;
-                    
+
                     return (
                       <div
                         key={index}
@@ -323,8 +329,8 @@ const OrderDetails = ({ order, onClose }) => {
                             {s.mobileDesc}
                           </p>
                         </div>
-                         {/* Connector lines between steps */}
-                         {index < statusSteps.length - 1 && (
+                        {/* Connector lines between steps */}
+                        {index < statusSteps.length - 1 && (
                           <div
                             className={`hidden sm:block absolute top-2 left-2/3 w-1/3 h-0.5 ${
                               step > s.index ? "bg-blue-500" : "bg-gray-300"
@@ -344,45 +350,45 @@ const OrderDetails = ({ order, onClose }) => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Order Items & Tracking */}
           <div className="xl:col-span-2 space-y-6">
-          {!order.orderReject && order.trackingId && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg mb-8 transform transition-all duration-500 animate-fade-in-up">
-          <h2 className="text-sm whitespace-nowrap sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Truck className="h-6 w-6 text-blue-500 animate-bounce" />
-            Tracking Information
-          </h2>
-          <span className="text-sm xs:text-lg  text-gray-900">
-            Tracking ID:{" "}
-          </span>{" "}
-          {/* Tracking ID with Copy */}
-          <div className="flex items-center justify-between gap-3 flex-wrap bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl shadow-inner">
-            <span className="font-semibold text-blue-700 break-all text-sm sm:text-base animate-pulse">
-              {order.trackingId}
-            </span>
-            <button
-              onClick={handleCopy}
-              className="p-2 rounded-xl bg-white hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
-            >
-              {copied ? (
-                <Check className="h-5 w-5 text-green-600 animate-scale-in" />
-              ) : (
-                <Copy className="h-5 w-5 text-gray-600" />
-              )}
-            </button>
-          </div>
-          {/* Track Link */}
-          <Link
-            to={`https://www.google.com/search?q=${order.trackingId}`}
-            target="_blank"
-            className="flex items-center justify-center mt-4 px-4 py-2 rounded-xl 
+            {!order.orderReject && order.trackingId && (
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg mb-8 transform transition-all duration-500 animate-fade-in-up">
+                <h2 className="text-sm whitespace-nowrap sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Truck className="h-6 w-6 text-blue-500 animate-bounce" />
+                  Tracking Information
+                </h2>
+                <span className="text-sm xs:text-lg  text-gray-900">
+                  Tracking ID:{" "}
+                </span>{" "}
+                {/* Tracking ID with Copy */}
+                <div className="flex items-center justify-between gap-3 flex-wrap bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl shadow-inner">
+                  <span className="font-semibold text-blue-700 break-all text-sm sm:text-base animate-pulse">
+                    {order.trackingId}
+                  </span>
+                  <button
+                    onClick={handleCopy}
+                    className="p-2 rounded-xl bg-white hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
+                  >
+                    {copied ? (
+                      <Check className="h-5 w-5 text-green-600 animate-scale-in" />
+                    ) : (
+                      <Copy className="h-5 w-5 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+                {/* Track Link */}
+                <Link
+                  to={`https://www.google.com/search?q=${order.trackingId}`}
+                  target="_blank"
+                  className="flex items-center justify-center mt-4 px-4 py-2 rounded-xl 
                  bg-gradient-to-r from-blue-500 to-indigo-500 text-white 
                  text-sm font-medium shadow-md hover:shadow-lg 
                  transform hover:scale-105 transition-all duration-300"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Track Package
-          </Link>
-        </div>
-      )}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Track Package
+                </Link>
+              </div>
+            )}
             {/* Order Items Card */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 md:p-6 animate-fade-in-up">
               <div className="flex items-center justify-between mb-6">
@@ -390,7 +396,6 @@ const OrderDetails = ({ order, onClose }) => {
                   <Package className="w-5 h-5 text-indigo-600 mr-2" />
                   Order Items ({order.orderItems?.length || 0})
                 </h2>
-                
               </div>
 
               <div className="space-y-4">
@@ -414,15 +419,31 @@ const OrderDetails = ({ order, onClose }) => {
                         {item.qty}
                       </div>
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-indigo-700 transition-colors">
                         {item.title}
                       </h3>
-                      <div className="flex items-center space-x-2 md:space-x-4 mt-2 text-sm text-gray-600">
-                        <span className="whitespace-nowrap ">₹{(item.price / item.qty).toLocaleString()} each</span>
-                        <span>•</span>
-                        <span className="font-medium text-gray-900">Qty:{item.price.toLocaleString()}</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs sm:text-sm text-gray-600">
+                        <span className="whitespace-nowrap">
+                          ₹{(item.price / item.qty).toLocaleString()} each
+                        </span>
+
+                        <span className="hidden sm:inline">•</span>
+
+                        <span className="font-medium text-gray-900 whitespace-nowrap">
+                          Qty: {item.qty}
+                        </span>
+
+                        {item.size && (
+                          <>
+                            <span className="hidden sm:inline">•</span>
+
+                            <span className="font-medium text-gray-900 whitespace-nowrap">
+                              Size: {item.size}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -434,8 +455,6 @@ const OrderDetails = ({ order, onClose }) => {
               </div>
             </div>
 
-            
-
             {/* Delivery Estimate */}
             {!order.orderReject && <DeliveryEstimateSection order={order} />}
 
@@ -445,7 +464,7 @@ const OrderDetails = ({ order, onClose }) => {
                 <HelpCircle className="w-5 h-5 text-blue-500 mr-2" />
                 Help & Support
               </h2>
-              
+
               <div className="grid grid-cols-1  gap-4 mb-6">
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <div className="flex items-center space-x-3">
@@ -453,15 +472,21 @@ const OrderDetails = ({ order, onClose }) => {
                       <RotateCcw className="h-4 w-4 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Returns</p>
-                      <p className="text-xs text-gray-600">7-day return policy</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        Returns
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        7-day return policy
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="border-t border-gray-200 pt-4">
-                <p className="text-sm text-gray-600 mb-3">Need immediate help?</p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Need immediate help?
+                </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <a
                     href="tel:+919474048860"
@@ -483,11 +508,13 @@ const OrderDetails = ({ order, onClose }) => {
                 <CreditCard className="w-5 h-5 text-green-500 mr-2" />
                 Order Summary
               </h2>
-              
+
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">₹{order.amount?.toLocaleString()}</span>
+                  <span className="font-medium">
+                    ₹{order.amount?.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
@@ -500,7 +527,9 @@ const OrderDetails = ({ order, onClose }) => {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-bold text-gray-900">₹{order.amount?.toLocaleString()}</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      ₹{order.amount?.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -508,11 +537,15 @@ const OrderDetails = ({ order, onClose }) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Payment Method</span>
-                  <span className="font-medium text-gray-900">{order.paymentMethod || "UPI"}</span>
+                  <span className="font-medium text-gray-900">
+                    {order.paymentMethod || "UPI"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-2">
                   <span className="text-gray-600">Payment Status</span>
-                  <span className="font-medium text-green-600 capitalize">{order.payStatus}</span>
+                  <span className="font-medium text-green-600 capitalize">
+                    {order.payStatus}
+                  </span>
                 </div>
               </div>
             </div>
@@ -523,22 +556,27 @@ const OrderDetails = ({ order, onClose }) => {
                 <MapPin className="w-5 h-5 text-indigo-500 mr-2" />
                 Shipping Address
               </h2>
-              
+
               <div className="space-y-3">
                 <div className="flex items-start space-x-3">
                   <User className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-gray-900">{order.userShipping?.FullName}</p>
-                    <p className="text-sm text-gray-600">{order.userShipping?.Phone}</p>
+                    <p className="font-semibold text-gray-900">
+                      {order.userShipping?.FullName}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {order.userShipping?.Phone}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-3">
                   <Navigation className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-gray-700 space-y-1">
                     <p>{order.userShipping?.Add}</p>
                     <p>
-                      {order.userShipping?.VillorCity}, {order.userShipping?.Dist}
+                      {order.userShipping?.VillorCity},{" "}
+                      {order.userShipping?.Dist}
                     </p>
                     <p>
                       {order.userShipping?.State} - {order.userShipping?.Pin}
@@ -547,7 +585,6 @@ const OrderDetails = ({ order, onClose }) => {
                 </div>
               </div>
             </div>
-
 
             {/* Need Help Card */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white animate-fade-in-up">

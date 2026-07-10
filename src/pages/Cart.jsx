@@ -507,6 +507,13 @@ const Cart = () => {
                     <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
                       Qty: <span className="text-blue-600 font-bold">{item.qty}</span>
                     </span>
+                    {
+                      item.size && (
+                        <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                          Size: <span className="text-blue-600 font-bold">{item.size}</span>
+                        </span>
+                      )
+                    }
                     <span className="text-gray-500">
                       (₹{item.price / item.qty} each)
                     </span>
