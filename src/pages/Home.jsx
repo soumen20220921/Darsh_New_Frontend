@@ -4,7 +4,7 @@ import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
 import {
   ArrowRight,
-  Star,
+  // Star,
   Heart,
   Sparkles,
   Truck,
@@ -53,57 +53,57 @@ const Home = () => {
     },
   ];
 
-  const testimonials = [
-    {
-      name: "Debolina Chatterjee",
-      quote:
-        "একদম অসাধারণ কাজ! শাড়ির গুনগত মান দারুণ, পড়তে খুবই আরামদায়ক। আমি বারবার এখান থেকেই কিনব।",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS30SkjTndCVjYNtrDYfr7QgG7j7L9gdqIhug&s",
-    },
-    {
-      name: "Rituparna Das",
-      quote:
-        "The blouse designs are so stylish yet comfortable. Perfect match with my silk saree collection.",
-      image:
-        "https://t4.ftcdn.net/jpg/03/48/83/25/360_F_348832546_xzYPZhbHjzkQz3pMHO8376J5ADF2QhxE.jpg",
-    },
-    {
-      name: "Sohini Mukherjee",
-      quote:
-        "খুব সুন্দরভাবে ডেলিভারি হয়েছে। দাম অনুযায়ী মান খুব ভালো। পরিবারের সবার কাছেই প্রশংসা কুড়িয়েছি।",
-      image:
-        "https://previews.123rf.com/images/devjyoti/devjyoti2109/devjyoti210900013/177631545-a-simple-bengali-girl-wearing-a-traditional-red-sari-and-golden-ornaments-giving-poses-in-front-of.jpg",
-    },
-    {
-      name: "Ananya Roy",
-      quote:
-        "Bought a kurta set for my brother. The fitting and fabric are really good. Value for money.",
-      image:
-        "https://i.pinimg.com/736x/55/90/a4/5590a4448787f5af9c6c81b00e3def3e.jpg",
-    },
-    {
-      name: "Madhumita Pal",
-      quote:
-        "এখানকার শাড়িগুলো একদম ঐতিহ্যবাহী। মা ও দিদির জন্যও কিনেছি, সবাই খুব খুশি।",
-      image:
-        "https://media.istockphoto.com/id/484288034/photo/portrait-of-happy-woman-after-applying-vermilion-during-durga-puja.jpg?s=612x612&w=0&k=20&c=fRC7IbQmqN1U2vJD_hC8Id9JKfL9fB3aJZ1YEoTvGJ0=",
-    },
-    {
-      name: "Subhra Dey",
-      quote:
-        "Ordered kidswear for my daughter. The fabric is soft and comfortable, perfect for daily use.",
-      image:
-        "https://media.istockphoto.com/id/1179812556/photo/holi-and-durga-puja-festival-in-india-portrait-of-an-unidentified-bengali-woman-playing-with.jpg?s=612x612&w=0&k=20&c=4mtfKFEovKHV4-RmLxq1vw1WQVf4kZj1gVu9I7Dqd8k=",
-    },
-    {
-      name: "Piyali Saha",
-      quote:
-        "Pujor আগেই অর্ডার করেছিলাম। সময়মতো ডেলিভারি হয়েছে আর শাড়ি দেখে সবাই অবাক! Highly recommended.",
-      image:
-        "https://media.istockphoto.com/id/1284505478/photo/portrait-of-beautiful-smiling-indian-woman.jpg?s=612x612&w=0&k=20&c=PXO1i8gQJpv4CNSRTmJgJag2gOny7rWTnywehXg8hCw=",
-    },
-  ];
+  // const testimonials = [
+  //   {
+  //     name: "Debolina Chatterjee",
+  //     quote:
+  //       "একদম অসাধারণ কাজ! শাড়ির গুনগত মান দারুণ, পড়তে খুবই আরামদায়ক। আমি বারবার এখান থেকেই কিনব।",
+  //     image:
+  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS30SkjTndCVjYNtrDYfr7QgG7j7L9gdqIhug&s",
+  //   },
+  //   {
+  //     name: "Rituparna Das",
+  //     quote:
+  //       "The blouse designs are so stylish yet comfortable. Perfect match with my silk saree collection.",
+  //     image:
+  //       "https://t4.ftcdn.net/jpg/03/48/83/25/360_F_348832546_xzYPZhbHjzkQz3pMHO8376J5ADF2QhxE.jpg",
+  //   },
+  //   {
+  //     name: "Sohini Mukherjee",
+  //     quote:
+  //       "খুব সুন্দরভাবে ডেলিভারি হয়েছে। দাম অনুযায়ী মান খুব ভালো। পরিবারের সবার কাছেই প্রশংসা কুড়িয়েছি।",
+  //     image:
+  //       "https://previews.123rf.com/images/devjyoti/devjyoti2109/devjyoti210900013/177631545-a-simple-bengali-girl-wearing-a-traditional-red-sari-and-golden-ornaments-giving-poses-in-front-of.jpg",
+  //   },
+  //   {
+  //     name: "Ananya Roy",
+  //     quote:
+  //       "Bought a kurta set for my brother. The fitting and fabric are really good. Value for money.",
+  //     image:
+  //       "https://i.pinimg.com/736x/55/90/a4/5590a4448787f5af9c6c81b00e3def3e.jpg",
+  //   },
+  //   {
+  //     name: "Madhumita Pal",
+  //     quote:
+  //       "এখানকার শাড়িগুলো একদম ঐতিহ্যবাহী। মা ও দিদির জন্যও কিনেছি, সবাই খুব খুশি।",
+  //     image:
+  //       "https://media.istockphoto.com/id/484288034/photo/portrait-of-happy-woman-after-applying-vermilion-during-durga-puja.jpg?s=612x612&w=0&k=20&c=fRC7IbQmqN1U2vJD_hC8Id9JKfL9fB3aJZ1YEoTvGJ0=",
+  //   },
+  //   {
+  //     name: "Subhra Dey",
+  //     quote:
+  //       "Ordered kidswear for my daughter. The fabric is soft and comfortable, perfect for daily use.",
+  //     image:
+  //       "https://media.istockphoto.com/id/1179812556/photo/holi-and-durga-puja-festival-in-india-portrait-of-an-unidentified-bengali-woman-playing-with.jpg?s=612x612&w=0&k=20&c=4mtfKFEovKHV4-RmLxq1vw1WQVf4kZj1gVu9I7Dqd8k=",
+  //   },
+  //   {
+  //     name: "Piyali Saha",
+  //     quote:
+  //       "Pujor আগেই অর্ডার করেছিলাম। সময়মতো ডেলিভারি হয়েছে আর শাড়ি দেখে সবাই অবাক! Highly recommended.",
+  //     image:
+  //       "https://media.istockphoto.com/id/1284505478/photo/portrait-of-beautiful-smiling-indian-woman.jpg?s=612x612&w=0&k=20&c=PXO1i8gQJpv4CNSRTmJgJag2gOny7rWTnywehXg8hCw=",
+  //   },
+  // ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-pink-50 to-yellow-50 font-inter">
@@ -286,74 +286,7 @@ const Home = () => {
       </section>
       <Reels />
 
-      {/* Why Choose Darsh (Enhanced Design) */}
-      {/* <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
-            Why Choose POMWB
-          </h2>
-          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
-            We combine traditional craftsmanship with modern convenience to bring you the best shopping experience.
-          </p>
-
-          <Swiper
-            spaceBetween={24}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 4 },
-            }}
-            autoplay={{ delay: 2500, disableOnInteraction: false }}
-            pagination={{ clickable: true }}
-            modules={[Pagination, Autoplay]}
-            className="mySwiper why-choose-swiper"
-          >
-            {[
-              {
-                icon: Heart,
-                color: "text-red-500",
-                title: "Artisanal Craftsmanship",
-                desc: "Each piece is lovingly handcrafted with attention to every detail.",
-              },
-              {
-                icon: Sparkles,
-                color: "text-pink-500",
-                title: "Sustainable Elegance",
-                desc: "Ethically sourced materials for timeless, eco-conscious fashion.",
-              },
-              {
-                icon: Truck,
-                color: "text-indigo-500",
-                title: "Swift Delivery",
-                desc: "Fast & secure shipping to your doorstep, anywhere.",
-              },
-              {
-                icon: ShoppingBag,
-                color: "text-teal-500",
-                title: "Guaranteed Quality",
-                desc: "We promise the finest quality with complete satisfaction.",
-              },
-            ].map((item, idx) => (
-              <SwiperSlide key={idx}>
-                <div className="relative bg-gradient-to-tr from-white via-amber-50 to-white rounded-3xl p-8 border border-amber-200 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 hover:scale-105">
-                  <div className={`mb-6 text-center`}>
-                    <item.icon
-                      className={`h-16 w-16 mx-auto ${item.color} animate-bounce-slow`}
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold whitespace-nowrap text-gray-800 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm font-light">
-                    {item.desc}
-                  </p>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      </section> */}
+    
 
       <FestiveBanner />
 
@@ -461,8 +394,76 @@ const Home = () => {
         </div>
       </section>
 
+  {/* Why Choose Darsh (Enhanced Design) */}
+       <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
+            Why Choose POMWB
+          </h2>
+          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
+            We combine traditional craftsmanship with modern convenience to bring you the best shopping experience.
+          </p>
+
+          <Swiper
+            spaceBetween={24}
+            slidesPerView={1}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 4 },
+            }}
+            autoplay={{ delay: 2500, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            modules={[Pagination, Autoplay]}
+            className="mySwiper why-choose-swiper"
+          >
+            {[
+              {
+                icon: Heart,
+                color: "text-red-500",
+                title: "Artisanal Craftsmanship",
+                desc: "Each piece is lovingly handcrafted with attention to every detail.",
+              },
+              {
+                icon: Sparkles,
+                color: "text-pink-500",
+                title: "Sustainable Elegance",
+                desc: "Ethically sourced materials for timeless, eco-conscious fashion.",
+              },
+              {
+                icon: Truck,
+                color: "text-indigo-500",
+                title: "Swift Delivery",
+                desc: "Fast & secure shipping to your doorstep, anywhere.",
+              },
+              {
+                icon: ShoppingBag,
+                color: "text-teal-500",
+                title: "Guaranteed Quality",
+                desc: "We promise the finest quality with complete satisfaction.",
+              },
+            ].map((item, idx) => (
+              <SwiperSlide key={idx}>
+                <div className="relative bg-gradient-to-tr from-white via-amber-50 to-white rounded-3xl p-8 border border-amber-200 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 hover:scale-105">
+                  <div className={`mb-6 text-center`}>
+                    <item.icon
+                      className={`h-16 w-16 mx-auto ${item.color} animate-bounce-slow`}
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold whitespace-nowrap text-gray-800 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm font-light">
+                    {item.desc}
+                  </p>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section> 
       {/* Testimonials - Redesigned & Animated */}
-      <section className="py-7 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
+      {/* <section className="py-7 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-4 font-serif animate-fade-in-up">
             Our Community
@@ -505,7 +506,7 @@ const Home = () => {
             ))}
           </Swiper>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

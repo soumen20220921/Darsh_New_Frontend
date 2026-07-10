@@ -12,7 +12,7 @@ const DeliveryEstimateSection = ({ order }) => {
     orderDate.getTime() + 7 * 24 * 60 * 60 * 1000
   );
 
-  return (
+  return ( 
     <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition-transform hover:-translate-y-1">
       <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
         <CalendarDays className="w-5 h-5 text-orange-500 mr-2" />

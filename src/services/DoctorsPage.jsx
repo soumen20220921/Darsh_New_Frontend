@@ -1050,7 +1050,20 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
     setShowContactModal(true);
   };
 
+  const handleNavigation = (e) => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+  handleBookAppointment(e);
+};
   const handleBookAppointment = (e) => {
+    window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
     if (!isLoggedIn) {
       e.preventDefault();
       setShowLoginModal(true);
@@ -1221,7 +1234,7 @@ const DoctorCard = ({ doctor, isLoggedIn, onLoginRequired }) => {
               
               <Link 
                 to={isLoggedIn ? `/doctor/${doctor._id}` : "#"}
-                onClick={handleBookAppointment}
+                 onClick={handleNavigation}
                 className={`block w-full font-semibold py-2 sm:py-3 px-4 rounded-xl text-center transition duration-200 text-sm sm:text-base ${
                   isLoggedIn 
                     ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg"

@@ -339,11 +339,24 @@ const ProductDetails = () => {
 
   const rating = product.rating ?? 4.4;
 
-  const faqs = [
-    { q: "What is the warranty?", a:  " This product does not come with a manufacturer's warranty." },
-    { q: "How long to deliver?", a: "Usually 5-7 business days depending on your location." },
-    { q: "Can I return the product?", a: "Yes! We offer easy 7-day returns. If you're not satisfied, simply follow our returns process for a smooth refund or replacement." },
-  ];
+ const faqs = [
+  {
+    q: "What is the warranty?",
+    a: "This product does not come with a manufacturer's warranty.",
+  },
+  {
+    q: "How long does delivery take?",
+    a: "Usually 5–7 business days depending on your location.",
+  },
+  {
+    q: "Can I return the product?",
+    a: "Yes! We offer an easy 7-day return policy for eligible products. To ensure a smooth return or replacement process, an unboxing/opening video is mandatory from the moment the package is opened. The video should clearly show the sealed package, product condition, and any issue if present. Returns without a proper opening video may not be accepted. The product must be unused, with original packaging and tags intact.",
+  },
+  {
+    q: "What if I receive a damaged or wrong product?",
+    a: "If you receive a damaged, defective, or incorrect item, please contact our support team within 48 hours of delivery with clear photos and the mandatory opening video for quick assistance.",
+  },
+];
 
   const toggleFAQ = (index) => {
     setShowFAQ(prev => ({
@@ -406,7 +419,7 @@ const ProductDetails = () => {
         </motion.div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
@@ -428,7 +441,7 @@ const ProductDetails = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-6">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -461,8 +474,8 @@ const ProductDetails = () => {
                       className="w-full h-full object-contain bg-white"
                       style={{
                         transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                        transition: isDragging ? 'none' : 'transform 0.3s ease',
-                        cursor: zoomLevel > 1 ? 'grabbing' : 'zoom-in'
+                        transition: isDragging ? "none" : "transform 0.3s ease",
+                        cursor: zoomLevel > 1 ? "grabbing" : "zoom-in",
                       }}
                     />
                   </AnimatePresence>
@@ -558,7 +571,7 @@ const ProductDetails = () => {
                     </span>
                     {product.originalPrice && (
                       <span className="text-xl text-gray-500 line-through">
-                       ₹{product.originalPrice}
+                        ₹{product.originalPrice}
                       </span>
                     )}
                     {product.originalPrice && (
@@ -566,7 +579,7 @@ const ProductDetails = () => {
                         {Math.round(
                           ((product.originalPrice - product.price) /
                             product.originalPrice) *
-                            100
+                            100,
                         )}
                         % OFF
                       </span>
@@ -629,7 +642,6 @@ const ProductDetails = () => {
                   )}
                 </div>
 
-
                 {/* Quantity Selector */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -644,108 +656,127 @@ const ProductDetails = () => {
                   </label>
                   <div className="flex items-center gap-3">
                     <div className="flex mb-3 items-center border border-gray-300 rounded-xl overflow-hidden w-fit shadow-sm">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
-                      disabled={quantity <= 1}
-                    >
-                      <Minus className="h-5 w-5 text-gray-600" />
-                    </button>
-                    <span className="px-6 font-bold text-lg text-gray-800">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setQuantity(Math.min(product.stock, quantity + 1))
-                      }
-                      className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
-                      disabled={quantity >= stock}
-                    >
-                      <Plus className="h-5 w-5 text-gray-600" />
-                    </button>
-                  </div>
-                  <span className="text-sm text-gray-500">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className="h-5 w-5 text-gray-600" />
+                      </button>
+                      <span className="px-6 font-bold text-lg text-gray-800">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setQuantity(Math.min(product.stock, quantity + 1))
+                        }
+                        className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        disabled={quantity >= stock}
+                      >
+                        <Plus className="h-5 w-5 text-gray-600" />
+                      </button>
+                    </div>
+                    <span className="text-sm text-gray-500">
                       {stock} available
                     </span>
                   </div>
                 </motion.div>
 
-                {/* Add to Cart Button */}
+                {/* Add to Cart Section */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
-                  className="grid grid-cols-1 gap-4"
+                  className="w-full space-y-4"
                 >
                   {!isAdded ? (
                     <motion.button
                       whileHover={{
-                        scale: quantity > product.stock ? 1 : 1.02,
+                        scale: quantity > product.stock ? 1 : 1.01,
                         boxShadow:
                           quantity > product.stock
                             ? "none"
-                            : "0 4px 12px rgba(0, 0, 0, 0.1)",
+                            : "0 8px 24px rgba(37, 99, 235, 0.18)",
                       }}
                       whileTap={{ scale: quantity > product.stock ? 1 : 0.98 }}
                       onClick={handleAddToCart}
                       disabled={loading || quantity > product.stock}
-                      className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 font-semibold text-lg transition-colors disabled:cursor-not-allowed
-                         ${
-                           quantity > product.stock
-                             ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                             : "bg-blue-600 text-white hover:bg-blue-700"
-                         }`}
+                      className={`w-full py-3 sm:py-4 px-4 rounded-2xl flex items-center justify-center gap-3 
+      font-semibold text-base sm:text-lg transition-all duration-300 disabled:cursor-not-allowed
+      ${
+        quantity > product.stock
+          ? "bg-gray-300 text-gray-600"
+          : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+      }`}
                     >
                       {loading ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
                       ) : quantity > product.stock ? (
-                        <CircleOff className="h-6 w-6" />
+                        <CircleOff className="h-5 w-5 sm:h-6 sm:w-6" />
                       ) : (
-                        <ShoppingCart className="h-6 w-6" />
+                        <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
                       )}
-                      {loading
-                        ? "Adding..."
-                        : quantity > product.stock
-                        ? "Out of Stock"
-                        : "Add to Cart"}
+
+                      <span>
+                        {loading
+                          ? "Adding..."
+                          : quantity > product.stock
+                            ? "Out of Stock"
+                            : "Add to Cart"}
+                      </span>
                     </motion.button>
                   ) : (
-                    <div className="flex flex-col sm:flex-row gap-3 w-full">
-                      <button className="flex-1 py-4 bg-green-500 text-white rounded-xl flex items-center justify-center gap-3 font-semibold hover:bg-green-600 transition-colors">
-                        <Check className="h-6 w-6" /> Added
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                      <button className="w-full py-3 sm:py-4 bg-green-500 text-white rounded-2xl flex items-center justify-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base hover:bg-green-600 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <Check className="h-5 w-5" />
+                        Added Successfully
                       </button>
+
                       <Link
-                        onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
+                        onClick={() =>
+                          window.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: "smooth",
+                          })
+                        }
                         to="/cart"
-                        className="flex-1 py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-xl flex items-center justify-center gap-3 font-semibold hover:bg-blue-50 transition-colors"
+                        className="w-full py-3 sm:py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-2xl flex items-center justify-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base hover:bg-blue-50 transition-all duration-300"
                       >
+                        <ShoppingCart className="h-5 w-5" />
                         View Cart
                       </Link>
                     </div>
                   )}
-                  <div className="flex gap-3 mt-2">
+
+                  {/* Share Buttons */}
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setShowShareModal(true)}
-                      className="flex-1 py-3 border border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="py-3 border border-gray-300 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-all duration-300"
                     >
-                      <Share2 className="h-5 w-5" /> Share
+                      <Share2 className="h-5 w-5" />
+                      <span className="hidden sm:inline">Share Product</span>
+                      <span className="sm:hidden">Share</span>
                     </button>
+
                     <button
                       onClick={() => {
                         navigator.clipboard?.writeText(window.location.href);
                         showNotification(
                           "Link copied to clipboard!",
-                          "success"
+                          "success",
                         );
                       }}
-                      className="py-3 px-6 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="py-3 border border-gray-300 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-all duration-300"
                       aria-label="Copy product link"
                     >
                       <Copy className="h-5 w-5" />
+                      <span className="hidden sm:inline">Copy Link</span>
+                      <span className="sm:hidden">Copy</span>
                     </button>
                   </div>
                 </motion.div>
-
                 {/* Trust badges */}
                 <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
                   <div className="p-2 rounded-lg border flex flex-col items-center">
@@ -761,15 +792,14 @@ const ProductDetails = () => {
                     <span>7 Days</span>
                   </div>
                 </div>
-                
+
                 {/* Delivery Date Information */}
-<motion.div
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
                   className="mb-6 mt-4 p-1 bg-blue-50 rounded-xl border border-blue-200"
                 >
-
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
                     <div>
@@ -852,7 +882,9 @@ const ProductDetails = () => {
             <div className="mb-8">
               {activeTab === "specifications" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <p>{product.specification || "No specifications provided."}</p>
+                  <p>
+                    {product.specification || "No specifications provided."}
+                  </p>
                 </div>
               )}
 
@@ -870,22 +902,26 @@ const ProductDetails = () => {
                   {faqs.map((faq, index) => (
                     <div
                       key={index}
-                      className="border border-gray-200 rounded-lg overflow-hidden"
+                      className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
                     >
                       <button
                         onClick={() => toggleFAQ(index)}
-                        className="w-full p-4 text-left font-medium text-gray-900 bg-gray-50 hover:bg-gray-100 flex items-center justify-between"
+                        className="w-full p-4 sm:p-5 text-left font-medium text-gray-900 bg-gradient-to-r from-gray-50 to-white hover:bg-gray-100 flex items-center justify-between"
                       >
-                        {faq.q}
+                        <span className="text-sm sm:text-base">{faq.q}</span>
+
                         <Plus
-                          className={`h-5 w-5 transition-transform ${
+                          className={`h-5 w-5 text-blue-600 transition-transform duration-300 ${
                             showFAQ[index] ? "rotate-45" : ""
                           }`}
                         />
                       </button>
+
                       {showFAQ[index] && (
-                        <div className="p-4 bg-white">
-                          <p className="text-gray-700">{faq.a}</p>
+                        <div className="p-4 sm:p-5 bg-white border-t border-gray-100">
+                          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                            {faq.a}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -894,6 +930,8 @@ const ProductDetails = () => {
               )}
             </div>
           </div>
+          
+          
 
           {/* Similar Products Section */}
           {similarProducts.length > 0 && (
@@ -939,7 +977,7 @@ const ProductDetails = () => {
                         {Math.round(
                           ((item.originalPrice - item.price) /
                             item.originalPrice) *
-                            100
+                            100,
                         )}
                         %
                       </span>
@@ -976,7 +1014,7 @@ const ProductDetails = () => {
               >
                 <X className="h-5 w-5" />
               </button>
-              
+
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <LogIn className="h-8 w-8 text-blue-600" />
@@ -1006,14 +1044,17 @@ const ProductDetails = () => {
               </div>
 
               <p className="text-center text-xs md:text-sm text-gray-500 mt-4">
-                New user? <span className="text-blue-600 font-semibold">Create an account in seconds</span>
+                New user?{" "}
+                <span className="text-blue-600 font-semibold">
+                  Create an account in seconds
+                </span>
               </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-     <AnimatePresence>
+      <AnimatePresence>
         {zoomMode && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1033,8 +1074,8 @@ const ProductDetails = () => {
                   className="max-w-full max-h-full object-contain"
                   style={{
                     transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                    transition: isDragging ? 'none' : 'transform 0.3s ease',
-                    cursor: zoomLevel > 1 ? 'grabbing' : 'grab'
+                    transition: isDragging ? "none" : "transform 0.3s ease",
+                    cursor: zoomLevel > 1 ? "grabbing" : "grab",
                   }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -1146,28 +1187,36 @@ const ProductDetails = () => {
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition"
                 >
                   <FaWhatsapp className="h-6 w-6 text-green-600" />
-                  <span className="text-xs font-medium text-gray-700">WhatsApp</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    WhatsApp
+                  </span>
                 </button>
                 <button
                   onClick={() => handleShare("telegram")}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition"
                 >
                   <FaTelegram className="h-6 w-6 text-blue-500" />
-                  <span className="text-xs font-medium text-gray-700">Telegram</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    Telegram
+                  </span>
                 </button>
                 <button
                   onClick={() => handleShare("facebook")}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-100 hover:bg-blue-200 transition"
                 >
                   <FaFacebook className="h-6 w-6 text-blue-700" />
-                  <span className="text-xs font-medium text-gray-700">Facebook</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    Facebook
+                  </span>
                 </button>
                 <button
                   onClick={() => handleShare("copy")}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
                 >
                   <Copy className="h-6 w-6 text-gray-600" />
-                  <span className="text-xs font-medium text-gray-700">Copy Link</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    Copy Link
+                  </span>
                 </button>
               </div>
             </motion.div>

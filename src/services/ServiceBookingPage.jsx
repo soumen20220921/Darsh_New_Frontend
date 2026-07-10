@@ -16,7 +16,7 @@ import {
   Stethoscope,
   Sparkle,
   Telescope,
-  Star as StarIcon,
+  // Star as StarIcon,
   Search,
   X
 } from "lucide-react";
@@ -498,7 +498,7 @@ const ServiceBookingPage = ({ onServiceClick }) => {
               {[
                 {
                   icon: <Users className="h-6 w-6 sm:h-8 sm:w-8" />,
-                  value: "10K+",
+                  value: "1K+",
                   label: "Happy Customers",
                 },
                 {
