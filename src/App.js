@@ -32,54 +32,10 @@ import { useState, useEffect } from 'react';
 import { FaUserDoctor } from "react-icons/fa6";
 import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
 import TherapistDetail from "./services/TherapistDetail.jsx";
+import WhatsAppChat from "./components/WhatsAppChat";
 
 
 
-const ScrollToTopButton = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  const toggleVisibility = () => {
-    if (window.pageYOffset > 300) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', toggleVisibility);
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
-
-  return (
-    <>
-      {isVisible && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-indigo-500 to-pink-500  text-white w-10 h-10 md:w-12 md:h-12  rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-          aria-label="Scroll to top"
-        >
-          <svg 
-            className="w-6 h-6" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-      )}
-    </>
-  );
-};
 
 const FloatingDoctorButton = () => {
   const context = useAppContext();
@@ -118,7 +74,10 @@ const App = () => {
             <Route path="/auth" element={<Auth />} />
             {/* <Route path="/*" element={<Pagenotfound />} /> */}
             <Route path="*" element={<Animated404Page />} />
-            <Route path="/ServiceBookingLayout" element={<ServiceBookingLayout />} />
+            <Route
+              path="/ServiceBookingLayout"
+              element={<ServiceBookingLayout />}
+            />
             <Route path="/aboutus" element={<AboutPage />} />
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/Categories/:name" element={<Categories />} />
@@ -138,7 +97,10 @@ const App = () => {
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/failure" element={<PaymentFailed />} />
             <Route path="/doctors" element={<DoctorsPage />} />
-            <Route path="/AppointmentSuccessPage" element={<AppointmentSuccessPage />} />
+            <Route
+              path="/AppointmentSuccessPage"
+              element={<AppointmentSuccessPage />}
+            />
             <Route path="/doctor/:id" element={<DoctorDetailPage />} />
             <Route path="/therapist/:id" element={<TherapistDetail />} />
             <Route
@@ -147,10 +109,10 @@ const App = () => {
             />
             <Route path="/cart" element={context.login ? <Cart /> : <Auth />} />
           </Routes>
-          
-          <ScrollToTopButton />
+
+          <WhatsAppChat />
           <FloatingDoctorButton />
-          
+
           <Footer />
         </div>
       </Router>
