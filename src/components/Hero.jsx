@@ -1,393 +1,810 @@
-import  { useEffect, useState, useRef } from 'react';
-import { ArrowRight, ShoppingBag, TrendingUp, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Crown,  Sparkles, Star } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
- 
+
 const carouselImages = [
-  { id: 1, src: "/IMG/home.png", alt: "Cutting-edge Technology & Gadgets", headline: "Unleash Your Potential" },
-  { id: 2, src: "/IMG/saree.png", alt: "Modern Fashion & Apparel", headline: "Style Reimagined" },
-  { id: 3, src: "/IMG/kids.png", alt: "Playful & Creative Children's Products", headline: "Adventure Awaits" },
-  { id: 4, src: "/IMG/men.png", alt: "Premium Menswear & Accessories", headline: "Gentleman's Collection" },
-  { id: 5, src: "/IMG/jwellary.png", alt: "Elegant & Traditional Luxury Accessories", headline: "Timeless Elegance" },
+  {
+    id: 1,
+    src: "/IMG/P4.jpg",
+    eyebrow: "HANDWOVEN · DIRECT",
+    title: "From the weaver's",
+    title2: "hands",
+    highlight: "straight to yours.",
+    description:
+      "Discover authentic handwoven sarees, crafted with patience, tradition and timeless Indian artistry.",
+  },
+  {
+    id: 2,
+    src: "/IMG/P3.jpg",
+    eyebrow: "DARSH · NEW COLLECTION",
+    title: "Woven with",
+    title2: "tradition",
+    highlight: "made for today.",
+    description:
+      "Elegant sarees created for women who appreciate heritage, craftsmanship and effortless beauty.",
+  },
+  {
+    id: 3,
+    src: "/IMG/P6.jpg",
+    eyebrow: "THE DARSH EDIT",
+    title: "Timeless",
+    title2: "Indian",
+    highlight: "elegance.",
+    description:
+      "A carefully selected collection of textures, colours and stories from India's weaving traditions.",
+  },
 ];
-
 
 export default function Hero() {
   const navigate = useNavigate();
+
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
   const intervalRef = useRef(null);
 
-    const currentHeadline = carouselImages[currentIndex].headline;
+  const currentSlide = carouselImages[currentIndex];
 
-   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
+  /* ---------------------------------------
+     Navigation
+  --------------------------------------- */
+
+  const handleClickShop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+
+    navigate("/allproducts");
   };
 
-   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + carouselImages.length) % carouselImages.length);
+  const handleClickStory = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+
+    navigate("/aboutus");
   };
 
-   useEffect(() => {
-     if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+  /* ---------------------------------------
+     Carousel
+  --------------------------------------- */
 
-     intervalRef.current = setInterval(nextSlide, 4000);
+  const nextSlide = () => {
+    setCurrentIndex(
+      (prev) => (prev + 1) % carouselImages.length
+    );
+  };
 
-     return () => {
+  const previousSlide = () => {
+    setCurrentIndex(
+      (prev) =>
+        (prev - 1 + carouselImages.length) %
+        carouselImages.length
+    );
+  };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
+  /* ---------------------------------------
+     Auto Play
+  --------------------------------------- */
+
+  useEffect(() => {
+    if (isPaused) return;
+
+    intervalRef.current = setInterval(() => {
+      nextSlide();
+    }, 6000);
+
+    return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, []); 
-
-   const handleClickShop = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    navigate("/allproducts");
-  };
-
-  const handleClickTrend = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    navigate("/newarrivals");
-  };
-  const handleClickhot = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    navigate("/hotsales");
-  };
+  }, [currentIndex, isPaused]);
 
   return (
-    <div className="relative h-[60vh] sm:h-[70vh] lg:h-[85vh] overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-purple-700 to-indigo-800"></div>
+    <section
+      className="
+        relative
+        w-full
+        h-[620px]
+        sm:h-[680px]
+        lg:h-[calc(100vh-128px)]
+        min-h-[560px]
+        max-h-[850px]
+        overflow-hidden
+        bg-[#3d090f]
+      "
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* =====================================================
+          BACKGROUND SLIDES
+      ===================================================== */}
 
-      <div className="relative w-full h-full">
-        {carouselImages.map((image, index) => (
-          <div
-            key={image.id}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-              index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-            }`}
-          >
-            <img
-              src={image.src}
-              alt={image.alt}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/40"></div>
-          </div>
-        ))}
+      <div className="absolute inset-0">
+        {carouselImages.map((image, index) => {
+          const active = index === currentIndex;
 
-        <div className="absolute bottom-6 md:bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-3 z-30">
-          {carouselImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`h-3 w-3 rounded-full transition-all duration-300 shadow-lg ${
-                index === currentIndex
-                  ? "bg-purple-400 w-8"
-                  : "bg-white/50 hover:bg-white"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 z-30 pt-16 pb-24 sm:pt-10 sm:pb-20 ">
-        <div className="animated-glow mb-4 sm:mb-6 px-4 py-1 rounded-full bg-gradient-to-r from-indigo-600/20 to-pink-500/20 backdrop-blur-sm border border-indigo-400/30 shadow-lg shadow-indigo-500/10">
-          <h2 className="text-xs sm:text-sm md:text-lg font-bold tracking-widest uppercase text-indigo-200 drop-shadow-lg flex items-center justify-center flex-wrap gap-2">
-            <Zap className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-pulse flex-shrink-0 text-pink-400" />
-            <span className="text-center bg-gradient-to-r from-indigo-200 to-pink-300 bg-clip-text text-transparent">
-              {currentHeadline}
-            </span>
-            <div className="w-2 h-2 rounded-full bg-pink-400 animate-ping ml-1"></div>
-          </h2>
-        </div>
-
-        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white text-center mb-4 sm:mb-8 leading-tight sm:leading-none drop-shadow-2xl animate-text-glide px-2">
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-300 bg-size-200 animate-text-shine">
-            Discover
-          </span>
-          <span className="block mt-2 sm:mt-4 bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 bg-clip-text text-transparent animate-fade-in-up whitespace-nowrap">
-            Premium Collections
-          </span>
-        </h1>
-
-        <div className="flex items-center gap-2 mb-4 animate-fade-in-up delay-200">
-          <div className="flex items-center gap-1 bg-gradient-to-r from-indigo-500/20 to-pink-500/20 px-3 py-1 rounded-full border border-indigo-400/40 shadow-lg shadow-purple-500/10">
-            <Star className="h-3 w-3 text-purple-400 fill-current" />
-            <span className="text-xs font-semibold bg-gradient-to-r from-indigo-200 to-pink-200 bg-clip-text text-transparent">
-              PREMIUM SELECTION
-            </span>
-            <Star className="h-3 w-3 text-purple-400 fill-current" />
-          </div>
-        </div>
-
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl text-indigo-100/90 text-center mb-6 sm:mb-8 md:mb-12 max-w-xs sm:max-w-md md:max-w-2xl animate-fade-in-up delay-300 backdrop-blur-sm bg-gradient-to-r from-indigo-900/20 to-purple-900/20 px-6 py-1 rounded-full border border-indigo-500/30 mx-2 shadow-lg shadow-indigo-500/10">
-          <span className="text-xs flex items-center justify-center gap-2 sm:text-2xl">
-            <Crown className="h-3 w-3 text-purple-400 sm:h-7 sm:w-7" />
-            Luxury • Quality • Fast
-            <Sparkles className="h-3 w-3 text-pink-400 sm:h-7 sm:w-7" />
-          </span>
-        </p>
-
-       <div className="hidden md:flex items-center justify-center gap-5 animate-fade-in-up">
-  {/* Modern Primary Button */}
-  <button
-    onClick={handleClickShop}
-    className="group relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white px-9 py-4.5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center justify-center gap-4 shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-  >
-    {/* Gradient Overlay */}
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 opacity-100 group-hover:from-indigo-500 group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-500" />
-    
-    {/* Animated Shine */}
-    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-    
-    {/* Inner Glow */}
-    <div className="absolute inset-1 rounded-xl bg-white/5 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-    
-    <div className="relative flex items-center py-2 gap-3 z-10">
-      <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-        <ShoppingBag className="h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
-      </div>
-      <span className="font-semibold tracking-wide drop-shadow-sm">
-        Shop Premium
-      </span>
-      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-    </div>
-  </button>
-
-  {/* Modern Secondary Button */}
-  <button
-    onClick={handleClickTrend}
-    className="group relative bg-gradient-to-br from-gray-900/80 to-gray-800/90 border border-gray-600/30 text-gray-100 px-9 py-4.5 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center justify-center gap-4 backdrop-blur-xl hover:border-indigo-400/50 hover:bg-gray-800/90 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-  >
-    {/* Animated Background */}
-    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    
-    {/* Border Glow */}
-    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-400/30 via-purple-400/30 to-pink-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm group-hover:blur-0 -z-10" />
-    
-    {/* Floating Dots */}
-    <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full animate-ping" />
-    <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full animate-ping delay-700" />
-    
-    <div className="relative flex items-center gap-3 py-2 z-10">
-      <div className="p-1.5 bg-indigo-500/20 rounded-lg backdrop-blur-sm">
-        <TrendingUp className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200 transition-colors duration-300" />
-      </div>
-      <span className="font-semibold tracking-wide bg-gradient-to-r from-indigo-200 to-purple-200 bg-clip-text text-transparent group-hover:from-white group-hover:to-gray-200 transition-all duration-500">
-        Trending Now
-      </span>
-    </div>
-  </button>
-</div>
-
-        <div className="md:hidden flex flex-col gap-4 mt-6 w-full max-w-xs px-4 animate-fade-in-up delay-700">
-          <div className="flex gap-3">
-            <button
-              onClick={handleClickTrend}
-              className="flex-1 bg-indigo-500/20 text-indigo-100 text-xs py-3 px-3 rounded-full backdrop-blur-sm border border-indigo-400/40 hover:bg-indigo-500/30 transition-all duration-200 active:scale-95 flex items-center justify-center gap-1"
+          return (
+            <div
+              key={image.id}
+              className={`
+                absolute
+                inset-0
+                overflow-hidden
+                transition-opacity
+                duration-[1200ms]
+                ease-out
+                ${
+                  active
+                    ? "opacity-100 z-10"
+                    : "opacity-0 z-0"
+                }
+              `}
             >
-              <Sparkles className="h-3 w-3 text-pink-300" />
-              New Arrivals
+              <img
+                src={image.src}
+                alt={image.title}
+                className={`
+                  absolute
+                  inset-0
+                  w-full
+                  h-full
+                  object-cover
+                  transition-transform
+                  duration-[8000ms]
+                  ease-out
+                  ${
+                    active
+                      ? "scale-110"
+                      : "scale-100"
+                  }
+                `}
+              />
+
+              {/* Dark cinematic overlay */}
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-[#39070d]/30
+                "
+              />
+
+              {/* Left wine gradient */}
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-gradient-to-r
+                  from-[#500912]/95
+                  via-[#5c1017]/70
+                  via-45%
+                  to-transparent
+                "
+              />
+
+              {/* Bottom shadow */}
+
+              <div
+                className="
+                  absolute
+                  inset-x-0
+                  bottom-0
+                  h-1/2
+                  bg-gradient-to-t
+                  from-[#250508]/70
+                  via-transparent
+                  to-transparent
+                "
+              />
+
+              {/* Warm golden atmosphere */}
+
+              <div
+                className="
+                  absolute
+                  top-0
+                  right-0
+                  w-[55%]
+                  h-full
+                  bg-gradient-to-l
+                  from-[#c59a55]/10
+                  to-transparent
+                  pointer-events-none
+                "
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* =====================================================
+          DECORATIVE VERTICAL LINE
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          left-6
+          sm:left-10
+          lg:left-16
+          top-1/2
+          -translate-y-1/2
+          h-[55%]
+          w-px
+          bg-gradient-to-b
+          from-transparent
+          via-[#d3a64d]/50
+          to-transparent
+          z-20
+          hidden sm:block
+        "
+      />
+
+      {/* =====================================================
+          MAIN CONTENT
+      ===================================================== */}
+
+      <div
+        className="
+          relative
+          z-20
+          h-full
+          max-w-[1500px]
+          mx-auto
+          px-7
+          sm:px-12
+          lg:px-20
+          xl:px-28
+          flex
+          items-center
+        "
+      >
+        <div
+          key={currentSlide.id}
+          className="
+            max-w-[720px]
+            pt-6
+            sm:pt-10
+            lg:pt-0
+            animate-[heroContent_900ms_ease-out]
+          "
+        >
+          {/* Eyebrow */}
+
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+              mb-5
+              sm:mb-7
+            "
+          >
+            <span
+              className="
+                block
+                w-7
+                sm:w-10
+                h-px
+                bg-[#d4a84e]
+              "
+            />
+
+            <span
+              className="
+                text-[#dfc889]
+                text-[9px]
+                sm:text-[10px]
+                md:text-[11px]
+                tracking-[0.38em]
+                uppercase
+                font-medium
+              "
+            >
+              {currentSlide.eyebrow}
+            </span>
+          </div>
+
+          {/* Main heading */}
+
+          <h1
+            className="
+              font-serif
+              text-[#f8f3e8]
+              text-[35px]
+              leading-[0.98]
+              sm:text-[64px]
+              sm:leading-[0.95]
+              md:text-[76px]
+              lg:text-[80px]
+              xl:text-[87px]
+              font-normal
+              tracking-[-0.025em]
+            "
+          >
+            <span className="block">
+              {currentSlide.title}
+            </span>
+
+            <span className="block">
+              {currentSlide.title2}
+            </span>
+
+            <span
+              className="
+                block
+                mt-1
+                sm:mt-2
+                text-[#d2a84e]
+                italic
+                font-light
+                text-[29px]
+                sm:text-[52px]
+                md:text-[61px]
+                lg:text-[68px]
+                xl:text-[76px]
+              "
+            >
+              {currentSlide.highlight}
+            </span>
+          </h1>
+
+          {/* Description */}
+
+          <p
+            className="
+              mt-6
+              sm:mt-8
+              max-w-[510px]
+              text-[#f1e5d5]/80
+              text-[12px]
+              sm:text-[14px]
+              md:text-[15px]
+              leading-7
+              tracking-wide
+            "
+          >
+            {currentSlide.description}
+          </p>
+
+          {/* =================================================
+              BUTTONS
+          ================================================= */}
+
+          <div
+            className="
+              mt-7
+              sm:mt-9
+              flex
+              flex-wrap
+              items-center
+              gap-3
+              sm:gap-4
+            "
+          >
+            {/* Primary */}
+
+            <button
+              onClick={handleClickShop}
+              className="
+                group
+                relative
+                overflow-hidden
+                bg-[#d1a447]
+                text-[#3d1711]
+                px-6
+                sm:px-8
+                py-3.5
+                sm:py-4
+                text-[9px]
+                sm:text-[10px]
+                tracking-[0.22em]
+                font-semibold
+                uppercase
+                transition-all
+                duration-500
+                hover:bg-[#e0b85d]
+                hover:-translate-y-0.5
+                shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+              "
+            >
+              {/* Shine */}
+
+              <span
+                className="
+                  absolute
+                  inset-y-0
+                  -left-full
+                  w-1/2
+                  skew-x-[-20deg]
+                  bg-white/25
+                  transition-all
+                  duration-700
+                  group-hover:left-[130%]
+                "
+              />
+
+              <span
+                className="
+                  relative
+                  flex
+                  items-center
+                  gap-3
+                "
+              >
+                <ShoppingBag
+                  size={15}
+                  strokeWidth={1.5}
+                />
+
+                Shop Collection
+
+                <ArrowRight
+                  size={14}
+                  className="
+                    transition-transform
+                    duration-300
+                    group-hover:translate-x-1
+                  "
+                />
+              </span>
             </button>
-            <button 
-             onClick={handleClickhot}
-            className="flex-1 bg-pink-500/20 text-pink-100 text-xs py-3 px-3 rounded-full backdrop-blur-sm border border-pink-400/40 hover:bg-pink-500/30 transition-all duration-200 active:scale-95 flex items-center justify-center gap-1">
-              <TrendingUp className="h-3 w-3 text-purple-300" />
-              Hot Deals
+
+            {/* Secondary */}
+
+            <button
+              onClick={handleClickStory}
+              className="
+                group
+                relative
+                border
+                border-[#f3dfbd]/45
+                text-[#f8f3e8]
+                px-6
+                sm:px-8
+                py-3.5
+                sm:py-4
+                text-[9px]
+                sm:text-[10px]
+                tracking-[0.22em]
+                font-semibold
+                uppercase
+                backdrop-blur-sm
+                transition-all
+                duration-500
+                hover:bg-[#f8f3e8]/10
+                hover:border-[#d4a84e]
+              "
+            >
+              <span>
+                Our Story
+              </span>
+
+              <span
+                className="
+                  absolute
+                  left-0
+                  bottom-0
+                  w-0
+                  h-[1px]
+                  bg-[#d4a84e]
+                  transition-all
+                  duration-500
+                  group-hover:w-full
+                "
+              />
             </button>
           </div>
-        </div>
 
-        <div className="absolute bottom-8 left-8 hidden lg:block animate-bounce-slow">
-          <div className="w-4 h-4 rounded-full bg-indigo-400/40 blur-sm"></div>
-        </div>
-        <div className="absolute top-12 right-12 hidden lg:block animate-pulse delay-1000">
-          <div className="w-6 h-6 rounded-full bg-pink-400/30 blur-sm"></div>
-        </div>
-        <div className="absolute top-1/4 left-1/4 hidden xl:block animate-float">
-          <div className="w-3 h-3 rounded-full bg-purple-400/20 blur-sm"></div>
-        </div>
-        <div className="absolute bottom-1/3 right-1/4 hidden xl:block animate-float delay-500">
-          <div className="w-2 h-2 rounded-full bg-indigo-300/30 blur-sm"></div>
+          {/* Small trust line */}
+
+          <div
+            className="
+              mt-7
+              flex
+              items-center
+              gap-3
+              text-[#ead8b5]/70
+            "
+          >
+            <Sparkles
+              size={13}
+              strokeWidth={1.2}
+            />
+
+            <span
+              className="
+                text-[8px]
+                sm:text-[9px]
+                tracking-[0.25em]
+                uppercase
+              "
+            >
+              Authentic · Handwoven · Thoughtfully Made
+            </span>
+          </div>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes shine {
-          0% {
-            transform: translateX(-100%) skew(-12deg);
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateX(200%) skew(-12deg);
-            opacity: 0;
-          }
-        }
+     
 
-        @keyframes shine-slow {
-          0% {
-            transform: translateX(-100%) skew(-12deg);
-            opacity: 0;
+      {/* =====================================================
+          PROGRESS INDICATORS
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          left-1/2
+          -translate-x-1/2
+          bottom-8
+          sm:bottom-10
+          z-30
+          flex
+          items-center
+          gap-2
+        "
+      >
+        {carouselImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            aria-label={`Go to slide ${
+              index + 1
+            }`}
+            className="
+              group
+              relative
+              h-5
+              flex
+              items-center
+            "
+          >
+            <span
+              className={`
+                block
+                h-[1px]
+                transition-all
+                duration-500
+                ${
+                  index === currentIndex
+                    ? "w-9 bg-[#d2a84e]"
+                    : "w-5 bg-[#f5e8d0]/45 group-hover:bg-[#f5e8d0]/80"
+                }
+              `}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* =====================================================
+          ARROW CONTROLS
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          right-7
+          sm:right-12
+          lg:right-20
+          bottom-7
+          sm:bottom-9
+          z-30
+          flex
+        "
+      >
+        {/* Previous */}
+
+        <button
+          onClick={previousSlide}
+          aria-label="Previous slide"
+          className="
+            group
+            w-6
+            h-6
+            sm:w-12
+            sm:h-12
+            border
+            border-[#f4e5c8]/35
+            flex
+            items-center
+            justify-center
+            text-[#f8f3e8]
+            transition-all
+            duration-300
+            hover:bg-[#d1a447]
+            hover:text-[#3d1711]
+            hover:border-[#d1a447]
+          "
+        >
+          <ChevronLeft
+            size={18}
+            strokeWidth={1.2}
+            className="
+              transition-transform
+              group-hover:-translate-x-0.5
+            "
+          />
+        </button>
+
+        {/* Next */}
+
+        <button
+          onClick={nextSlide}
+          aria-label="Next slide"
+          className="
+            group
+            w-6
+            h-6
+            sm:w-12
+            sm:h-12
+            border
+            border-l-0
+            border-[#f4e5c8]/35
+            flex
+            items-center
+            justify-center
+            text-[#f8f3e8]
+            transition-all
+            duration-300
+            hover:bg-[#d1a447]
+            hover:text-[#3d1711]
+            hover:border-[#d1a447]
+          "
+        >
+          <ChevronRight
+            size={18}
+            strokeWidth={1.2}
+            className="
+              transition-transform
+              group-hover:translate-x-0.5
+            "
+          />
+        </button>
+      </div>
+
+      {/* =====================================================
+          TOP RIGHT DECORATION
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          right-8
+          sm:right-14
+          lg:right-20
+          top-10
+          z-20
+          hidden
+          md:block
+        "
+      >
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+            text-[#f3ddaf]/60
+          "
+        >
+          <span
+            className="
+              text-[8px]
+              tracking-[0.35em]
+              uppercase
+            "
+          >
+            DARSH
+          </span>
+
+          <span className="w-8 h-px bg-[#d1a447]/40" />
+
+          <span
+            className="
+              text-[8px]
+              tracking-[0.2em]
+            "
+          >
+            2026
+          </span>
+        </div>
+      </div>
+
+      {/* =====================================================
+          ANIMATED GOLD PARTICLES
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          top-[22%]
+          right-[35%]
+          z-20
+          w-1
+          h-1
+          rounded-full
+          bg-[#d4a84e]
+          shadow-[0_0_12px_#d4a84e]
+          animate-[goldFloat_4s_ease-in-out_infinite]
+        "
+      />
+
+      <div
+        className="
+          absolute
+          bottom-[30%]
+          right-[18%]
+          z-20
+          w-1.5
+          h-1.5
+          rounded-full
+          bg-[#e5c477]/60
+          blur-[1px]
+          animate-[goldFloat_5s_ease-in-out_infinite_reverse]
+        "
+      />
+
+      {/* =====================================================
+          CUSTOM ANIMATIONS
+      ===================================================== */}
+
+      <style>
+        {`
+          @keyframes heroContent {
+            0% {
+              opacity: 0;
+              transform: translateY(35px);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          50% {
-            opacity: 0.3;
+
+          @keyframes goldFloat {
+            0%,
+            100% {
+              transform: translateY(0) translateX(0);
+              opacity: 0.3;
+            }
+
+            50% {
+              transform: translateY(-25px) translateX(12px);
+              opacity: 1;
+            }
           }
-          100% {
-            transform: translateX(200%) skew(-12deg);
-            opacity: 0;
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
           }
-        }
-
-        @keyframes gradient-flow {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(180deg);
-          }
-        }
-
-        @keyframes text-shine {
-          0% {
-            background-position: -200% center;
-          }
-          100% {
-            background-position: 200% center;
-          }
-        }
-
-        @keyframes text-glide {
-          0% {
-            transform: translateY(30px);
-            opacity: 0;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        @keyframes fade-in-up {
-          0% {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        @keyframes glow {
-          0%,
-          100% {
-            text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
-          }
-          50% {
-            text-shadow: 0 0 30px rgba(255, 193, 7, 0.8),
-              0 0 40px rgba(255, 193, 7, 0.6);
-          }
-        }
-
-        @keyframes scroll {
-          0% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(15px);
-            opacity: 0;
-          }
-        }
-
-        @keyframes bounce-slow {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        .animate-shine {
-          animation: shine 3s infinite;
-        }
-
-        .animate-shine-slow {
-          animation: shine-slow 4s infinite;
-        }
-
-        .animate-gradient-flow {
-          background-size: 200% 200%;
-          animation: gradient-flow 8s ease infinite;
-        }
-
-        .animate-float {
-          animation: float linear infinite;
-        }
-
-        .animate-text-shine {
-          background-size: 200% auto;
-          animation: text-shine 4s linear infinite;
-        }
-
-        .animate-text-glide {
-          animation: text-glide 1.2s ease-out;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 1s ease-out forwards;
-        }
-
-        .delay-300 {
-          animation-delay: 0.3s;
-          opacity: 0;
-          animation-fill-mode: both;
-        }
-
-        .delay-500 {
-          animation-delay: 0.5s;
-          opacity: 0;
-          animation-fill-mode: both;
-        }
-
-        .animated-glow {
-          animation: glow 2s ease-in-out infinite;
-        }
-
-        .animate-scroll {
-          animation: scroll 2s infinite;
-        }
-
-        .animate-bounce-slow {
-          animation: bounce-slow 2s infinite;
-        }
-
-        .bg-size-200 {
-          background-size: 200% auto;
-        }
-      `}</style>
-    </div>
+        `}
+      </style>
+    </section>
   );
 }

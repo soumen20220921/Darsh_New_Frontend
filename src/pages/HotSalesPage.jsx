@@ -1,241 +1,838 @@
 import React, { useMemo } from "react";
-import { Flame, Timer, Zap, Rocket, Star, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  Eye,
+  Flame,
+  Shield,
+  Sparkles,
+  Star,
+  Timer,
+  Truck,
+  Zap,
+} from "lucide-react";
+
 import { useAppContext } from "../context/AppContext.jsx";
-import ProductCard from "../components/ProductCard";
-import DealOfTheDay from "./DealOfTheDay.jsx";
-import { ArrowRight, Shield, Truck, Award } from "lucide-react";
 
 const HotSalesPage = () => {
   const { allProduct, url } = useAppContext();
 
-  const hotSales = allProduct?.filter((product) => product.hotSell) || [];
+  /* =========================================================
+     HOT SALES
+  ========================================================= */
+
+  const hotSales = useMemo(() => {
+    if (!allProduct?.length) return [];
+
+    return allProduct.filter(
+      (product) =>
+        product?.hotSell === true ||
+        product?.hotSell === "true" ||
+        product?.hotSell === 1
+    );
+  }, [allProduct]);
+
+  /* =========================================================
+     DEAL OF THE DAY
+  ========================================================= */
 
   const dealOfTheDay = useMemo(() => {
     if (!hotSales.length) return null;
-    return hotSales.reduce((best, product) => {
-      if (product.originalPrice && product.price) {
+
+    let bestProduct = null;
+    let bestDiscount = 0;
+
+    hotSales.forEach((product) => {
+      const originalPrice =
+        Number(product?.originalPrice) || 0;
+
+      const price =
+        Number(product?.price) || 0;
+
+      if (
+        originalPrice > price &&
+        price > 0
+      ) {
         const discount = Math.round(
-          ((product.originalPrice - product.price) / product.originalPrice) * 100
+          ((originalPrice - price) /
+            originalPrice) *
+            100
         );
-        if (!best.discount || discount > best.discount) {
-          return { ...product, discount };
+
+        if (discount > bestDiscount) {
+          bestDiscount = discount;
+
+          bestProduct = {
+            ...product,
+            discount,
+          };
         }
       }
-      return best;
-    }, {});
+    });
+
+    return bestProduct;
   }, [hotSales]);
 
+  /* =========================================================
+     REMAINING PRODUCTS
+  ========================================================= */
+
+  const remainingProducts = useMemo(() => {
+    return hotSales.filter(
+      (product) =>
+        product?._id !==
+        dealOfTheDay?._id
+    );
+  }, [hotSales, dealOfTheDay]);
+
+  /* =========================================================
+     SCROLL TOP
+  ========================================================= */
+
+  const scrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* =========================================================
+     IMAGE
+  ========================================================= */
+
+  const getImage = (product) => {
+    if (product?.images?.[0]) {
+      return `${url}/img/${product.images[0]}`;
+    }
+
+    return (
+      product?.image ||
+      "https://placehold.co/600x750?text=Darsh"
+    );
+  };
+
+  /* =========================================================
+     OLD PRICE
+  ========================================================= */
+
+  const getOldPrice = (product) => {
+    return (
+      product?.originalPrice ||
+      product?.oldPrice ||
+      product?.oldprice ||
+      null
+    );
+  };
+
+  /* =========================================================
+     DISCOUNT
+  ========================================================= */
+
+  const getDiscount = (product) => {
+    const price =
+      Number(product?.price) || 0;
+
+    const oldPrice =
+      Number(getOldPrice(product)) || 0;
+
+    if (
+      !oldPrice ||
+      oldPrice <= price
+    ) {
+      return null;
+    }
+
+    return Math.round(
+      ((oldPrice - price) /
+        oldPrice) *
+        100
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 font-inter">
-      <section className="relative text-center py-7 sm:py-8 lg:py-9 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-2xl overflow-hidden">
+    <main className="min-h-screen bg-[#f8f4eb] text-[#3f1616] overflow-hidden">
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
+      <section className="relative overflow-hidden bg-[#f3eadb] border-b border-[#741522]/10">
+
+        <div className="absolute -left-32 -top-20 w-72 h-72 rounded-full bg-[#d4ad54]/10 blur-3xl" />
+
+        <div className="absolute -right-32 -bottom-24 w-80 h-80 rounded-full bg-[#741522]/5 blur-3xl" />
+
         <div className="absolute inset-0 pointer-events-none">
-          {/* Floating Geometric Shapes */}
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute animate-float-slow"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${i * 0.7}s`,
-                animationDuration: `${8 + Math.random() * 12}s`,
-              }}
-            >
-              <div
-                className={`opacity-20 ${
-                  i % 3 === 0 ? "rounded-lg" : i % 3 === 1 ? "rounded-full" : "rotate-45"
-                }`}
-                style={{
-                  width: `${8 + Math.random() * 12}px`,
-                  height: `${8 + Math.random() * 12}px`,
-                  backgroundColor: ["#ffffff", "#c7d2fe", "#f0abfc"][
-                    Math.floor(Math.random() * 3)
-                  ],
-                }}
-              />
-            </div>
-          ))}
-          
-          {/* Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/20 via-transparent to-pink-600/20"></div>
-          <div className="absolute top-0 left-0 w-72 h-72 bg-indigo-300/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-300/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
+
+          <Sparkles
+            size={22}
+            className="absolute left-[12%] top-[30%] text-[#b88b34]/40 animate-pulse"
+          />
+
+          <Sparkles
+            size={16}
+            className="absolute right-[15%] top-[24%] text-[#741522]/30 animate-pulse"
+          />
+
+          <Sparkles
+            size={18}
+            className="absolute left-[22%] bottom-[20%] text-[#b88b34]/30 animate-pulse"
+          />
         </div>
 
-        <div className="max-w-3xl mx-auto px-6 relative z-10">
-         
+        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 lg:px-0 py-16 sm:py-20 lg:py-24">
 
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 mb-8">
-            <div className="hidden sm:block relative group mb-8">
-              <div className="absolute inset-0 bg-white/20 rounded-full blur-lg group-hover:blur-xl transition-all duration-500"></div>
-              <Flame size={64} className="text-white relative z-10 animate-pulse group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            
-            <div className="text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 leading-tight">
-                
-                <span className="block whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-pink-200 mt-2">
-                  Premium Hot Deals
-                </span>
-              </h1>
-              
-              <div className="flex items-center justify-center lg:justify-start gap-3 text-white/90 mb-4">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 text-yellow-300 fill-current" />
-                  <span className="text-sm font-medium">Exclusive Offers</span>
-                </div>
-                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
-                <div className="flex items-center gap-1">
-                  <Zap className="h-4 w-4 text-yellow-300" />
-                  <span className="text-sm font-medium">Flash Sale</span>
-                </div>
-              </div>
-            </div>
+          {/* Breadcrumb */}
+
+          <div className="flex items-center justify-center gap-2 mb-9 text-[7px] sm:text-[8px] uppercase tracking-[0.28em] text-[#977e73]">
+
+            <Link
+              to="/"
+              onClick={scrollTop}
+              className="hover:text-[#741522] transition-colors"
+            >
+              Home
+            </Link>
+
+            <span>/</span>
+
+            <span className="text-[#741522]">
+              Hot Sales
+            </span>
           </div>
 
-          
-        </div>
+          {/* Label */}
 
-        <div className="absolute bottom-3/ left-1/2 -translate-x-1/2 flex gap-8 opacity-60">
-          <Sparkles size={24} className="text-indigo-200 animate-pulse delay-100" />
-          <Sparkles size={24} className="text-purple-200 animate-pulse delay-300" />
-          <Sparkles size={24} className="text-pink-200 animate-pulse delay-500" />
+          <div className="flex items-center justify-center gap-3 mb-5">
+
+            <span className="w-8 sm:w-12 h-px bg-[#d4ad54]" />
+
+            <div className="flex items-center gap-2 text-[8px] sm:text-[9px] uppercase tracking-[0.35em] text-[#977e73]">
+
+              <Flame
+                size={13}
+                className="text-[#741522] animate-pulse"
+              />
+
+              THE DARSH SALE EDIT
+            </div>
+
+            <span className="w-8 sm:w-12 h-px bg-[#d4ad54]" />
+
+          </div>
+
+          {/* Heading */}
+
+          <h1 className="text-center font-serif text-[46px] sm:text-[60px] lg:text-[72px] leading-none text-[#3f1616]">
+            Hot Sales
+          </h1>
+
+          {/* Ornament */}
+
+          <div className="flex items-center justify-center gap-3 mt-6">
+
+            <span className="w-10 h-px bg-[#d4ad54]/60" />
+
+            <Flame
+              size={17}
+              className="text-[#b88b34] animate-pulse"
+            />
+
+            <span className="w-10 h-px bg-[#d4ad54]/60" />
+
+          </div>
+
+          <p className="max-w-[600px] mx-auto mt-6 text-center text-[12px] sm:text-[13px] leading-6 sm:leading-7 text-[#806c63]">
+            Discover our most-loved sarees at
+            exceptional prices. Handpicked
+            treasures, limited opportunities,
+            timeless elegance.
+          </p>
+
+          {/* Features */}
+
+          <div className="mt-9 flex flex-wrap justify-center gap-x-7 gap-y-3">
+
+            <div className="flex items-center gap-2 text-[7px] sm:text-[8px] uppercase tracking-[0.2em] text-[#741522]">
+              <Zap
+                size={12}
+                className="text-[#b88b34]"
+              />
+              Limited Offers
+            </div>
+
+            <div className="flex items-center gap-2 text-[7px] sm:text-[8px] uppercase tracking-[0.2em] text-[#741522]">
+              <Star
+                size={12}
+                className="text-[#b88b34]"
+              />
+              Premium Weaves
+            </div>
+
+            <div className="flex items-center gap-2 text-[7px] sm:text-[8px] uppercase tracking-[0.2em] text-[#741522]">
+              <Timer
+                size={12}
+                className="text-[#b88b34]"
+              />
+              While Stocks Last
+            </div>
+
+          </div>
         </div>
       </section>
 
-      {dealOfTheDay && <DealOfTheDay dealOfTheDay={dealOfTheDay} />}
+      {/* =====================================================
+          DEAL OF THE DAY
+      ===================================================== */}
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="text-center mb-16 relative">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="w-12 h-px bg-gradient-to-r from-transparent to-indigo-500"></div>
-            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">
-              Premium Collection
-            </span>
-            <div className="w-12 h-px bg-gradient-to-l from-transparent to-pink-500"></div>
-          </div>
-          
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-pink-500">
-              More Exclusive Deals
-            </span>
-          </h2>
-          
-          <p className="text-gray-600 text-xs sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Handpicked premium products with exceptional discounts. 
-            Each item carefully selected for quality and value.
-          </p>
-        </div>
+      {dealOfTheDay && (
+        <section className="bg-[#f8f4eb] px-4 sm:px-6 lg:px-8 py-14 sm:py-18 lg:py-20">
 
-        {hotSales.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {hotSales
-              .filter((p) => p._id !== dealOfTheDay?._id)
-              .map((product, index) => (
-                <div
-                  key={product._id}
-                  className="group relative bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden transform hover:-translate-y-2"
-                  style={{ animationDelay: `${index * 100}ms` }}
+          <div className="max-w-[1100px] mx-auto">
+
+            <div className="flex items-center justify-center gap-3 mb-8">
+
+              <span className="w-8 sm:w-12 h-px bg-[#d4ad54]" />
+
+              <span className="flex items-center gap-2 text-[8px] uppercase tracking-[0.3em] text-[#977e73]">
+
+                <Sparkles
+                  size={13}
+                  className="text-[#b88b34]"
+                />
+
+                DEAL OF THE DAY
+              </span>
+
+              <span className="w-8 sm:w-12 h-px bg-[#d4ad54]" />
+
+            </div>
+
+            <div className="grid md:grid-cols-2 border border-[#d4ad54]/30 bg-[#f3eadb] overflow-hidden">
+
+              {/* Image */}
+
+              <div className="relative min-h-[400px] sm:min-h-[500px] md:min-h-[560px] overflow-hidden">
+
+                <Link
+                  to={`/productDetails/${dealOfTheDay._id}`}
+                  onClick={scrollTop}
                 >
-                  <div className="absolute top-4 right-4 z-20">
-                    <div className="relative">
-                      <div className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                        <div className="flex items-center gap-1">
-                          <Flame className="h-3 w-3" />
-                          <span>HOT</span>
-                        </div>
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full blur-sm opacity-50 animate-ping"></div>
-                    </div>
-                  </div>
+                  <img
+                    src={getImage(dealOfTheDay)}
+                    alt={dealOfTheDay.productName}
+                    className="w-full h-full min-h-[400px] sm:min-h-[500px] md:min-h-[560px] object-cover transition-transform duration-[1200ms] hover:scale-105"
+                  />
+                </Link>
 
-                  <ProductCard
-                    product={{
-                      id: product._id,
-                      name: product.productName,
-                      image: product.images?.[0]
-                        ? `${url}/img/${product.images[0]}`
-                        : "",
-                      price: product.price,
-                      oldprice: product.originalPrice,
-                    }}
-                    onToggleWishlist={() => {}}
-                    onAddToCart={() => {}}
-                    isCompactMobile={true}
+                {/* HOT */}
+
+                <div className="absolute left-4 top-4 sm:left-6 sm:top-6 flex items-center gap-2 bg-[#741522] px-4 py-2 text-[8px] uppercase tracking-[0.2em] text-[#f8f4eb]">
+                  <Flame size={13} />
+                  HOT PICK
+                </div>
+
+                {/* Discount */}
+
+                <div className="absolute right-4 bottom-4 sm:right-6 sm:bottom-6 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#d4ad54] text-[#4a1815] flex flex-col items-center justify-center shadow-xl">
+
+                  <span className="text-[17px] font-medium">
+                    {dealOfTheDay.discount}%
+                  </span>
+
+                  <span className="text-[6px] uppercase tracking-[0.15em]">
+                    OFF
+                  </span>
+
+                </div>
+              </div>
+
+              {/* Content */}
+
+              <div className="flex flex-col justify-center px-6 sm:px-10 lg:px-14 py-10 sm:py-12">
+
+                <p className="text-[8px] uppercase tracking-[0.3em] text-[#977e73]">
+                  EDITOR'S PICK
+                </p>
+
+                <h2 className="mt-4 font-serif text-[32px] sm:text-[42px] leading-tight text-[#3f1616]">
+                  {dealOfTheDay.productName}
+                </h2>
+
+                <p className="mt-4 text-[8px] uppercase tracking-[0.22em] text-[#977e73]">
+                  {dealOfTheDay.fabric ||
+                    dealOfTheDay.category ||
+                    "HANDWOVEN · DARSH"}
+                </p>
+
+                <div className="my-7 h-px bg-[#741522]/10" />
+
+                {/* Price */}
+
+                <div className="flex items-end gap-4">
+
+                  <span className="font-serif text-[28px] text-[#741522]">
+                    ₹
+                    {Number(
+                      dealOfTheDay.price || 0
+                    ).toLocaleString("en-IN")}
+                  </span>
+
+                  {dealOfTheDay.originalPrice && (
+                    <span className="pb-1 text-[13px] text-[#977e73] line-through">
+                      ₹
+                      {Number(
+                        dealOfTheDay.originalPrice
+                      ).toLocaleString("en-IN")}
+                    </span>
+                  )}
+
+                </div>
+
+                <p className="mt-5 max-w-[450px] text-[12px] leading-6 text-[#806c63]">
+                  A special Darsh selection,
+                  available at an exceptional
+                  price for a limited time.
+                  Once it's gone, this offer
+                  may not return.
+                </p>
+
+                <Link
+                  to={`/productDetails/${dealOfTheDay._id}`}
+                  onClick={scrollTop}
+                  className="group mt-8 inline-flex min-h-[50px] w-full sm:w-fit items-center justify-center gap-3 bg-[#741522] px-7 text-[8px] uppercase tracking-[0.25em] text-[#f8f4eb] hover:bg-[#5e101a] transition-all duration-300"
+                >
+
+                  <Eye size={14} />
+
+                  View This Saree
+
+                  <ArrowRight
+                    size={14}
+                    className="group-hover:translate-x-1 transition-transform"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                </div>
-              ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 lg:py-20">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-indigo-100 to-pink-100 rounded-3xl flex items-center justify-center">
-              <Flame className="h-12 w-12 text-gray-400" />
+                </Link>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No Hot Deals Available
-            </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              We're preparing some amazing deals for you. Check back soon for exclusive offers!
-            </p>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 lg:mb-20">
-        <div className="relative rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-80 h-80 bg-pink-300/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
-          </div>
-          
-          <div className="relative z-10 text-center py-16 lg:py-20 px-6">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
-              Don't Miss Out On Premium Deals!
-            </h2>
-            <p className="text-white/80 text-xs sm:text-lg mb-8 max-w-2xl mx-auto">
-              Explore our complete collection of premium products with exclusive discounts and fast delivery.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/allproducts"
-                className="group bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-3"
-              >
-                <span>Explore All Products</span>
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              
-              <Link
-                to="/"
-                className="group border-2 border-white text-white px-8 py-4 rounded-2xl font-bold backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center gap-3"
-              >
-                <span>Browse Categories</span>
-                <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
-              </Link>
+      {/* =====================================================
+          MORE HOT PICKS
+      ===================================================== */}
+
+      <section className="bg-[#f3eadb] border-y border-[#741522]/10 px-4 sm:px-6 lg:px-8 py-14 sm:py-18 lg:py-20">
+
+        <div className="max-w-[1240px] mx-auto">
+
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 mb-10 sm:mb-12">
+
+            <div>
+
+              <p className="mb-3 flex items-center gap-2 text-[8px] uppercase tracking-[0.32em] text-[#977e73]">
+
+                <Flame
+                  size={13}
+                  className="text-[#b88b34]"
+                />
+
+                LIMITED TIME EDIT
+              </p>
+
+              <h2 className="font-serif text-[34px] sm:text-[45px] leading-none text-[#3f1616]">
+                More hot picks
+              </h2>
+
+              <p className="mt-4 max-w-[520px] text-[12px] leading-6 text-[#806c63]">
+                Explore more handpicked sarees
+                currently available in our
+                special sale edit.
+              </p>
+
             </div>
-            
-            <div className="flex flex-wrap justify-center gap-6 mt-8 text-white/70 text-sm">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                <span>Secure Payment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Truck className="h-4 w-4" />
-                <span>Fast Delivery</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4" />
-                <span>Premium Quality</span>
-              </div>
-            </div>
+
+            <span className="text-[8px] uppercase tracking-[0.25em] text-[#977e73]">
+              {remainingProducts.length} Pieces
+            </span>
+
           </div>
+
+          {remainingProducts.length > 0 ? (
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 sm:gap-x-5 lg:gap-x-6 gap-y-12 sm:gap-y-14">
+
+              {remainingProducts.map(
+                (product, index) => {
+
+                  const image =
+                    getImage(product);
+
+                  const oldPrice =
+                    getOldPrice(product);
+
+                  const discount =
+                    getDiscount(product);
+
+                  return (
+                    <article
+                      key={product._id}
+                      className="group min-w-0 animate-[hotReveal_650ms_ease-out_both]"
+                      style={{
+                        animationDelay:
+                          `${index * 80}ms`,
+                      }}
+                    >
+
+                      {/* Image */}
+
+                      <div className="relative aspect-[0.78] overflow-hidden bg-[#eee5d5]">
+
+                        <Link
+                          to={`/productDetails/${product._id}`}
+                          onClick={scrollTop}
+                        >
+                          <img
+                            src={image}
+                            alt={product.productName}
+                            loading={
+                              index > 3
+                                ? "lazy"
+                                : "eager"
+                            }
+                            className="w-full h-full object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+                          />
+                        </Link>
+
+                        {/* Overlay */}
+
+                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#4c1117]/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                        {/* HOT badge */}
+
+                        <div className="absolute left-3 top-3 sm:left-4 sm:top-4 flex items-center gap-1.5 bg-[#741522] px-3 py-1.5 text-[7px] sm:text-[8px] uppercase tracking-[0.18em] text-[#f8f4eb]">
+
+                          <Flame
+                            size={11}
+                            className="animate-pulse"
+                          />
+
+                          HOT
+
+                        </div>
+
+                        {/* Discount */}
+
+                        {discount && (
+                          <span className="absolute right-3 top-3 sm:right-4 sm:top-4 bg-[#d4ad54] px-2.5 py-1.5 text-[7px] tracking-[0.12em] text-[#4a1815]">
+                            -{discount}%
+                          </span>
+                        )}
+
+                        {/* Desktop button */}
+
+                        <Link
+                          to={`/productDetails/${product._id}`}
+                          onClick={scrollTop}
+                          className="absolute hidden sm:flex left-1/2 bottom-4 -translate-x-1/2 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 items-center gap-2 whitespace-nowrap bg-[#f8f4eb]/95 backdrop-blur-sm px-5 py-2.5 text-[8px] uppercase tracking-[0.2em] text-[#741522] shadow-lg transition-all duration-500"
+                        >
+
+                          <Eye size={13} />
+
+                          View Saree
+
+                        </Link>
+                      </div>
+
+                      {/* Details */}
+
+                      <div className="pt-4 sm:pt-5">
+
+                        <div className="flex items-start justify-between gap-2">
+
+                          <Link
+                            to={`/productDetails/${product._id}`}
+                            onClick={scrollTop}
+                            className="min-w-0"
+                          >
+                            <h3 className="truncate font-serif text-[15px] sm:text-[17px] leading-tight text-[#3f1616] group-hover:text-[#741522] transition-colors">
+                              {product.productName}
+                            </h3>
+                          </Link>
+
+                          <div className="shrink-0 text-right">
+
+                            <p className="whitespace-nowrap text-[10px] sm:text-[11px] text-[#3d1714]">
+                              ₹
+                              {Number(
+                                product.price || 0
+                              ).toLocaleString(
+                                "en-IN"
+                              )}
+                            </p>
+
+                            {oldPrice && (
+                              <p className="mt-0.5 text-[8px] text-[#977e73] line-through">
+                                ₹
+                                {Number(
+                                  oldPrice
+                                ).toLocaleString(
+                                  "en-IN"
+                                )}
+                              </p>
+                            )}
+
+                          </div>
+                        </div>
+
+                        <p className="mt-2 truncate text-[7px] sm:text-[8px] uppercase tracking-[0.18em] text-[#977e73]">
+                          {product.fabric ||
+                            product.category ||
+                            product.subCategory ||
+                            "SPECIAL SALE · DARSH"}
+                        </p>
+
+                        {/* Mobile */}
+
+                        <Link
+                          to={`/productDetails/${product._id}`}
+                          onClick={scrollTop}
+                          className="sm:hidden mt-4 min-h-[38px] flex items-center justify-center gap-2 border border-[#741522]/30 text-[#741522] text-[7px] uppercase tracking-[0.18em] hover:bg-[#741522] hover:text-[#f8f4eb] transition-all"
+                        >
+
+                          <Eye size={12} />
+
+                          View Saree
+
+                        </Link>
+
+                      </div>
+                    </article>
+                  );
+                }
+              )}
+
+            </div>
+
+          ) : (
+
+            <div className="min-h-[330px] flex flex-col items-center justify-center text-center border border-[#741522]/10 bg-[#f8f4eb] px-6">
+
+              <div className="w-16 h-16 flex items-center justify-center border border-[#d4ad54]/50">
+
+                <Flame
+                  size={25}
+                  className="text-[#b88b34] animate-pulse"
+                />
+
+              </div>
+
+              <h3 className="mt-6 font-serif text-[27px] text-[#3f1616]">
+                More offers are coming
+              </h3>
+
+              <p className="mt-3 max-w-[450px] text-[12px] leading-6 text-[#806c63]">
+                We're preparing more beautiful
+                sarees and special prices for you.
+              </p>
+
+              <Link
+                to="/newarrivals"
+                onClick={scrollTop}
+                className="mt-7 inline-flex items-center gap-3 border border-[#741522]/35 px-7 py-3.5 text-[8px] uppercase tracking-[0.25em] text-[#741522] hover:bg-[#741522] hover:text-[#f8f4eb] transition-all"
+              >
+                View New Arrivals
+
+                <ArrowRight size={14} />
+              </Link>
+
+            </div>
+          )}
         </div>
       </section>
-    </div>
+
+      {/* =====================================================
+          TRUST FEATURES
+      ===================================================== */}
+
+      <section className="bg-[#f8f4eb] px-5 sm:px-8 py-12 sm:py-14">
+
+        <div className="max-w-[950px] mx-auto grid grid-cols-1 sm:grid-cols-3 border-y border-[#741522]/10 divide-y sm:divide-y-0 sm:divide-x divide-[#741522]/10">
+
+          <div className="flex justify-center items-center gap-3 px-5 py-5 sm:py-7">
+
+            <Shield
+              size={18}
+              className="text-[#b88b34]"
+            />
+
+            <div>
+              <p className="text-[8px] uppercase tracking-[0.18em] text-[#741522]">
+                Secure Payment
+              </p>
+
+              <p className="mt-1 text-[9px] text-[#977e73]">
+                Safe & trusted checkout
+              </p>
+            </div>
+
+          </div>
+
+          <div className="flex justify-center items-center gap-3 px-5 py-5 sm:py-7">
+
+            <Truck
+              size={18}
+              className="text-[#b88b34]"
+            />
+
+            <div>
+              <p className="text-[8px] uppercase tracking-[0.18em] text-[#741522]">
+                Fast Delivery
+              </p>
+
+              <p className="mt-1 text-[9px] text-[#977e73]">
+                Delivered with care
+              </p>
+            </div>
+
+          </div>
+
+          <div className="flex justify-center items-center gap-3 px-5 py-5 sm:py-7">
+
+            <Award
+              size={18}
+              className="text-[#b88b34]"
+            />
+
+            <div>
+              <p className="text-[8px] uppercase tracking-[0.18em] text-[#741522]">
+                Premium Quality
+              </p>
+
+              <p className="mt-1 text-[9px] text-[#977e73]">
+                Carefully selected weaves
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ===================================================== */}
+
+      <section className="bg-[#741522] px-5 sm:px-8 py-16 sm:py-20">
+
+        <div className="max-w-[950px] mx-auto text-center">
+
+          <div className="mx-auto w-12 h-12 flex items-center justify-center border border-[#d4ad54]/50">
+
+            <Sparkles
+              size={20}
+              className="text-[#d4ad54] animate-pulse"
+            />
+
+          </div>
+
+          <p className="mt-6 text-[8px] uppercase tracking-[0.4em] text-[#e6d2ae]">
+            DISCOVER MORE FROM DARSH
+          </p>
+
+          <h2 className="mt-4 font-serif text-[32px] sm:text-[45px] leading-tight text-[#f8f4eb]">
+            Your next favourite
+            saree awaits.
+          </h2>
+
+          <p className="max-w-[560px] mx-auto mt-5 text-[12px] leading-6 text-[#e6d2ae]/80">
+            Explore our complete collection
+            of handpicked sarees, from new
+            arrivals to timeless classics.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+
+            <Link
+              to="/allproducts"
+              onClick={scrollTop}
+              className="group w-full sm:w-auto min-h-[50px] inline-flex items-center justify-center gap-3 bg-[#f8f4eb] px-8 text-[8px] uppercase tracking-[0.25em] text-[#741522] hover:bg-[#e9dcc6] transition-all"
+            >
+              Explore All Sarees
+
+              <ArrowRight
+                size={14}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+
+            <Link
+              to="/newarrivals"
+              onClick={scrollTop}
+              className="group w-full sm:w-auto min-h-[50px] inline-flex items-center justify-center gap-3 border border-[#e6d2ae]/50 px-8 text-[8px] uppercase tracking-[0.25em] text-[#f8f4eb] hover:bg-[#f8f4eb]/10 transition-all"
+            >
+              <Sparkles size={14} />
+
+              New Arrivals
+
+              <ArrowRight
+                size={14}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+
+          </div>
+
+          <Link
+            to="/"
+            onClick={scrollTop}
+            className="mt-7 inline-flex items-center gap-2 text-[7px] uppercase tracking-[0.25em] text-[#e6d2ae]/70 hover:text-[#f8f4eb] transition-colors"
+          >
+            <ArrowLeft size={12} />
+
+            Back to Home
+          </Link>
+
+        </div>
+      </section>
+
+      {/* =====================================================
+          ANIMATION
+      ===================================================== */}
+
+      <style>
+        {`
+          @keyframes hotReveal {
+            0% {
+              opacity: 0;
+              transform: translateY(28px) scale(0.985);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}
+      </style>
+
+    </main>
   );
 };
 

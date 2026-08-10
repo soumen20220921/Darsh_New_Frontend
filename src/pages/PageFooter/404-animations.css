@@ -1,13 +1,47 @@
+/* =========================================================
+   DARSH LUXURY ANIMATION SYSTEM
+   Theme: Maroon + Antique Gold + Cream
+========================================================= */
+
+:root {
+  --darsh-maroon: #741522;
+  --darsh-wine: #3f1616;
+  --darsh-gold: #d4ad54;
+  --darsh-champagne: #e6d2ae;
+  --darsh-cream: #f8f4eb;
+  --darsh-beige: #f3eadb;
+  --darsh-muted: #806c63;
+}
+
+
+/* =========================================================
+   WHEEL
+========================================================= */
 
 @keyframes wheel-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
   50% {
     transform: rotate(360deg);
-    animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    animation-timing-function: cubic-bezier(
+      0.55,
+      0.085,
+      0.68,
+      0.53
+    );
   }
+
   100% {
     transform: rotate(960deg);
   }
 }
+
+
+/* =========================================================
+   CLOCK
+========================================================= */
 
 @keyframes clock-rotate {
   100% {
@@ -15,174 +49,451 @@
   }
 }
 
+
+/* =========================================================
+   BOX
+========================================================= */
+
 @keyframes box-top-anim {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
   50% {
     transform: rotate(-5deg);
   }
 }
 
+
+/* =========================================================
+   UMBRELLA
+========================================================= */
+
 @keyframes umbrella-anim {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
   25% {
     transform: translateY(10px) rotate(5deg);
   }
+
   75% {
     transform: rotate(-5deg);
   }
 }
 
+
+/* =========================================================
+   CUP
+========================================================= */
+
 @keyframes cup-rotate {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
   50% {
     transform: rotate(-5deg);
   }
 }
 
+
+/* =========================================================
+   PILLOW
+========================================================= */
+
 @keyframes pillow-anim {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+
   25% {
     transform: rotate(10deg) translateY(5px);
   }
+
   75% {
     transform: rotate(-10deg);
   }
 }
 
+
+/* =========================================================
+   STRIPE
+========================================================= */
+
 @keyframes stripe-anim {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+
   25% {
     transform: translate(10px, 0) rotate(-10deg);
   }
+
   75% {
     transform: translateX(10px);
   }
 }
 
+
+/* =========================================================
+   BIKE
+========================================================= */
+
 @keyframes bike-anim {
   0% {
     transform: translateX(-1300px);
   }
+
   50% {
     transform: translateX(0);
-    animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
+
+    animation-timing-function: cubic-bezier(
+      0.47,
+      0,
+      0.745,
+      0.715
+    );
   }
+
   100% {
     transform: translateX(1300px);
   }
 }
 
+
+/* =========================================================
+   RUCKSACK
+========================================================= */
+
 @keyframes ruck-anim {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
   50% {
     transform: rotate(5deg);
   }
 }
 
+
+/* =========================================================
+   GOLD CIRCLE
+========================================================= */
+
 @keyframes circle-anim {
+  0%,
+  100% {
+    transform: scale(1) rotateX(0) rotateY(0);
+  }
+
   50% {
-    transform: scale(0.2) rotateX(360deg) rotateY(360deg);
+    transform:
+      scale(0.2)
+      rotateX(360deg)
+      rotateY(360deg);
   }
 }
 
+
+/* =========================================================
+   FOUR
+========================================================= */
+
 @keyframes four-anim {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
   50% {
     transform: scale(0.98);
   }
 }
+
+
+/* =========================================================
+   LUXURY SLIDE
+========================================================= */
 
 @keyframes slide {
   0% {
     transform: translateX(-100px);
     opacity: 0;
   }
+
   50% {
     transform: translateX(0);
     opacity: 1;
   }
+
   100% {
     transform: translateX(100px);
     opacity: 0;
   }
 }
 
+
+/* =========================================================
+   FLOAT
+========================================================= */
+
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
+  0%,
+  100% {
+    transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
 }
 
+
+/* =========================================================
+   GOLD GLOW
+========================================================= */
+
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
+    filter:
+      drop-shadow(
+        0 0 0 rgba(212, 173, 84, 0)
+      );
   }
+
   50% {
-    opacity: 0.7;
+    opacity: 0.75;
+
+    filter:
+      drop-shadow(
+        0 0 10px rgba(212, 173, 84, 0.45)
+      );
   }
 }
 
-/* Animation classes */
+
+/* =========================================================
+   DARSH GOLD SHIMMER
+========================================================= */
+
+@keyframes darsh-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+
+/* =========================================================
+   SOFT REVEAL
+========================================================= */
+
+@keyframes darsh-reveal {
+  0% {
+    opacity: 0;
+    transform:
+      translateY(25px)
+      scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* =========================================================
+   GOLD SPARKLE
+========================================================= */
+
+@keyframes darsh-sparkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.25) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+
+/* =========================================================
+   MAROON PULSE
+========================================================= */
+
+@keyframes darsh-maroon-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0
+      rgba(116, 21, 34, 0);
+  }
+
+  50% {
+    box-shadow:
+      0 8px 25px
+      rgba(116, 21, 34, 0.18);
+  }
+}
+
+
+/* =========================================================
+   ANIMATION CLASSES
+========================================================= */
+
 .wheel {
-  animation: wheel-rotate 6s ease infinite;
+  animation:
+    wheel-rotate
+    6s
+    ease
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
 }
 
+
 .clock-hand-1 {
-  animation: clock-rotate 3s linear infinite;
+  animation:
+    clock-rotate
+    3s
+    linear
+    infinite;
+
   transform-origin: bottom;
   transform-box: fill-box;
 }
+
 
 .clock-hand-2 {
-  animation: clock-rotate 6s linear infinite;
+  animation:
+    clock-rotate
+    6s
+    linear
+    infinite;
+
   transform-origin: bottom;
   transform-box: fill-box;
 }
 
+
 #box-top {
-  animation: box-top-anim 2s linear infinite;
+  animation:
+    box-top-anim
+    2s
+    linear
+    infinite;
+
   transform-origin: right top;
   transform-box: fill-box;
 }
 
+
 #umbrella {
-  animation: umbrella-anim 6s linear infinite;
+  animation:
+    umbrella-anim
+    6s
+    linear
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
 }
 
+
 #cup {
-  animation: cup-rotate 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  animation:
+    cup-rotate
+    3s
+    cubic-bezier(
+      0.455,
+      0.03,
+      0.515,
+      0.955
+    )
+    infinite;
+
   transform-origin: top left;
   transform-box: fill-box;
 }
 
+
 #pillow {
-  animation: pillow-anim 3s linear infinite;
+  animation:
+    pillow-anim
+    3s
+    linear
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
 }
+
 
 #stripe {
-  animation: stripe-anim 3s linear infinite;
+  animation:
+    stripe-anim
+    3s
+    linear
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
 }
 
+
 #bike {
-  animation: bike-anim 8s ease-in-out infinite;
+  animation:
+    bike-anim
+    8s
+    ease-in-out
+    infinite;
 }
 
+
 #rucksack {
-  animation: ruck-anim 3s linear infinite;
+  animation:
+    ruck-anim
+    3s
+    linear
+    infinite;
+
   transform-origin: top;
   transform-box: fill-box;
 }
 
+
 .circle {
-  animation: circle-anim ease infinite;
+  animation:
+    circle-anim
+    ease
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
-  perspective: 0px;
+
+  perspective: 0;
 }
+
 
 .circle.c1 {
   animation-duration: 2s;
@@ -208,96 +519,246 @@
   animation-duration: 3s;
 }
 
+
 .four.a {
-  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
-  animation-duration: 3s;
+  animation:
+    four-anim
+    cubic-bezier(
+      0.39,
+      0.575,
+      0.565,
+      1
+    )
+    3s
+    infinite;
+
   transform-origin: bottom left;
   transform-box: fill-box;
 }
 
+
 .four.b {
-  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
-  animation-duration: 3s;
+  animation:
+    four-anim
+    cubic-bezier(
+      0.39,
+      0.575,
+      0.565,
+      1
+    )
+    3s
+    infinite;
+
   transform-origin: bottom right;
   transform-box: fill-box;
 }
 
+
 #ou {
-  animation: four-anim cubic-bezier(0.39, 0.575, 0.565, 1) infinite;
-  animation-duration: 6s;
+  animation:
+    four-anim
+    cubic-bezier(
+      0.39,
+      0.575,
+      0.565,
+      1
+    )
+    6s
+    infinite;
+
   transform-origin: center;
   transform-box: fill-box;
 }
 
+
+/* =========================================================
+   DARSH CUSTOM ANIMATIONS
+========================================================= */
+
 .animate-slide {
-  animation: slide 8s ease-in-out infinite;
+  animation:
+    slide
+    8s
+    ease-in-out
+    infinite;
 }
+
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation:
+    float
+    3s
+    ease-in-out
+    infinite;
 }
+
 
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation:
+    pulse-glow
+    2s
+    ease-in-out
+    infinite;
 }
 
-/* Animation delay utilities */
-.animation-delay-200 {
-  animation-delay: 200ms;
+
+.animate-darsh-reveal {
+  animation:
+    darsh-reveal
+    0.8s
+    ease-out
+    both;
 }
 
-.animation-delay-300 {
-  animation-delay: 300ms;
+
+.animate-darsh-sparkle {
+  animation:
+    darsh-sparkle
+    2s
+    ease-in-out
+    infinite;
 }
 
-.animation-delay-500 {
-  animation-delay: 500ms;
+
+.animate-darsh-maroon {
+  animation:
+    darsh-maroon-pulse
+    2.5s
+    ease-in-out
+    infinite;
 }
 
-.animation-delay-700 {
-  animation-delay: 700ms;
+
+/* =========================================================
+   GOLD SHIMMER TEXT
+========================================================= */
+
+.darsh-gold-shimmer {
+  background:
+    linear-gradient(
+      110deg,
+      #9b7429 20%,
+      #d4ad54 40%,
+      #f1dfaa 50%,
+      #d4ad54 60%,
+      #9b7429 80%
+    );
+
+  background-size: 200% auto;
+
+  color: transparent;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  animation:
+    darsh-shimmer
+    4s
+    linear
+    infinite;
 }
 
-.animation-delay-1000 {
-  animation-delay: 1000ms;
+
+/* =========================================================
+   GOLD LINE
+========================================================= */
+
+.darsh-gold-line {
+  position: relative;
+  overflow: hidden;
+  background: #d4ad54;
 }
 
-.animation-delay-1200 {
-  animation-delay: 1200ms;
+
+.darsh-gold-line::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.75),
+      transparent
+    );
+
+  animation:
+    darsh-shimmer
+    3s
+    linear
+    infinite;
 }
 
-.animation-delay-1500 {
-  animation-delay: 1500ms;
-}
 
-/* Color classes matching the original design */
+/* =========================================================
+   DARSH COLOR CLASSES
+========================================================= */
+
 .cls-1 {
-  fill: #ffc541;
+  fill: #d4ad54;
 }
 
 .cls-2 {
-  fill: #4e4066;
+  fill: #3f1616;
 }
 
 .cls-3 {
-  fill: #6f5b92;
+  fill: #741522;
 }
 
 .cls-4 {
-  fill: #f78d5e;
+  fill: #b88b34;
 }
 
 .cls-5 {
-  fill: #fa976c;
+  fill: #e6d2ae;
 }
 
-.cls-6,
-.cls-7,
+.cls-6 {
+  fill: #f3eadb;
+}
+
+.cls-7 {
+  fill: #f8f4eb;
+}
+
 .cls-8 {
-  fill: #b65c32;
+  fill: #977e73;
 }
 
-.cls-10,
+.cls-9 {
+  fill: #9b7429;
+}
+
+.cls-10 {
+  fill: #5e101a;
+}
+
+.cls-11 {
+  fill: #c69b46;
+}
+
+.cls-12 {
+  fill: #806c63;
+}
+
+.cls-13 {
+  fill: #4a1815;
+}
+
+.cls-14 {
+  fill: #eadbbf;
+}
+
+
+/* =========================================================
+   OPACITY VARIATIONS
+========================================================= */
+
 .cls-6 {
   opacity: 0.6;
 }
@@ -306,70 +767,175 @@
   opacity: 0.4;
 }
 
-.cls-9 {
-  fill: #f4b73b;
-}
 
-.cls-11 {
-  fill: #f9c358;
-}
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-.cls-12 {
-  fill: #9b462c;
-}
-
-.cls-13 {
-  fill: #aa512e;
-}
-
-.cls-14 {
-  fill: #7d6aa5;
-}
-
-/* Enhanced responsive design */
 @media (max-width: 768px) {
+
   .wheel {
     animation-duration: 8s;
   }
-  
+
   #bike {
     animation-duration: 12s;
   }
-  
+
   .circle {
     animation-duration: 4s;
   }
-  
+
   #umbrella {
     animation-duration: 8s;
   }
+
 }
 
+
 @media (max-width: 480px) {
+
   #bike {
     animation-duration: 15s;
   }
-}
 
-/* Smooth transitions for all animated elements */
-* {
-  transition: all 0.3s ease;
-}
-
-/* Focus states for accessibility */
-/* button:focus {
-  outline: 2px solid #ffc541;
-  outline-offset: 2px;
-} */
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .animate-slide {
+    animation-duration: 10s;
   }
-  
+
+}
+
+
+/* =========================================================
+   HOVER INTERACTION
+========================================================= */
+
+.darsh-hover {
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    color 0.4s ease,
+    background-color 0.4s ease;
+}
+
+
+.darsh-hover:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 15px 35px
+    rgba(63, 22, 22, 0.12);
+}
+
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.darsh-button {
+  position: relative;
+
+  overflow: hidden;
+
+  background: #741522;
+
+  color: #f8f4eb;
+
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+
+.darsh-button::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -120%;
+
+  width: 80%;
+  height: 100%;
+
+  transform: skewX(-20deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.18),
+      transparent
+    );
+
+  transition: left 0.7s ease;
+}
+
+
+.darsh-button:hover::before {
+  left: 140%;
+}
+
+
+.darsh-button:hover {
+  transform: translateY(-2px);
+
+  background: #5e101a;
+
+  box-shadow:
+    0 10px 25px
+    rgba(116, 21, 34, 0.22);
+}
+
+
+/* =========================================================
+   SMOOTH TRANSITIONS
+========================================================= */
+
+button,
+a,
+img,
+svg {
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+
+/* =========================================================
+   FOCUS ACCESSIBILITY
+========================================================= */
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #d4ad54;
+
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+
+    scroll-behavior: auto !important;
+  }
+
   .wheel,
   .clock-hand-1,
   .clock-hand-2,
@@ -389,17 +955,47 @@
 }
 
 
-/* Selection styles */
+/* =========================================================
+   SELECTION
+========================================================= */
+
 ::selection {
-  background: rgba(255, 197, 65, 0.3);
+  background: rgba(212, 173, 84, 0.35);
+
+  color: #3f1616;
 }
+
 
 ::-moz-selection {
-  background: rgba(255, 197, 65, 0.3);
+  background: rgba(212, 173, 84, 0.35);
+
+  color: #3f1616;
 }
 
-/* Loading states */
+
+/* =========================================================
+   LOADING
+========================================================= */
+
 .loading {
   opacity: 0.7;
+
   pointer-events: none;
+
+  cursor: wait;
+}
+
+
+/* =========================================================
+   MOBILE TOUCH
+========================================================= */
+
+@media (hover: none) {
+
+  .darsh-hover:hover {
+    transform: none;
+
+    box-shadow: none;
+  }
+
 }

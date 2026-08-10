@@ -1,506 +1,1629 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  AiOutlineUser,
-  AiOutlineShopping,
-  AiOutlineHome
-} from "react-icons/ai";
-import { Package } from "lucide-react";
-import { FiMenu } from "react-icons/fi";
-import { IoMdClose } from "react-icons/io";
-import { FaStethoscope } from "react-icons/fa";
-import { useAppContext } from "../context/AppContext";
-import LogoutModal from "../pages/LogoutModal";
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  UserRound,
+  Package,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAppContext } from "../context/AppContext.jsx";
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { login, setLogin, totalItems, orderCount, order } = useAppContext();
-  const [showModal, setShowModal] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeHover, setActiveHover] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const menuRef = useRef(null);
-  const userName = localStorage.getItem("name");
-  // const logOut = () => setShowModal(true);
-  const paidOrderCount = order 
-  ? order.filter(order => order.payStatus && order.payStatus.toLowerCase() === 'paid').length
-  : 0;
 
-  const confirmLogout = () => {
-    localStorage.clear();
-    navigate("/auth");
-    window.location.reload();
-  };
-  const cancelLogout = () => setShowModal(false);
+  const {
+    login,
+    setLogin,
+    totalItems,
+    order = [],
+  } = useAppContext();
+
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+
+  // ============================================================
+  // DARSH LOGO
+  // ============================================================
+
+  const logoSrc = "/IMG/Logo.jpg";
+
+  // ============================================================
+  // USER NAME
+  // ============================================================
+
+  const userName = localStorage.getItem("name");
+
+  // ============================================================
+  // PAID ORDER COUNT
+  // ============================================================
+
+  const paidOrderCount = Array.isArray(order)
+    ? order.filter(
+        (item) =>
+          item?.payStatus &&
+          item.payStatus.toLowerCase() === "paid"
+      ).length
+    : 0;
+
+  // ============================================================
+  // LOGIN CHECK
+  // ============================================================
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) setLogin(true);
+
+    if (token) {
+      setLogin(true);
+    }
   }, [setLogin]);
+
+  // ============================================================
+  // SCROLL EFFECT
+  // ============================================================
 
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      setScrolled(isScrolled);
+      setScrolled(window.scrollY > 25);
     };
-    
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-   
+  // ============================================================
+  // CLOSE MOBILE MENU WHEN ROUTE CHANGES
+  // ============================================================
 
-  const handleMenuToggle = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  useEffect(() => {
+    setMobileMenu(false);
+  }, [location.pathname]);
 
-  const handleNavigation = (path) => {
-    console.log("Navigating to:", path); 
-    navigate(path);
-    setIsMobileMenuOpen(false);
-    window.scrollTo(0, 0);
-  };
+  // ============================================================
+  // PREVENT BODY SCROLL WHEN MOBILE MENU IS OPEN
+  // ============================================================
 
-  const isActiveRoute = (path) => {
-    if (path.includes('?')) {
-      const [basePath, queryString] = path.split('?');
-      const searchParams = new URLSearchParams(queryString);
-      const currentParams = new URLSearchParams(location.search);
-      
-      if (location.pathname !== basePath) return false;
-      
-      for (const [key, value] of searchParams) {
-        if (currentParams.get(key) !== value) return false;
-      }
-      return true;
+  useEffect(() => {
+    if (mobileMenu) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-    
-    return location.pathname === path;
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenu]);
+
+  // ============================================================
+  // NAVIGATION
+  // ============================================================
+
+  const goTo = (path) => {
+    setMobileMenu(false);
+
+    navigate(path);
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
   };
 
-  const isAccountTabActive = (tabNumber) => {
-    return location.pathname === "/account" && new URLSearchParams(location.search).get('tab') === tabNumber.toString();
+  // ============================================================
+  // ACTIVE ROUTE
+  // ============================================================
+
+  const isActive = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+
+    return location.pathname.startsWith(path);
   };
-
-  const FloatingParticles = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full bg-gradient-to-r from-indigo-300/20 to-pink-300/20 animate-float"
-          style={{
-            width: `${Math.random() * 30 + 10}px`,
-            height: `${Math.random() * 30 + 10}px`,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${Math.random() * 10 + 10}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-
-  const MobileIconButton = ({ onClick, children, label, badge = 0, isActive = false }) => (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      className={`relative flex items-center justify-center w-9 h-9 rounded-2xl 
-        transition-all duration-300 ease-out transform hover:scale-110 active:scale-95
-        ${isActive 
-          ? "bg-gradient-to-br  from-pink-500 to-blue-300 text-white shadow-lg" 
-          : "bg-white/80 backdrop-blur-sm text-gray-700 shadow-md hover:shadow-lg"
-        }`}
-    >
-      {children}
-      {badge > 0 && (
-        <span className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 rounded-full 
-          bg-red-500 text-white text-xs font-bold shadow-lg animate-pulse-subtle">
-          {badge > 9 ? "9+" : badge}
-        </span>
-      )}
-    </button>
-  );
-
-  const DesktopNavItem = ({ 
-    path, 
-    icon: Icon, 
-    label, 
-    badge = 0, 
-    gradient = "from-indigo-600 to-pink-500",
-    iconGradient = "from-indigo-600 to-pink-500"
-  }) => (
-    <button
-      onClick={() => handleNavigation(path)}
-      onMouseEnter={() => setActiveHover(path)}
-      onMouseLeave={() => setActiveHover(null)}
-      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-2xl transition-all duration-500
-        ${isActiveRoute(path) 
-          ? `bg-gradient-to-r ${gradient} text-white shadow-lg transform -translate-y-0.5` 
-          : "text-gray-700 hover:bg-white/80 hover:shadow-md"
-        }`}
-    >
-      <div className={`transition-transform duration-300 ${activeHover === path ? 'scale-110' : 'scale-100'}`}>
-        <Icon size={20} className={isActiveRoute(path) ? "text-white" : `text-gradient ${iconGradient}`} />
-      </div>
-      <span className={`text-sm font-semibold transition-all duration-300 ${
-        isActiveRoute(path) 
-          ? "text-white" 
-          : `bg-gradient-to-r ${gradient} bg-clip-text text-transparent`
-      }`}>
-        {label}
-      </span>
-      
-      {badge > 0 && (
-        <span className={`absolute -top-2 -right-2 flex items-center justify-center h-6 w-6 rounded-full 
-          text-xs font-bold shadow-lg animate-bounce-subtle ${
-            isActiveRoute(path) ? "bg-white text-indigo-600" : "bg-orange-500 text-white"
-          }`}>
-          {badge > 9 ? "9+" : badge}
-        </span>
-      )}
-      
-      <div className={`absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r ${gradient} 
-        transition-all duration-300 transform -translate-x-1/2
-        ${activeHover === path ? 'w-3/4' : 'w-0'}`} />
-    </button>
-  );
 
   return (
-    <nav
-      className={`sticky top-0 z-50 backdrop-blur-lg transition-all duration-500 ${
-        scrolled 
-          ? "bg-white/95 shadow-2xl py-0" 
-          : "bg-white/80 shadow-lg py-1"
-      }`}
-    >
-      <div className="w-full lg:w-[90%] xl:w-[70%] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        
-        <Link
-          to="/"
-          className="inline-flex items-center space-x-1 md:space-x-3 transform transition-all duration-500 hover:scale-105 active:scale-95"
-        >
-          <div className="relative">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl animate-glow">
-              <span className="text-white font-bold text-xl">P</span>
-            </div>
-            <div className="absolute inset-0 rounded-2xl border-2 border-indigo-300/50 animate-ping-slow" />
-          </div>
-          <span className="text-lg  md:text-2xl font-black bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent tracking-tight">
-            POMWB
-          </span>
-        </Link>
-
-        <div className="hidden lg:flex items-center gap-3">
-          <DesktopNavItem 
-            path="/" 
-            icon={AiOutlineHome} 
-            label="Home" 
-            gradient="from-blue-500 to-cyan-500"
-            iconGradient="from-blue-500 to-cyan-500"
-          />
-          
-          <DesktopNavItem 
-            path="/ServiceBookingLayout" 
-            icon={FaStethoscope} 
-            label="Services" 
-            gradient="from-green-500 to-teal-500"
-            iconGradient="from-green-500 to-teal-500"
-          />
-          
-          <DesktopNavItem 
-            path="/cart" 
-            icon={AiOutlineShopping} 
-            label="Cart" 
-            badge={totalItems}
-            gradient="from-orange-500 to-red-500"
-            iconGradient="from-orange-500 to-red-500"
-          />
-
-          <div className="relative group">
-            <button
-              onClick={() => handleNavigation("/account?tab=1")}
-              className={`relative flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all duration-500 overflow-hidden
-                ${login
-                  ? "bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow-xl hover:shadow-2xl hover:scale-105"
-                  : "bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg hover:shadow-xl"
-                }`}
-            >
-              <div className="relative z-10 flex items-center gap-2">
-                <AiOutlineUser size={20} className="text-white" />
-                <span className={`transition-all duration-500 ease-out ${
-                  login ? "max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100" : "max-w-[120px]"
-                } overflow-hidden whitespace-nowrap`}>
-                  {login ? userName : "Log In"}
-                </span>
-              </div>
-              
-              <div className="absolute inset-0 -left-[100%] group-hover:left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-1000" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 lg:hidden" ref={menuRef}>
-          <div className="flex items-center gap-2">
-            <MobileIconButton 
-              onClick={() => handleNavigation("/")} 
-              label="Home"
-              isActive={isActiveRoute("/")}
-            >
-              <AiOutlineHome size={20} />
-            </MobileIconButton>
-
-            <MobileIconButton
-              onClick={() => handleNavigation("/cart")}
-              label="Cart"
-              badge={totalItems || 0}
-              isActive={isActiveRoute("/cart")}
-            >
-              <AiOutlineShopping size={20} />
-            </MobileIconButton>
-
-            {login && (
-              <MobileIconButton
-                onClick={() => handleNavigation("/account?tab=3")}
-                label="Orders"
-                badge={paidOrderCount || 0}
-                isActive={isAccountTabActive(3)}
-              >
-                <Package size={20} />
-              </MobileIconButton>
-            )}
-
-          </div>
-
-          <button
-            onClick={handleMenuToggle}
-            className="relative w-9 h-9 flex items-center justify-center rounded-2xl 
-              bg-gradient-to-br from-pink-500 to-blue-300 text-white shadow-lg
-              transition-all duration-500 hover:scale-110 hover:shadow-xl active:scale-95"
-            aria-label="Toggle menu"
-          >
-            <div className="relative w-5 h-5 transition-all duration-500">
-              {isMobileMenuOpen ? (
-                <IoMdClose className="w-5 h-5 transition-transform duration-500 rotate-90 scale-110" />
-              ) : (
-                <FiMenu className="w-5 h-5 transition-transform duration-500" />
-              )}
-            </div>
-          </button>
-        </div>
-      </div>
+    <>
+      {/* ========================================================
+          ANNOUNCEMENT BAR
+      ======================================================== */}
 
       <div
-        className={`lg:hidden fixed top-0 left-0 w-full h-screen z-50 transition-all duration-700 ease-out
-          ${isMobileMenuOpen 
-            ? "opacity-100 visible backdrop-blur-md" 
-            : "opacity-0 invisible pointer-events-none"
-          }`}
+        className="
+          relative
+          z-[70]
+          h-[31px]
+          overflow-hidden
+          bg-[#741522]
+          text-[#FFF9F0]
+          flex
+          items-center
+          justify-center
+        "
       >
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-indigo-50/95 via-white/98 to-pink-50/95"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-        
-        <FloatingParticles />
-        
-        <div className="relative z-10 h-full flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-white/30 bg-white/20 backdrop-blur-lg">
-            <div className="flex items-center gap-3">
-              {login ? (
-                <div className="animate-slide-in-left">
-                  <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-blue-300 text-white rounded-xl flex items-center justify-center shadow-xl">
-                    <span className="text-white font-bold text-lg">
-                      {userName?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-              
-              <div className="animate-slide-in-left" style={{ animationDelay: "100ms" }}>
-                <span className="text-xl font-bold text-gray-800">
-                  {login ? (
-                    <>
-                      Hello,{" "}
-                      <span className="font-extrabold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
-                        {userName}!
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-extrabold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
-                      Welcome!
-                    </span>
-                  )}
-                </span>
-              </div>
-            </div>
+        <div
+          className="
+            flex
+            items-center
+            whitespace-nowrap
+            text-[5.5px]
+            font-medium
+            tracking-[0.28em]
+            sm:text-[9px]
+            sm:tracking-[0.32em]
+          "
+        >
+          <span>FREE SHIPPING ACROSS INDIA</span>
 
-            <button
-              onClick={handleMenuToggle}
-              className="w-10 h-10 flex items-center justify-center rounded-2xl 
-                bg-white/80 backdrop-blur-sm text-gray-700 shadow-lg
-                hover:bg-red-500 hover:text-white hover:scale-110
-                transition-all duration-500 transform hover:rotate-180"
-              aria-label="Close menu"
-            >
-              <IoMdClose size={24} />
-            </button>
-          </div>
+          <span className="mx-2 opacity-50 sm:mx-3">
+            ◆
+          </span>
 
-          <div className="flex-1 flex flex-col justify-between p-6 overflow-y-auto">
-            <ul className="flex flex-col gap-3">
-              <li className="animate-stagger-in" style={{ animationDelay: "200ms" }}>
-                <button
-                  onClick={() => handleNavigation("/")}
-                  className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
-                    text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
-                    hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
-                    transition-all duration-500 shadow-lg active:scale-95
-                    ${location.pathname === "/" ? 'ring-2 ring-white/50 transform -translate-y-0.5' : ''}`}
-                >
-                  <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
-                    <AiOutlineHome size={22} />
-                  </div>
-                  <span className="flex-1 text-left text-base whitespace-nowrap">Home</span>
-                  <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
-                    →
-                  </div>
-                </button>
-              </li>
+          <span>HANDLOOM COLLECTION</span>
 
-              <li className="animate-stagger-in" style={{ animationDelay: "300ms" }}>
-                <button
-                  onClick={() => handleNavigation("/ServiceBookingLayout")}
-                  className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
-                    text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
-                    hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
-                    transition-all duration-500 shadow-lg active:scale-95
-                    ${location.pathname === "/doctors" ? 'ring-2 ring-white/50 transform -translate-y-0.5' : ''}`}
-                >
-                  <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-teal-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
-                    <FaStethoscope size={22} />
-                  </div>
-                  <span className="flex-1 text-left text-base whitespace-nowrap">Services Consult</span>
-                  <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
-                    →
-                  </div>
-                </button>
-              </li>
+          <span className="mx-2 opacity-50 sm:mx-3">
+            ◆
+          </span>
 
-              {login && (
-                <li className="animate-stagger-in" style={{ animationDelay: "400ms" }}>
-                  <button
-                    onClick={() => handleNavigation("/account?tab=1")}
-                    className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
-                      text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
-                      hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
-                      transition-all duration-500 shadow-lg active:scale-95
-                      ${isAccountTabActive(1) ? 'ring-2 ring-white/50 transform -translate-y-0.5' : ''}`}
-                  >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
-                      <AiOutlineUser size={22} />
-                    </div>
-                    <span className="flex-1 text-left text-base whitespace-nowrap">My Account</span>
-                    <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
-                      →
-                    </div>
-                  </button>
-                </li>
-              )}
-
-              {/* Cart */}
-              <li className="animate-stagger-in" style={{ animationDelay: "500ms" }}>
-                <button
-                  onClick={() => handleNavigation("/cart")}
-                  className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
-                    text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
-                    hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
-                    transition-all duration-500 shadow-lg active:scale-95
-                    ${location.pathname === "/cart" ? 'ring-2 ring-white/50 transform -translate-y-0.5' : ''}`}
-                >
-                  <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
-                    <AiOutlineShopping size={22} />
-                  </div>
-                  <span className="flex-1 text-left text-base whitespace-nowrap">Cart</span>
-                  {totalItems > 0 && (
-                    <span className="flex items-center justify-center h-7 w-7 rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-white text-sm font-bold shadow-lg ring-2 ring-white/50 animate-pulse-subtle">
-                      {totalItems > 9 ? "9+" : totalItems}
-                    </span>
-                  )}
-                  <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
-                    →
-                  </div>
-                </button>
-              </li>
-
-              {/* My Orders */}
-              {login && (
-                <li className="animate-stagger-in" style={{ animationDelay: "600ms" }}>
-                  <button
-                    onClick={() => handleNavigation("/account?tab=3")}
-                    className={`group relative flex items-center gap-2 w-full px-5 py-3 rounded-2xl
-                      text-gray-800 font-semibold bg-white/70 backdrop-blur-sm border border-white/40
-                      hover:bg-white/90 hover:-translate-y-1 hover:shadow-2xl
-                      transition-all duration-500 shadow-lg active:scale-95
-                      ${isAccountTabActive(3) ? 'ring-2 ring-white/50 transform -translate-y-0.5' : ''}`}
-                  >
-                    <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg text-white transition-transform duration-500 group-hover:scale-110">
-                      <Package size={22} />
-                    </div>
-                    <span className="flex-1 text-left text-base whitespace-nowrap">My Orders</span>
-                    {paidOrderCount > 0 && (
-                      <span className="flex items-center justify-center h-7 w-7 rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-white text-sm font-bold shadow-lg ring-2 ring-white/50 animate-pulse-subtle">
-                        {paidOrderCount > 9 ? "9+" : paidOrderCount}
-                      </span>
-                    )}
-                    <div className="text-gray-400 animate-arrowMove group-hover:text-gray-600 transition-colors duration-300">
-                      →
-                    </div>
-                  </button>
-                </li>
-              )}
-            {!login && (
-              <div className="animate-stagger-in" style={{ animationDelay: "700ms" }}>
-                <button
-                  onClick={() => handleNavigation("/account")}
-                  className="w-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-6 py-5 rounded-2xl shadow-2xl font-bold text-lg hover:scale-105 hover:shadow-indigo-500/25 transition-all duration-500 active:scale-95"
-                >
-                  Log In / Sign Up
-                </button>
-              </div>
-            )}
-            </ul>
-              
-          {/* {login && (
-            <div className="mt-8 mb-16 pt-6 border-t border-white/20 animate-fade-in">
-              <button
-                type="button"
-                onClick={logOut}
-                className="group flex items-center gap-4 w-full px-4 py-3 rounded-xl
-                text-red-500 font-semibold
-                hover:bg-red-50
-                transition-all duration-300 active:scale-95"
-              >
-                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-100 text-red-500">
-                  <AiOutlineLogout size={22} />
-                </div>
-                Log Out
-              </button>
-            </div>
-          )} */}
-            
-
-            
-
-            
-          </div>
+          <span>CRAFTED WITH LOVE</span>
         </div>
+
+        {/* Shine */}
+
+        <div
+          className="
+            absolute
+            top-0
+            -left-[100%]
+            h-full
+            w-[35%]
+            bg-gradient-to-r
+            from-transparent
+            via-white/10
+            to-transparent
+            animate-[navbarShine_6s_ease-in-out_infinite]
+          "
+        />
       </div>
 
-      {showModal && <LogoutModal onConfirm={confirmLogout} onCancel={cancelLogout} />}
-    </nav>
+      {/* ========================================================
+          MAIN NAVBAR
+      ======================================================== */}
+
+      <header
+        className={`
+          sticky
+          top-0
+          z-[60]
+          border-b
+          border-[#741522]/10
+          bg-[#F8F5ED]/95
+          backdrop-blur-xl
+          transition-all
+          duration-500
+          ease-out
+
+          ${
+            scrolled
+              ? "shadow-[0_8px_30px_rgba(74,35,25,0.10)]"
+              : "shadow-none"
+          }
+        `}
+      >
+        <div
+          className={`
+            relative
+            mx-auto
+            flex
+            max-w-[1500px]
+            items-center
+            justify-between
+            px-4
+            sm:px-7
+            lg:px-12
+
+            transition-all
+            duration-500
+
+            ${
+              scrolled
+                ? "h-[64px] sm:h-[70px]"
+                : "h-[75px] sm:h-[84px]"
+            }
+          `}
+        >
+          {/* ==================================================
+              DARSH CIRCULAR LOGO
+          ================================================== */}
+
+          <Link
+            to="/"
+            aria-label="Darsh Home"
+            onClick={() => {
+              setMobileMenu(false);
+
+              window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "smooth",
+              });
+            }}
+            className="
+              group
+              relative
+              flex
+              items-center
+              select-none
+            "
+          >
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.7,
+                rotate: -10,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                rotate: 0,
+              }}
+              transition={{
+                duration: 0.8,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className={`
+                relative
+                flex
+                items-center
+                justify-center
+                rounded-full
+                transition-all
+                duration-500
+
+                ${
+                  scrolled
+                    ? "h-[52px] w-[52px] sm:h-[58px] sm:w-[58px]"
+                    : "h-[61px] w-[61px] sm:h-[68px] sm:w-[68px]"
+                }
+              `}
+            >
+              {/* Soft Glow */}
+
+              <div
+                className="
+                  absolute
+                  -inset-2
+                  rounded-full
+                  bg-[#C9A24A]/10
+                  blur-lg
+                  opacity-0
+                  transition-all
+                  duration-500
+                  group-hover:opacity-100
+                  group-hover:scale-110
+                "
+              />
+
+              {/* Outer Circle */}
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  rounded-full
+                  border
+                  border-[#C9A24A]
+                  bg-[#FFFDF8]
+                  shadow-[0_5px_20px_rgba(116,21,34,0.12)]
+                  transition-all
+                  duration-500
+                  group-hover:border-[#741522]
+                  group-hover:shadow-[0_8px_28px_rgba(201,162,74,0.28)]
+                "
+              />
+
+              {/* Inner Circle */}
+
+              <div
+                className="
+                  absolute
+                  inset-[5px]
+                  rounded-full
+                  border
+                  border-[#C9A24A]/40
+                  pointer-events-none
+                  transition-all
+                  duration-500
+                  group-hover:inset-[4px]
+                  group-hover:border-[#C9A24A]/70
+                "
+              />
+
+              {/* Top Decorative Dot */}
+
+              <span
+                className="
+                  absolute
+                  top-[6px]
+                  left-1/2
+                  z-20
+                  h-[3px]
+                  w-[3px]
+                  -translate-x-1/2
+                  rounded-full
+                  bg-[#C9A24A]
+                "
+              />
+
+              {/* Bottom Decorative Dot */}
+
+              <span
+                className="
+                  absolute
+                  bottom-[6px]
+                  left-1/2
+                  z-20
+                  h-[3px]
+                  w-[3px]
+                  -translate-x-1/2
+                  rounded-full
+                  bg-[#C9A24A]
+                "
+              />
+
+              {/* Left Decorative Dot */}
+
+              <span
+                className="
+                  absolute
+                  left-[6px]
+                  top-1/2
+                  z-20
+                  h-[2px]
+                  w-[2px]
+                  -translate-y-1/2
+                  rounded-full
+                  bg-[#C9A24A]
+                "
+              />
+
+              {/* Right Decorative Dot */}
+
+              <span
+                className="
+                  absolute
+                  right-[6px]
+                  top-1/2
+                  z-20
+                  h-[2px]
+                  w-[2px]
+                  -translate-y-1/2
+                  rounded-full
+                  bg-[#C9A24A]
+                "
+              />
+
+              {/* Logo Image */}
+
+              <motion.img
+                src={logoSrc}
+                alt="Darsh"
+                whileHover={{
+                  scale: 1.07,
+                }}
+                transition={{
+                  duration: 0.35,
+                  ease: "easeOut",
+                }}
+                className="
+                  relative
+                  z-10
+                  h-[76%]
+                  w-[76%]
+                  rounded-full
+                  object-contain
+                  p-1
+                  mix-blend-multiply
+                "
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+
+              {/* Animated Sparkle */}
+
+              <motion.div
+                animate={{
+                  scale: [1, 1.18, 1],
+                  rotate: [0, 8, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="
+                  absolute
+                  -right-[3px]
+                  -top-[3px]
+                  z-30
+                  flex
+                  h-5
+                  w-5
+                  items-center
+                  justify-center
+                  rounded-full
+                  bg-[#FFFDF8]
+                  shadow-sm
+                "
+              >
+                <Sparkles
+                  size={11}
+                  strokeWidth={1.5}
+                  className="text-[#C9A24A]"
+                />
+              </motion.div>
+            </motion.div>
+
+            {/* Desktop Brand Text */}
+
+            <div
+              className="
+                ml-3
+                flex-col
+                justify-center
+              "
+            >
+              <span
+                className="
+                  font-serif
+                  text-[15px]
+                  font-semibold
+                  tracking-[0.25em]
+                  text-[#741522]
+                "
+              >
+                DARSH
+              </span>
+
+              <span
+                className="
+                  mt-0.5
+                  hidden 
+                  sm:flex
+                  text-[6.5px]
+                  font-medium
+                  tracking-[0.28em]
+                  text-[#806B63]
+                "
+              >
+                HANDWOVEN SAREES
+              </span>
+            </div>
+          </Link>
+
+          {/* ==================================================
+              DESKTOP NAVIGATION
+          ================================================== */}
+
+          <nav
+            className="
+              absolute
+              left-1/2
+              hidden
+              -translate-x-1/2
+              items-center
+              gap-8
+              lg:flex
+              xl:gap-11
+            "
+          >
+            {/* SHOP */}
+
+            <button
+              onClick={() => goTo("/")}
+              className={`
+                group
+                relative
+                py-3
+                text-[10px]
+                font-medium
+                tracking-[0.28em]
+                transition-colors
+                duration-300
+                xl:text-[11px]
+
+                ${
+                  isActive("/")
+                    ? "text-[#741522]"
+                    : "text-[#806B63] hover:text-[#741522]"
+                }
+              `}
+            >
+              SHOP
+
+              <span
+                className={`
+                  absolute
+                  bottom-0
+                  left-0
+                  h-[1px]
+                  bg-[#741522]
+                  transition-all
+                  duration-500
+
+                  ${
+                    isActive("/")
+                      ? "w-full"
+                      : "w-0 group-hover:w-full"
+                  }
+                `}
+              />
+            </button>
+
+            {/* NEW ARRIVALS */}
+
+            <button
+              onClick={() => goTo("/newarrivals")}
+              className="
+                group
+                relative
+                flex
+                items-center
+                gap-1.5
+                py-3
+                text-[10px]
+                font-medium
+                tracking-[0.25em]
+                text-[#806B63]
+                transition-colors
+                duration-300
+                hover:text-[#741522]
+                xl:text-[11px]
+              "
+            >
+              NEW ARRIVALS
+
+              <Sparkles
+                size={11}
+                strokeWidth={1.5}
+                className="
+                  text-[#C9A24A]
+                  transition-transform
+                  duration-300
+                  group-hover:rotate-12
+                "
+              />
+
+              <span
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  h-[1px]
+                  w-0
+                  bg-[#741522]
+                  transition-all
+                  duration-500
+                  group-hover:w-full
+                "
+              />
+            </button>
+
+            {/* HOT SALES */}
+
+            <button
+              onClick={() => goTo("/hotsales")}
+              className="
+                group
+                relative
+                py-3
+                text-[10px]
+                font-medium
+                tracking-[0.28em]
+                text-[#806B63]
+                transition-colors
+                duration-300
+                hover:text-[#741522]
+                xl:text-[11px]
+              "
+            >
+              HOT SALES
+
+              <span
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  h-[1px]
+                  w-0
+                  bg-[#741522]
+                  transition-all
+                  duration-500
+                  group-hover:w-full
+                "
+              />
+            </button>
+
+            {/* OUR STORY */}
+
+            <button
+              onClick={() => goTo("/aboutus")}
+              className="
+                group
+                relative
+                py-3
+                text-[10px]
+                font-medium
+                tracking-[0.28em]
+                text-[#806B63]
+                transition-colors
+                duration-300
+                hover:text-[#741522]
+                xl:text-[11px]
+              "
+            >
+              OUR STORY
+
+              <span
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  h-[1px]
+                  w-0
+                  bg-[#741522]
+                  transition-all
+                  duration-500
+                  group-hover:w-full
+                "
+              />
+            </button>
+
+            {/* CONTACT */}
+
+            <button
+              onClick={() => goTo("/contactus")}
+              className="
+                group
+                relative
+                py-3
+                text-[10px]
+                font-medium
+                tracking-[0.28em]
+                text-[#806B63]
+                transition-colors
+                duration-300
+                hover:text-[#741522]
+                xl:text-[11px]
+              "
+            >
+              CONTACT
+
+              <span
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  h-[1px]
+                  w-0
+                  bg-[#741522]
+                  transition-all
+                  duration-500
+                  group-hover:w-full
+                "
+              />
+            </button>
+          </nav>
+
+          {/* ==================================================
+              RIGHT ACTIONS
+          ================================================== */}
+
+          <div
+            className="
+              flex
+              items-center
+              gap-0.5
+              sm:gap-1
+            "
+          >
+            {/* SEARCH */}
+
+            <button
+              onClick={() => goTo("/allproducts")}
+              aria-label="Search"
+              className="
+                group
+                relative
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                text-[#6E5A52]
+                transition-all
+                duration-300
+                hover:text-[#741522]
+                sm:h-10
+                sm:w-10
+              "
+            >
+              <Search
+                size={20}
+                strokeWidth={1.5}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:scale-110
+                "
+              />
+
+              <span
+                className="
+                  absolute
+                  bottom-1
+                  left-1/2
+                  h-[1px]
+                  w-0
+                  -translate-x-1/2
+                  bg-[#741522]
+                  transition-all
+                  duration-300
+                  group-hover:w-5
+                "
+              />
+            </button>
+
+            {/* ACCOUNT */}
+
+            <button
+              onClick={() =>
+                goTo(
+                  login
+                    ? "/account?tab=1"
+                    : "/account"
+                )
+              }
+              aria-label="Account"
+              className="
+                group
+                hidden
+                h-10
+                w-10
+                items-center
+                justify-center
+                text-[#6E5A52]
+                transition-all
+                duration-300
+                hover:text-[#741522]
+                sm:flex
+              "
+            >
+              <UserRound
+                size={20}
+                strokeWidth={1.5}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:-translate-y-0.5
+                "
+              />
+            </button>
+
+            {/* CART */}
+
+            <button
+              onClick={() => goTo("/cart")}
+              aria-label="Shopping bag"
+              className="
+                group
+                relative
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                text-[#741522]
+                sm:h-10
+                sm:w-10
+              "
+            >
+              <ShoppingBag
+                size={20}
+                strokeWidth={1.5}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:-translate-y-0.5
+                "
+              />
+
+              {totalItems > 0 && (
+                <motion.span
+                  initial={{
+                    scale: 0,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                  }}
+                  className="
+                    absolute
+                    -right-0.5
+                    -top-0.5
+                    flex
+                    h-[17px]
+                    min-w-[17px]
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[#741522]
+                    px-1
+                    text-[8px]
+                    font-semibold
+                    text-white
+                  "
+                >
+                  {totalItems > 9
+                    ? "9+"
+                    : totalItems}
+                </motion.span>
+              )}
+            </button>
+
+            {/* MOBILE MENU */}
+
+            <button
+              onClick={() =>
+                setMobileMenu(!mobileMenu)
+              }
+              aria-label="Open menu"
+              className="
+                ml-1
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                text-[#741522]
+                lg:hidden
+                sm:h-10
+                sm:w-10
+              "
+            >
+              <AnimatePresence mode="wait">
+                {mobileMenu ? (
+                  <motion.div
+                    key="close"
+                    initial={{
+                      rotate: -90,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      rotate: 0,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      rotate: 90,
+                      opacity: 0,
+                    }}
+                  >
+                    <X
+                      size={24}
+                      strokeWidth={1.5}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{
+                      rotate: 90,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      rotate: 0,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      rotate: -90,
+                      opacity: 0,
+                    }}
+                  >
+                    <Menu
+                      size={24}
+                      strokeWidth={1.5}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ========================================================
+          MOBILE MENU
+      ======================================================== */}
+
+      <AnimatePresence>
+        {mobileMenu && (
+          <motion.div
+            className="
+              fixed
+              inset-0
+              z-[55]
+              lg:hidden
+            "
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+          >
+            {/* Overlay */}
+
+            <motion.div
+              onClick={() =>
+                setMobileMenu(false)
+              }
+              className="
+                absolute
+                inset-0
+                bg-[#351B18]/45
+                backdrop-blur-sm
+              "
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+            />
+
+            {/* Drawer */}
+
+            <motion.div
+              className="
+                absolute
+                right-0
+                top-0
+                flex
+                h-full
+                w-[88%]
+                max-w-[420px]
+                flex-col
+                overflow-hidden
+                bg-[#F8F5ED]
+                shadow-2xl
+              "
+              initial={{
+                x: "100%",
+              }}
+              animate={{
+                x: 0,
+              }}
+              exit={{
+                x: "100%",
+              }}
+              transition={{
+                duration: 0.45,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              {/* =================================================
+                  MOBILE DRAWER HEADER
+              ================================================= */}
+
+              <div
+                className="
+                  flex
+                  h-[96px]
+                  shrink-0
+                  items-center
+                  justify-between
+                  border-b
+                  border-[#741522]/10
+                  px-5
+                  sm:h-[105px]
+                  sm:px-7
+                "
+              >
+                {/* Circle Logo */}
+
+                <Link
+                  to="/"
+                  onClick={() => {
+                    setMobileMenu(false);
+
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                  }}
+                  className="
+                    group
+                    flex
+                    items-center
+                  "
+                >
+                  <div
+                    className="
+                      relative
+                      flex
+                      h-[61px]
+                      w-[61px]
+                      items-center
+                      justify-center
+                      rounded-full
+                    "
+                  >
+                    {/* Outer */}
+
+                    <div
+                      className="
+                        absolute
+                        inset-0
+                        rounded-full
+                        border
+                        border-[#C9A24A]
+                        bg-[#FFFDF8]
+                        shadow-[0_6px_20px_rgba(116,21,34,0.12)]
+                      "
+                    />
+
+                    {/* Inner */}
+
+                    <div
+                      className="
+                        absolute
+                        inset-[5px]
+                        rounded-full
+                        border
+                        border-[#C9A24A]/40
+                      "
+                    />
+
+                    {/* Logo */}
+
+                    <img
+                      src={logoSrc}
+                      alt="Darsh"
+                      className="
+                        relative
+                        z-10
+                        h-[76%]
+                        w-[76%]
+                        rounded-full
+                        object-contain
+                        p-1
+                        mix-blend-multiply
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
+                      onError={(e) => {
+                        e.currentTarget.style.display =
+                          "none";
+                      }}
+                    />
+
+                    {/* Sparkle */}
+
+                    <Sparkles
+                      size={11}
+                      strokeWidth={1.5}
+                      className="
+                        absolute
+                        -right-1
+                        -top-1
+                        z-20
+                        text-[#C9A24A]
+                      "
+                    />
+                  </div>
+
+                  <div className="ml-3">
+                    <p
+                      className="
+                        font-serif
+                        text-[11px]
+                        font-semibold
+                        tracking-[0.25em]
+                        text-[#741522]
+                      "
+                    >
+                      DARSH
+                    </p>
+
+                    <p
+                      className="
+                        mt-0.5
+                        text-[6.5px]
+                        tracking-[0.28em]
+                        text-[#806B63]
+                      "
+                    >
+                      HANDWOVEN SAREES
+                    </p>
+                  </div>
+                </Link>
+
+                {/* Close */}
+
+                <button
+                  onClick={() =>
+                    setMobileMenu(false)
+                  }
+                  aria-label="Close menu"
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-full
+                    border
+                    border-[#741522]/20
+                    text-[#741522]
+                    transition-all
+                    duration-300
+                    hover:bg-[#741522]
+                    hover:text-white
+                  "
+                >
+                  <X
+                    size={20}
+                    strokeWidth={1.5}
+                  />
+                </button>
+              </div>
+
+              {/* =================================================
+                  MOBILE NAVIGATION
+              ================================================= */}
+
+              <div
+                className="
+                  flex-1
+                  overflow-y-auto
+                  px-6
+                  pb-28
+                  pt-8
+                  sm:px-7
+                  sm:pt-10
+                "
+              >
+                {/* Welcome */}
+
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: 15,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  transition={{
+                    delay: 0.15,
+                  }}
+                  className="mb-8 sm:mb-10"
+                >
+                  <p
+                    className="
+                      mb-2
+                      text-[8px]
+                      uppercase
+                      tracking-[0.3em]
+                      text-[#9A8982]
+                    "
+                  >
+                    {login
+                      ? "WELCOME BACK"
+                      : "WELCOME TO"}
+                  </p>
+
+                  <h2
+                    className="
+                      font-serif
+                      text-xl
+                      text-[#3F302B]
+                      sm:text-2xl
+                    "
+                  >
+                    {login
+                      ? userName || "Darsh"
+                      : "The Darsh Collection"}
+                  </h2>
+                </motion.div>
+
+                <div className="space-y-0">
+                  {/* SHOP */}
+
+                  <MobileNavItem
+                    number="01"
+                    label="SHOP"
+                    onClick={() => goTo("/")}
+                    active={isActive("/")}
+                  />
+
+                  {/* NEW ARRIVALS */}
+
+                  <MobileNavItem
+                    number="02"
+                    label="NEW ARRIVALS"
+                    onClick={() =>
+                      goTo("/newarrivals")
+                    }
+                    icon={
+                      <Sparkles
+                        size={16}
+                        strokeWidth={1.3}
+                      />
+                    }
+                  />
+
+                  {/* HOT SALES */}
+
+                  <MobileNavItem
+                    number="03"
+                    label="HOT SALES"
+                    onClick={() =>
+                      goTo("/hotsales")
+                    }
+                  />
+
+                  {/* ACCOUNT */}
+
+                  <MobileNavItem
+                    number="04"
+                    label={
+                      login
+                        ? "MY ACCOUNT"
+                        : "LOGIN / SIGN UP"
+                    }
+                    onClick={() =>
+                      goTo(
+                        login
+                          ? "/account?tab=1"
+                          : "/account"
+                      )
+                    }
+                    icon={
+                      <UserRound
+                        size={17}
+                        strokeWidth={1.3}
+                      />
+                    }
+                  />
+
+                  {/* SHOPPING BAG */}
+
+                  <MobileNavItem
+                    number="05"
+                    label="SHOPPING BAG"
+                    onClick={() =>
+                      goTo("/cart")
+                    }
+                    badge={
+                      totalItems > 0
+                        ? totalItems
+                        : null
+                    }
+                    icon={
+                      <ShoppingBag
+                        size={17}
+                        strokeWidth={1.3}
+                      />
+                    }
+                  />
+
+                  {/* ORDERS */}
+
+                  {login && (
+                    <MobileNavItem
+                      number="06"
+                      label="MY ORDERS"
+                      onClick={() =>
+                        goTo("/account?tab=3")
+                      }
+                      badge={
+                        paidOrderCount > 0
+                          ? paidOrderCount
+                          : null
+                      }
+                      icon={
+                        <Package
+                          size={17}
+                          strokeWidth={1.3}
+                        />
+                      }
+                    />
+                  )}
+
+                  {/* OUR STORY */}
+
+                  <MobileNavItem
+                    number="07"
+                    label="OUR STORY"
+                    onClick={() =>
+                      goTo("/aboutus")
+                    }
+                  />
+
+                  {/* CONTACT */}
+
+                  <MobileNavItem
+                    number="08"
+                    label="CONTACT"
+                    onClick={() =>
+                      goTo("/contactus")
+                    }
+                  />
+                </div>
+
+                {/* Quote */}
+
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  transition={{
+                    delay: 0.55,
+                  }}
+                  className="mt-12 sm:mt-14"
+                >
+                  <div
+                    className="
+                      mb-4
+                      h-[1px]
+                      w-8
+                      bg-[#741522]
+                    "
+                  />
+
+                  <p
+                    className="
+                      font-serif
+                      text-sm
+                      italic
+                      leading-relaxed
+                      text-[#806B63]
+                    "
+                  >
+                    Woven with tradition,
+                    <br />
+                    made for today.
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* =================================================
+                  MOBILE FOOTER
+              ================================================= */}
+
+              <div
+                className="
+                  absolute
+                  bottom-0
+                  left-0
+                  right-0
+                  border-t
+                  border-[#741522]/10
+                  bg-[#F8F5ED]/95
+                  px-5
+                  py-4
+                  backdrop-blur-md
+                  sm:px-7
+                  sm:py-5
+                "
+              >
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                  "
+                >
+                  <Sparkles
+                    size={10}
+                    strokeWidth={1.2}
+                    className="text-[#C9A24A]"
+                  />
+
+                  <p
+                    className="
+                      text-[7px]
+                      tracking-[0.22em]
+                      text-[#9A8982]
+                      sm:text-[8px]
+                    "
+                  >
+                    © DARSH · HANDWOVEN SAREES
+                  </p>
+
+                  <Sparkles
+                    size={10}
+                    strokeWidth={1.2}
+                    className="text-[#C9A24A]"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================
+          CUSTOM ANIMATIONS
+      ======================================================== */}
+
+      <style>
+        {`
+          @keyframes navbarShine {
+            0% {
+              left: -100%;
+            }
+
+            45%,
+            100% {
+              left: 130%;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}
+      </style>
+    </>
+  );
+};
+
+/* ============================================================
+   MOBILE NAV ITEM
+============================================================ */
+
+const MobileNavItem = ({
+  number,
+  label,
+  onClick,
+  icon,
+  badge,
+  active,
+}) => {
+  return (
+    <motion.button
+      whileTap={{
+        scale: 0.98,
+      }}
+      onClick={onClick}
+      className="
+        group
+        flex
+        w-full
+        items-center
+        justify-between
+        border-b
+        border-[#741522]/10
+        py-4
+        text-left
+        sm:py-5
+      "
+    >
+      <div className="flex items-center gap-4">
+        <span
+          className={`
+            text-[8px]
+            tracking-[0.2em]
+            ${
+              active
+                ? "text-[#C9A24A]"
+                : "text-[#9A8982]"
+            }
+          `}
+        >
+          {number}
+        </span>
+
+        <span
+          className={`
+            text-[11px]
+            tracking-[0.25em]
+            transition-colors
+            sm:text-[12px]
+
+            ${
+              active
+                ? "font-semibold text-[#741522]"
+                : "text-[#5C4942] group-hover:text-[#741522]"
+            }
+          `}
+        >
+          {label}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {badge !== null &&
+          badge !== undefined && (
+            <span
+              className="
+                flex
+                h-5
+                min-w-5
+                items-center
+                justify-center
+                rounded-full
+                bg-[#741522]
+                px-1.5
+                text-[9px]
+                font-medium
+                text-white
+              "
+            >
+              {badge > 9 ? "9+" : badge}
+            </span>
+          )}
+
+        {icon ? (
+          <span
+            className={`
+              ${
+                active
+                  ? "text-[#741522]"
+                  : "text-[#9A8982]"
+              }
+              transition-colors
+              group-hover:text-[#741522]
+            `}
+          >
+            {icon}
+          </span>
+        ) : (
+          <ChevronRight
+            size={17}
+            strokeWidth={1.2}
+            className="
+              text-[#9A8982]
+              transition-transform
+              duration-300
+              group-hover:translate-x-1
+              group-hover:text-[#741522]
+            "
+          />
+        )}
+      </div>
+    </motion.button>
   );
 };
 

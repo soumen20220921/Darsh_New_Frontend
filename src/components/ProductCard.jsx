@@ -1,8 +1,12 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
 
-const ProductCard = ({ product, onAddToCart, isCompactMobile }) => {
+const ProductCard = ({
+  product,
+  onAddToCart,
+  isCompactMobile,
+}) => {
   if (!product) return null;
 
   const {
@@ -14,103 +18,452 @@ const ProductCard = ({ product, onAddToCart, isCompactMobile }) => {
     isNew,
     rating,
     reviews,
+    fabric,
+    category,
+    subCategory,
   } = product;
 
   const discount =
-    oldPrice && price < oldPrice
-      ? Math.round(((oldPrice - price) / oldPrice) * 100)
+    oldPrice && Number(price) < Number(oldPrice)
+      ? Math.round(
+          ((Number(oldPrice) - Number(price)) /
+            Number(oldPrice)) *
+            100
+        )
       : null;
 
+  const productLink = `/productDetails/${id}`;
+
+  const handleScrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <div
-      className={`relative bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 group ${
-        isCompactMobile ? "max-w-xs mx-auto" : ""
-      }`}
+    <article
+      className={`
+        group
+        relative
+        w-full
+        bg-transparent
+        text-[#3f1616]
+        ${
+          isCompactMobile
+            ? "max-w-none mx-auto"
+            : ""
+        }
+      `}
     >
-      <div className="relative overflow-hidden rounded-t-2xl">
-        <Link
-          to={`/productDetails/${id}`}
-          onClick={() =>
-            window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+
+      {/* =====================================================
+          IMAGE
+      ===================================================== */}
+
+      <Link
+        to={productLink}
+        onClick={handleScrollTop}
+        className="
+          relative
+          block
+          overflow-hidden
+          bg-[#eee5d5]
+          aspect-[3/4]
+        "
+      >
+
+        {/* Product image */}
+
+        <img
+          src={
+            image ||
+            "https://placehold.co/600x800/f0e8da/741522?text=Darsh"
           }
+          alt={name}
+          loading="lazy"
+          className="
+            absolute
+            inset-0
+            w-full
+            h-full
+            object-cover
+            transition-transform
+            duration-1000
+            ease-[cubic-bezier(0.22,1,0.36,1)]
+            group-hover:scale-[1.045]
+          "
+        />
+
+
+        {/* Soft image overlay */}
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-[#3f1616]/20
+            via-transparent
+            to-transparent
+            opacity-0
+            group-hover:opacity-100
+            transition-opacity
+            duration-700
+            pointer-events-none
+          "
+        />
+
+
+        {/* ===================================================
+            BADGES
+        =================================================== */}
+
+        <div
+          className="
+            absolute
+            top-3
+            left-3
+            flex
+            flex-col
+            items-start
+            gap-2
+          "
         >
-          <img
-            src={image || "https://placehold.co/300x200"}
-            alt={name}
-            className="w-full h-56 object-cover transition-transform duration-500 transform group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
-        </Link>
 
-        {isNew && (
-          <span className="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg animate-pulse">
-            NEW
-          </span>
-        )}
-
-        {discount && (
-          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg animate-bounce">
-            -{discount}%
-          </span>
-        )}
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4 space-y-2">
-        <Link
-          to={`/productDetails/${id}`}
-          onClick={() =>
-            window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
-          }
-        >
-          <h3 className="text-sm md:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-300 truncate">
-            {name}
-          </h3>
-        </Link>
-
-        <div className="flex items-center text-yellow-400 text-sm">
-          {rating
-            ? "★".repeat(Math.floor(rating)) +
-              "☆".repeat(5 - Math.floor(rating))
-            : "☆☆☆☆☆"}
-          {reviews && (
-            <span className="text-gray-500 text-xs ml-2">({reviews})</span>
+          {isNew && (
+            <span
+              className="
+                bg-[#d4ad54]
+                text-[#4a211f]
+                px-2.5
+                py-1.5
+                text-[7px]
+                tracking-[0.2em]
+                uppercase
+                leading-none
+              "
+            >
+              New
+            </span>
           )}
+
+          {discount && (
+            <span
+              className="
+                bg-[#741522]
+                text-[#f8f4eb]
+                px-2.5
+                py-1.5
+                text-[7px]
+                tracking-[0.16em]
+                uppercase
+                leading-none
+              "
+            >
+              -{discount}%
+            </span>
+          )}
+
         </div>
 
-        <div className="flex items-center justify-between mt-2 mb-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg md:text-xl font-bold text-gray-900">
-              ₹{price}
-            </span>
+
+        {/* ===================================================
+            HOVER VIEW BUTTON
+        =================================================== */}
+
+        <div
+          className="
+            absolute
+            inset-x-0
+            bottom-0
+            p-3
+            sm:p-4
+            flex
+            justify-end
+            translate-y-3
+            opacity-0
+            group-hover:translate-y-0
+            group-hover:opacity-100
+            transition-all
+            duration-500
+          "
+        >
+
+          <span
+            className="
+              inline-flex
+              items-center
+              gap-2
+              bg-[#f8f4eb]
+              text-[#741522]
+              px-3
+              sm:px-4
+              py-2
+              text-[7px]
+              sm:text-[8px]
+              tracking-[0.18em]
+              uppercase
+              shadow-sm
+            "
+          >
+
+            View
+
+            <ArrowUpRight
+              size={13}
+              strokeWidth={1.2}
+              className="
+                transition-transform
+                duration-300
+                group-hover:translate-x-0.5
+                group-hover:-translate-y-0.5
+              "
+            />
+
+          </span>
+
+        </div>
+
+      </Link>
+
+
+      {/* =====================================================
+          PRODUCT INFORMATION
+      ===================================================== */}
+
+      <div
+        className="
+          pt-4
+          pb-1
+        "
+      >
+
+        {/* Name + Price */}
+
+        <div
+          className="
+            flex
+            items-start
+            justify-between
+            gap-3
+          "
+        >
+
+          <Link
+            to={productLink}
+            onClick={handleScrollTop}
+            className="
+              min-w-0
+              group/name
+            "
+          >
+
+            <h3
+              className="
+                font-serif
+                font-normal
+                text-[16px]
+                sm:text-[18px]
+                leading-[1.2]
+                text-[#3f1616]
+                transition-colors
+                duration-300
+                group-hover/name:text-[#741522]
+                line-clamp-2
+              "
+            >
+              {name}
+            </h3>
+
+          </Link>
+
+
+          {/* Price */}
+
+          <div
+            className="
+              shrink-0
+              text-right
+            "
+          >
+
+            <div
+              className="
+                text-[11px]
+                sm:text-[12px]
+                text-[#3f1616]
+                whitespace-nowrap
+              "
+            >
+              ₹{Number(price || 0).toLocaleString("en-IN")}
+            </div>
+
+
             {oldPrice && (
-              <span className="text-sm text-gray-400 line-through">
-                ₹{oldPrice}
+              <div
+                className="
+                  mt-0.5
+                  text-[9px]
+                  text-[#9c8980]
+                  line-through
+                  whitespace-nowrap
+                "
+              >
+                ₹
+                {Number(oldPrice).toLocaleString(
+                  "en-IN"
+                )}
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+
+        {/* ===================================================
+            PRODUCT META
+        =================================================== */}
+
+        {(fabric ||
+          category ||
+          subCategory) && (
+          <p
+            className="
+              mt-2
+              text-[7px]
+              sm:text-[8px]
+              tracking-[0.18em]
+              uppercase
+              text-[#927c71]
+              truncate
+            "
+          >
+
+            {fabric ||
+              subCategory ||
+              category}
+
+            {(fabric ||
+              subCategory) &&
+              " · "}
+
+            {subCategory ||
+              category ||
+              "Handwoven"}
+
+          </p>
+        )}
+
+
+        {/* ===================================================
+            RATING
+        =================================================== */}
+
+        {rating ? (
+          <div
+            className="
+              mt-2.5
+              flex
+              items-center
+              gap-2
+            "
+          >
+
+            <span
+              className="
+                text-[9px]
+                tracking-[1px]
+                text-[#b58b32]
+              "
+            >
+              {"★".repeat(
+                Math.min(
+                  5,
+                  Math.floor(rating)
+                )
+              )}
+              {"☆".repeat(
+                Math.max(
+                  0,
+                  5 -
+                    Math.floor(rating)
+                )
+              )}
+            </span>
+
+            {reviews && (
+              <span
+                className="
+                  text-[8px]
+                  text-[#9c8980]
+                "
+              >
+                ({reviews})
               </span>
             )}
-          </div>
-        </div>
 
-       {/* Button */}
-        {onAddToCart && (
-          <Link
-            to={`/productDetails/${id}`}
-            onClick={() =>
-              window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
-            }
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg 
-              bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-medium 
-              shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 relative
-              before:absolute before:inset-0 before:rounded-lg before:bg-white/10 before:opacity-0 hover:before:opacity-100 before:transition-opacity"
-          >
-            <Eye className="hidden sm:inline animate-pulse" />
-            <span>View</span>
-          </Link>
-        )}
+          </div>
+        ) : null}
+
+
+        {/* ===================================================
+            MOBILE VIEW LINK
+        =================================================== */}
+
+        <Link
+          to={productLink}
+          onClick={handleScrollTop}
+          className="
+            mt-3
+            inline-flex
+            sm:hidden
+            items-center
+            gap-1.5
+            text-[7px]
+            tracking-[0.2em]
+            uppercase
+            text-[#741522]
+            opacity-70
+            group-hover:opacity-100
+            transition-opacity
+          "
+        >
+
+          View piece
+
+          <ArrowUpRight
+            size={11}
+            strokeWidth={1.2}
+          />
+
+        </Link>
+
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-0 group-hover:opacity-25 rounded-2xl transition-opacity duration-500 pointer-events-none"></div>
-    </div>
+
+      {/* =====================================================
+          EDITORIAL HOVER LINE
+      ===================================================== */}
+
+      <div
+        className="
+          absolute
+          left-0
+          bottom-0
+          w-0
+          h-px
+          bg-[#d4ad54]
+          group-hover:w-full
+          transition-all
+          duration-700
+          ease-out
+        "
+      />
+
+    </article>
   );
 };
 

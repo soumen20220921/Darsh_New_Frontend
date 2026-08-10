@@ -1,211 +1,981 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import {  Mail, Phone, MapPin, Shield, Truck, Star, CheckCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Shield,
+  Truck,
+  Star,
+  CheckCircle,
+  Facebook,
+  ArrowUpRight,
+  Instagram,
+  Youtube,
+} from "lucide-react";
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /* =====================================================
+     EXISTING FOOTER DATA — KEPT
+  ===================================================== */
+
   const footerLinks = {
     support: [
-      { name: 'Contact Us', path: '/contactus' },
-      { name: 'Returns', path: '/CancellationandRefund' },
-      { name: 'Terms And Conditions', path: '/terms-and-conditions' },
-      { name: 'Track Order', path: '/track-order' }
+      {
+        name: "Contact Us",
+        path: "/contactus",
+      },
+      {
+        name: "Returns",
+        path: "/CancellationandRefund",
+      },
+      {
+        name: "Terms And Conditions",
+        path: "/terms-and-conditions",
+      },
+      {
+        name: "Track Order",
+        path: "/track-order",
+      },
     ],
+
     company: [
-      { name: 'About Us', path: '/aboutus' },
-      { name: 'Disclaimer', path: '/disclaimer' },
-      { name: 'Privacy Policy', path: '/PrivacyPolicy' },
-      { name: 'Payment Options', path: '/PaymentOptions' }
-    ]
+      {
+        name: "About Us",
+        path: "/aboutus",
+      },
+      {
+        name: "Disclaimer",
+        path: "/disclaimer",
+      },
+      {
+        name: "Privacy Policy",
+        path: "/PrivacyPolicy",
+      },
+      {
+        name: "Payment Options",
+        path: "/PaymentOptions",
+      },
+    ],
   };
+
+
+  /* =====================================================
+     NEWSLETTER
+  ===================================================== */
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    if (email) {
-      setIsSubmitting(true);
+
+    if (!email.trim()) return;
+
+    setIsSubmitting(true);
+
+    setTimeout(() => {
+      setSubscribed(true);
+      setIsSubmitting(false);
+
+      console.log(
+        `Subscribed with email: ${email}`
+      );
+
+      setEmail("");
+
       setTimeout(() => {
-        setSubscribed(true);
-        setIsSubmitting(false);
-        setEmail('');
-        console.log(`Subscribed with email: ${email}`);
-      }, 2000);
-    }
+        setSubscribed(false);
+      }, 4000);
+    }, 1200);
   };
 
+
   return (
-    <footer className="bg-gray-900 text-white font-inter overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
-          <div className="lg:col-span-2 text-center md:text-left animate-fadeInLeft">
-            <Link to="/" className="inline-flex items-center justify-center md:justify-start space-x-2 mb-4 transform transition-transform duration-500 hover:scale-110 cursor-pointer">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg animate-pulse">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
-              <span className="text-2xl font-extrabold tracking-wide text-white">POMWB</span>
+    <footer
+      className="
+        relative
+        overflow-hidden
+        bg-[#f4ecdf]
+        text-[#3f1616]
+        border-t
+        border-[#741522]/10
+      "
+    >
+
+      {/* =====================================================
+          DECORATIVE BACKGROUND
+      ===================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -left-48
+          -bottom-48
+          w-[520px]
+          h-[520px]
+          rounded-full
+          border
+          border-[#d4ad54]/10
+        "
+      />
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -right-48
+          -top-48
+          w-[520px]
+          h-[520px]
+          rounded-full
+          border
+          border-[#741522]/5
+        "
+      />
+
+
+      {/* =====================================================
+          MAIN FOOTER
+      ===================================================== */}
+
+      <div
+        className="
+          relative
+          z-10
+          max-w-[1180px]
+          mx-auto
+          px-5
+          sm:px-8
+          lg:px-10
+          py-14
+          sm:py-16
+          lg:py-20
+        "
+      >
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            lg:grid-cols-[1.7fr_1fr_1fr_1fr]
+            gap-12
+            lg:gap-14
+          "
+        >
+
+          {/* =================================================
+              DARSH BRAND
+          ================================================= */}
+
+          <div
+            className="
+              lg:pr-8
+              animate-[fadeIn_0.8s_ease-out]
+            "
+          >
+
+            <Link
+              to="/"
+              className="
+                inline-block
+                group
+              "
+            >
+
+              <h2
+                className="
+                  font-serif
+                  font-normal
+                  text-[#741522]
+                  text-[30px]
+                  sm:text-[34px]
+                  tracking-[0.2em]
+                  leading-none
+                  transition-all
+                  duration-500
+                  group-hover:tracking-[0.28em]
+                "
+              >
+                DARSH
+              </h2>
+
             </Link>
-            <p className="text-gray-300 mb-6 leading-relaxed text-sm sm:text-base">
-              Premium products with unbeatable prices. Experience fast shipping and outstanding service.
+
+
+            <p
+              className="
+                mt-4
+                text-[7px]
+                sm:text-[8px]
+                tracking-[0.34em]
+                uppercase
+                text-[#806c63]
+              "
+            >
+              HANDWOVEN SAREES · KANCHIPURAM · INDIA
             </p>
 
-            {/* Contact Info */}
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-center md:justify-start space-x-3">
-                <Phone className="h-5 w-5 text-blue-400 animate-bounce" />
-                <span className="text-gray-300">+91 7363054510</span>
-              </div>
-              <div className="flex items-center justify-center md:justify-start space-x-3">
-                <Mail className="h-5 w-5 text-blue-400 animate-bounce delay-100" />
-                <span className="text-gray-300">pomwbweb@gmail.com</span>
-              </div>
-              <div className="flex items-center justify-center md:justify-start space-x-3">
-                <MapPin className="h-5 w-5 text-blue-400 animate-bounce delay-200" />
-                <span className="text-gray-300">Nilkuthidanga, Purulia,West bengal,723101</span>
-              </div>
+
+            {/* Existing description,
+                redesigned */}
+            <p
+              className="
+                mt-7
+                max-w-[380px]
+                text-[10px]
+                sm:text-[11px]
+                leading-6
+                text-[#806c63]
+              "
+            >
+              Premium products with unbeatable prices.
+              Experience fast shipping and outstanding
+              service.
+            </p>
+
+
+            {/* =================================================
+                CONTACT INFORMATION
+            ================================================= */}
+
+            <div
+              className="
+                mt-7
+                space-y-4
+              "
+            >
+
+              {/* Phone */}
+
+              <a
+                href="tel:+919907804710"
+                className="
+                  group
+                  flex
+                  items-center
+                  gap-3
+                  text-[10px]
+                  text-[#5e4941]
+                  hover:text-[#741522]
+                  transition-colors
+                "
+              >
+
+                <Phone
+                  size={15}
+                  strokeWidth={1.2}
+                  className="
+                    text-[#d4ad54]
+                    transition-transform
+                    group-hover:scale-110
+                  "
+                />
+
+                <span>
+                  +91 9907804710
+                </span>
+
+              </a>
+
+
+              {/* Email */}
+
+              <a
+                href="mailto:contactdarsh9@gmail.com"
+                className="
+                  group
+                  flex
+                  items-center
+                  gap-3
+                  text-[10px]
+                  text-[#5e4941]
+                  hover:text-[#741522]
+                  transition-colors
+                "
+              >
+
+                <Mail
+                  size={15}
+                  strokeWidth={1.2}
+                  className="
+                    text-[#d4ad54]
+                    transition-transform
+                    group-hover:scale-110
+                  "
+                />
+
+                <span className="break-all">
+                 contactdarsh9@gmail.com
+                </span>
+
+              </a>
+
+
+              {/* Address */}
+
+              <a
+                href="https://share.google/pClPGHzUnS3mJENSA"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  group
+                  flex
+                  items-start
+                  gap-3
+                  text-[10px]
+                  leading-5
+                  text-[#5e4941]
+                  hover:text-[#741522]
+                  transition-colors
+                "
+              >
+
+                <MapPin
+                  size={15}
+                  strokeWidth={1.2}
+                  className="
+                    mt-0.5
+                    shrink-0
+                    text-[#d4ad54]
+                  "
+                />
+
+                <span>
+                   6VJG+23H, Ichlabad, Bardhaman, West Bengal 713103, Burdwan, India, 713103
+                </span>
+
+              </a>
+
             </div>
 
-            {/* Social Links */}
-            {/* <div className="flex space-x-4 mt-6 justify-center md:justify-start">
-              {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
-                <a
-                  key={idx}
-                  href="#"
-                  className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gradient-to-br hover:from-indigo-500 hover:to-pink-500 transform hover:scale-110 transition-all duration-300 shadow-lg"
-                >
-                  <Icon className="h-5 w-5 text-white" />
-                </a>
-              ))}
-            </div> */}
+
+           {/* =================================================
+                             SOCIAL
+                         ================================================= */}
+           
+                         <div className="flex  mt-7 items-center gap-3">
+                           <span
+                             className="
+                 text-[7px]
+                 tracking-[0.3em]
+                 uppercase
+                 text-[#977e73]
+                 mr-1
+               "
+                           >
+                             FOLLOW DARSH
+                           </span>
+           
+                           {/* Facebook */}
+                           <a
+                             href="https://www.facebook.com/Darshpage"
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             aria-label="Darsh Facebook"
+                             className="
+                 w-9 h-9
+                 border border-[#741522]/25
+                 flex items-center justify-center
+                 text-[#741522]
+                 transition-all duration-300
+                 hover:bg-[#741522]
+                 hover:text-[#f8f4eb]
+               "
+                           >
+                             <Facebook size={15} strokeWidth={1.2} />
+                           </a>
+           
+                           {/* Instagram */}
+                           <a
+                             href="https://www.instagram.com/darsh_bysathi/"
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             aria-label="Darsh Instagram"
+                             className="
+                 w-9 h-9
+                 border border-[#741522]/25
+                 flex items-center justify-center
+                 text-[#741522]
+                 transition-all duration-300
+                 hover:bg-[#741522]
+                 hover:text-[#f8f4eb]
+               "
+                           >
+                             <Instagram size={15} strokeWidth={1.2} />
+                           </a>
+           
+                           {/* YouTube */}
+                           <a
+                             href="https://youtube.com/@darsh7901?si=6uplC1BKqxBEYZbt"
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             aria-label="Darsh YouTube"
+                             className="
+                 w-9 h-9
+                 border border-[#741522]/25
+                 flex items-center justify-center
+                 text-[#741522]
+                 transition-all duration-300
+                 hover:bg-[#741522]
+                 hover:text-[#f8f4eb]
+               "
+                           >
+                             <Youtube size={15} strokeWidth={1.2} />
+                           </a>
+                         </div>
+
           </div>
 
-          {/* Support Links */}
-          <div className="text-center md:text-left animate-fadeInUp">
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
-            <ul className="space-y-2 text-sm">
-              {footerLinks.support.map((link) => (
-                <li key={link.name}>
-                  <Link to={link.path} className="text-gray-300 hover:text-white transition-colors duration-200 transform hover:translate-x-1 inline-block">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
 
-          {/* Company Links */}
-          <div className="text-center md:text-left animate-fadeInUp delay-100">
-            <h3 className="text-lg font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
-              {footerLinks.company.map((link) => (
-                <li key={link.name}>
-                  <Link to={link.path} className="text-gray-300 hover:text-white transition-colors duration-200 transform hover:translate-x-1 inline-block">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* =================================================
+              SUPPORT
+          ================================================= */}
 
-          {/* Developers Section */}
-          {/* <div className="text-center md:text-left animate-fadeInUp delay-200">
-            <h3 className="text-lg font-semibold mb-4">Developers</h3>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-300">Developed with passion by:</p>
-              <Link to="/developers" className="flex items-center justify-center md:justify-start space-x-2 hover:text-indigo-400 transition-all duration-300">
-                <Code className="h-4 w-4 text-indigo-500" />
-                <span className="text-gray-300">Debashis & Soumen</span>
-              </Link>
-              <div className="flex items-center justify-center md:justify-start space-x-2">
-                <Mail className="h-4 w-4 text-blue-400" />
-                <a href="mailto:adebashispaul@gmail.com" className="text-gray-300 hover:text-white hover:underline transition-all duration-300">
-                  adebashispaul@gmail.com
-                </a>
-              </div>
-              <div className="flex items-center justify-center md:justify-start space-x-2">
-                <Github className="h-4 w-4 text-gray-400" />
-                <a href="https://github.com/Debashis-11101-srijib" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white hover:underline transition-all duration-300">
-                  GitHub Profile
-                </a>
-              </div>
+          <FooterColumn
+            title="SUPPORT"
+            links={footerLinks.support}
+          />
+
+
+          {/* =================================================
+              COMPANY
+          ================================================= */}
+
+          <FooterColumn
+            title="COMPANY"
+            links={footerLinks.company}
+          />
+
+
+          {/* =================================================
+              WHY SHOP WITH US
+          ================================================= */}
+
+          <div>
+
+            <h3
+              className="
+                text-[7px]
+                sm:text-[8px]
+                tracking-[0.35em]
+                uppercase
+                text-[#977e73]
+                mb-6
+              "
+            >
+              WHY SHOP WITH US
+            </h3>
+
+
+            <div className="space-y-5">
+
+              {/* Fast Shipping */}
+
+              <Feature
+                icon={Truck}
+                title="Fast Shipping"
+                text="On all orders over 1000"
+              />
+
+
+              {/* Secure Payments */}
+
+              <Feature
+                icon={Shield}
+                title="Secure Payments"
+                text="Advanced SSL encryption"
+              />
+
+
+              {/* Quality */}
+
+              <Feature
+                icon={Star}
+                title="Quality Guaranteed"
+                text="100% satisfaction policy"
+              />
+
             </div>
-          </div> */}
+
+          </div>
+
         </div>
 
-        {/* Subscription Section */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="max-w-md mx-auto text-center animate-fadeInUp">
-            <h3 className="text-xl font-semibold mb-2">Stay Updated</h3>
-            {subscribed ? (
-              <div className="bg-green-600 text-white p-4 rounded-lg shadow-lg flex items-center justify-center space-x-2 animate-pulse">
-                <CheckCircle className="h-6 w-6" />
-                <p className="text-sm sm:text-base font-semibold">Successfully Subscribed!</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubscribe}>
-                <p className="text-gray-300 mb-4 text-sm sm:text-base">
-                  Subscribe for special offers, giveaways, and updates.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:space-x-2">
+
+        {/* =====================================================
+            NEWSLETTER
+        ===================================================== */}
+
+        <div
+          className="
+            mt-14
+            pt-8
+            border-t
+            border-[#741522]/10
+          "
+        >
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              lg:grid-cols-[1fr_1fr]
+              gap-7
+              items-center
+            "
+          >
+
+            {/* Newsletter text */}
+
+            <div>
+
+              <p
+                className="
+                  text-[7px]
+                  tracking-[0.35em]
+                  uppercase
+                  text-[#977e73]
+                  mb-2
+                "
+              >
+                STAY CONNECTED
+              </p>
+
+              <h3
+                className="
+                  font-serif
+                  text-[24px]
+                  sm:text-[28px]
+                  text-[#3f1616]
+                "
+              >
+                New drops, directly to you.
+              </h3>
+
+              <p
+                className="
+                  mt-2
+                  text-[9px]
+                  sm:text-[10px]
+                  text-[#806c63]
+                "
+              >
+                Subscribe for special offers,
+                giveaways, and updates.
+              </p>
+
+            </div>
+
+
+            {/* Newsletter form */}
+
+            <div>
+
+              {subscribed ? (
+
+                <div
+                  className="
+                    h-12
+                    border
+                    border-[#741522]/20
+                    bg-[#fbf8f2]
+                    flex
+                    items-center
+                    justify-center
+                    gap-3
+                  "
+                >
+
+                  <CheckCircle
+                    size={17}
+                    className="text-[#741522]"
+                  />
+
+                  <span
+                    className="
+                      text-[9px]
+                      tracking-[0.18em]
+                      uppercase
+                      text-[#741522]
+                    "
+                  >
+                    Successfully Subscribed!
+                  </span>
+
+                </div>
+
+              ) : (
+
+                <form
+                  onSubmit={handleSubscribe}
+                  className="
+                    flex
+                    w-full
+                  "
+                >
+
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Email for new drops"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-500 w-full transition-all duration-300 shadow-inner"
+                    onChange={(e) =>
+                      setEmail(e.target.value)
+                    }
                     required
                     disabled={isSubmitting}
+                    className="
+                      flex-1
+                      min-w-0
+                      h-12
+                      px-4
+                      bg-[#fbf8f2]
+                      border
+                      border-[#741522]/15
+                      border-r-0
+                      outline-none
+                      text-[10px]
+                      sm:text-[11px]
+                      text-[#3f1616]
+                      placeholder:text-[#a6948b]
+                      focus:border-[#741522]
+                      transition-colors
+                    "
                   />
+
+
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg w-full sm:w-auto font-medium"
                     disabled={isSubmitting}
+                    className="
+                      h-12
+                      px-6
+                      sm:px-8
+                      bg-[#741522]
+                      text-[#f4ecdf]
+                      text-[7px]
+                      sm:text-[8px]
+                      tracking-[0.25em]
+                      uppercase
+                      transition-all
+                      duration-300
+                      hover:bg-[#d4ad54]
+                      hover:text-[#741522]
+                      disabled:opacity-60
+                    "
                   >
-                    {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+                    {isSubmitting
+                      ? "SUBSCRIBING..."
+                      : "JOIN"}
                   </button>
-                </div>
-              </form>
-            )}
+
+                </form>
+
+              )}
+
+            </div>
+
           </div>
+
         </div>
 
-        {/* Features Cards */}
-       <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h3 className="text-xl font-semibold mb-6 text-center">Why Shop with Us?</h3>
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-6 text-center">
-             <div className="flex flex-col items-center p-6 rounded-xl bg-gray-800/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-              <Truck className="h-8 w-8 text-blue-400 mb-3" />
-              <div className="text-xs md:text-lg font-medium">Fast Shipping</div>
-              <div className="hidden md:inline text-sm text-gray-400 mt-1">On all orders over 1000</div>
-            </div>
-            <div className="flex flex-col items-center p-6 rounded-xl bg-gray-800/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-              <Shield className="h-8 w-8 text-green-400 mb-3" />
-              <div className="text-xs md:text-lg font-medium">Secure Payments</div>
-              <div className="hidden md:inline text-sm text-gray-400 mt-1">Advanced SSL encryption</div>
-            </div>
-            <div className="flex flex-col items-center p-6 rounded-xl bg-gray-800/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-              <Star className="h-8 w-8 text-yellow-400 mb-3" />
-              <div className="text-xs md:text-lg font-medium">Quality Guaranteed</div>
-              <div className="hidden md:inline text-sm text-gray-400 mt-1">100% satisfaction policy</div>
-            </div>
-          </div>
-        </div>
+
+        
+
       </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-gray-800 mt-12 py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-4 md:space-y-0">
-            <div className="text-gray-400 text-xs sm:text-sm">© 2025 CoderDeba. All rights reserved.</div>
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs sm:text-sm text-gray-400">
-              <Link to="/PrivacyPolicy" className="hover:text-white hover:underline transition-all duration-300">Privacy Policy</Link>
-              <Link to="/terms-and-conditions" className="hover:text-white hover:underline transition-all duration-300">Terms of Service</Link>
-              <Link to="/CancellationandRefund" className="hover:text-white hover:underline transition-all duration-300">Returns Policy</Link>
-            </div>
+
+      {/* =====================================================
+          COPYRIGHT / POLICY BAR
+      ===================================================== */}
+
+      <div
+        className="
+          relative
+          z-10
+          border-t
+          border-[#741522]/10
+        "
+      >
+
+        <div
+          className="
+            max-w-[1180px]
+            mx-auto
+            px-5
+            sm:px-8
+            lg:px-10
+            py-5
+            flex
+            flex-col
+            md:flex-row
+            items-center
+            justify-between
+            gap-4
+          "
+        >
+
+          {/* Existing copyright information */}
+
+          <p
+            className="
+              text-[8px]
+              sm:text-[9px]
+              text-[#806c63]
+              text-center
+              md:text-left
+            "
+          >
+            © 2026 Darsh.
+            All rights reserved.
+          </p>
+
+
+          {/* Policy links */}
+
+          <div
+            className="
+              flex
+              flex-wrap
+              justify-center
+              items-center
+              gap-x-5
+              gap-y-2
+            "
+          >
+
+            <Link
+              to="/PrivacyPolicy"
+              className="FooterPolicyLink"
+            >
+              Privacy Policy
+            </Link>
+
+            <Link
+              to="/terms-and-conditions"
+              className="FooterPolicyLink"
+            >
+              Terms of Service
+            </Link>
+
+            <Link
+              to="/CancellationandRefund"
+              className="FooterPolicyLink"
+            >
+              Returns Policy
+            </Link>
+
           </div>
+
         </div>
+
       </div>
+
+
+      {/* =====================================================
+          ANIMATION
+      ===================================================== */}
+
+      <style>
+        {`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(18px);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .FooterPolicyLink {
+            font-size: 8px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #806c63;
+            transition:
+              color 300ms ease,
+              letter-spacing 300ms ease;
+          }
+
+          .FooterPolicyLink:hover {
+            color: #741522;
+            letter-spacing: 0.19em;
+          }
+
+          @media (max-width: 640px) {
+            .FooterPolicyLink {
+              font-size: 7px;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
+          }
+        `}
+      </style>
+
     </footer>
   );
 }
+
+
+/* =========================================================
+   FOOTER COLUMN
+========================================================= */
+
+const FooterColumn = ({
+  title,
+  links,
+}) => {
+  return (
+    <div>
+
+      <h3
+        className="
+          text-[7px]
+          sm:text-[8px]
+          tracking-[0.35em]
+          uppercase
+          text-[#977e73]
+          mb-6
+        "
+      >
+        {title}
+      </h3>
+
+
+      <ul className="space-y-4">
+
+        {links.map((link) => (
+          <li key={link.name}>
+
+            <Link
+              to={link.path}
+              className="
+                group
+                inline-flex
+                items-center
+                gap-2
+                text-[10px]
+                sm:text-[11px]
+                text-[#5e4941]
+                hover:text-[#741522]
+                transition-colors
+                duration-300
+              "
+            >
+
+              {link.name}
+
+              <ArrowUpRight
+                size={11}
+                strokeWidth={1}
+                className="
+                  opacity-0
+                  -translate-y-1
+                  group-hover:opacity-100
+                  group-hover:translate-y-0
+                  transition-all
+                  duration-300
+                  text-[#d4ad54]
+                "
+              />
+
+            </Link>
+
+          </li>
+        ))}
+
+      </ul>
+
+    </div>
+  );
+};
+
+
+/* =========================================================
+   FEATURE
+========================================================= */
+
+const Feature = ({
+  icon: Icon,
+  title,
+  text,
+}) => {
+  return (
+    <div
+      className="
+        group
+        flex
+        items-start
+        gap-3
+      "
+    >
+
+      <div
+        className="
+          w-8
+          h-8
+          shrink-0
+          border
+          border-[#d4ad54]/50
+          flex
+          items-center
+          justify-center
+          text-[#741522]
+          group-hover:bg-[#741522]
+          group-hover:text-[#d4ad54]
+          transition-all
+          duration-300
+        "
+      >
+
+        <Icon
+          size={14}
+          strokeWidth={1.2}
+        />
+
+      </div>
+
+
+      <div>
+
+        <h4
+          className="
+            font-serif
+            text-[14px]
+            text-[#3f1616]
+          "
+        >
+          {title}
+        </h4>
+
+        <p
+          className="
+            mt-1
+            text-[8px]
+            sm:text-[9px]
+            leading-4
+            text-[#806c63]
+          "
+        >
+          {text}
+        </p>
+
+      </div>
+
+    </div>
+  );
+};

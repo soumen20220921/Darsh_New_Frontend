@@ -3,9 +3,9 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import {
   Truck,
-  Shield,
+  ShieldCheck,
   RotateCcw,
-  ShoppingCart,
+  ShoppingBag,
   Minus,
   Plus,
   Share2,
@@ -21,187 +21,297 @@ import {
   ZoomOut,
   RotateCw,
   Move,
-  Calendar,
-  LogIn
+  CalendarDays,
+  LogIn,
+  X,
+  ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { FaWhatsapp, FaTelegram, FaFacebook } from "react-icons/fa";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
+
+/* =========================================================
+   DARSH PRODUCT DETAILS
+   Luxury / Editorial Saree Design
+========================================================= */
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const { allProduct, token, getCart, url } = useAppContext();
 
-  const product = useMemo(() => allProduct?.find((p) => p._id === id), [allProduct, id]);
-  const similarProducts = useMemo(
-    () =>
-      allProduct?.filter((p) => p.category === product?.category && p._id !== product._id) || [],
-    [allProduct, product]
+  /* =========================================================
+     PRODUCT
+  ========================================================= */
+
+  const product = useMemo(
+    () => allProduct?.find((item) => item._id === id),
+    [allProduct, id],
   );
 
-  const sizes =
-  product?.size
-    ?.split(",")
-    .map((item) => item.trim())
-    .filter(Boolean) || [];
-    
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("description");
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
-  const [showFAQ, setShowFAQ] = useState({});
-  const [notification, setNotification] = useState({
-    message: '',
-    type: '',
-    visible: false,
-  });
-  const [countdown, setCountdown] = useState(null);
-  const [zoomMode, setZoomMode] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [size, setSize] = useState("");
+  const similarProducts = useMemo(() => {
+    if (!allProduct || !product) return [];
 
-  const stock = product ? Math.max(0, product.stock) : 0;  
+    return allProduct.filter(
+      (item) => item.category === product.category && item._id !== product._id,
+    );
+  }, [allProduct, product]);
+
+  /* =========================================================
+     PRODUCT OPTIONS
+  ========================================================= */
+
+  const sizes =
+    product?.size
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean) || [];
+
+  const stock = product ? Math.max(0, Number(product.stock) || 0) : 0;
+
   const isLowStock = stock > 0 && stock <= 5;
+
   const isOutOfStock = stock === 0;
 
-  // Calculate delivery date
+  /* =========================================================
+     STATES
+  ========================================================= */
+
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const [quantity, setQuantity] = useState(1);
+
+  const [size, setSize] = useState("");
+
+  const [activeTab, setActiveTab] = useState("description");
+
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [isAdded, setIsAdded] = useState(false);
+
+  const [showFAQ, setShowFAQ] = useState({});
+
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  const [deliveryDate, setDeliveryDate] = useState("");
+
+  const [countdown, setCountdown] = useState(null);
+
+  const [zoomMode, setZoomMode] = useState(false);
+
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  const [position, setPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  const [startPosition, setStartPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [notification, setNotification] = useState({
+    message: "",
+    type: "",
+    visible: false,
+  });
+
+  /* =========================================================
+     IMAGES
+  ========================================================= */
+
+  const images = useMemo(
+    () => product?.images?.map((image) => `${url}/img/${image}`) || [],
+    [product, url],
+  );
+
+  /* =========================================================
+     DELIVERY DATE
+  ========================================================= */
+
   useEffect(() => {
     const calculateDeliveryDate = () => {
       const today = new Date();
-      const deliveryDays = 7; // 5-7 business days
-      
-      // Add business days (excluding weekends)
-      let count = 0;
-      const deliveryDate = new Date(today);
-      
-      while (count < deliveryDays) {
-        deliveryDate.setDate(deliveryDate.getDate() + 1);
-        // Check if it's a weekday (0 = Sunday, 6 = Saturday)
-        if (deliveryDate.getDay() !== 0 && deliveryDate.getDay() !== 6) {
-          count++;
+
+      let days = 0;
+      const delivery = new Date(today);
+
+      while (days < 7) {
+        delivery.setDate(delivery.getDate() + 1);
+
+        const day = delivery.getDay();
+
+        if (day !== 0 && day !== 6) {
+          days++;
         }
       }
-      
-      return deliveryDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+
+      return delivery.toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       });
     };
 
     setDeliveryDate(calculateDeliveryDate());
   }, []);
 
+  /* =========================================================
+     RESET WHEN PRODUCT CHANGES
+  ========================================================= */
+
   useEffect(() => {
     setIsAdded(false);
     setSelectedImage(0);
     setQuantity(1);
+    setSize("");
     setZoomLevel(1);
-    setPosition({ x: 0, y: 0 });
-    window.scrollTo(0, 0);
+    setPosition({
+      x: 0,
+      y: 0,
+    });
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
   }, [id]);
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type, visible: true });
+  /* =========================================================
+     NOTIFICATION
+  ========================================================= */
+
+  const showNotification = (message, type = "success") => {
+    setNotification({
+      message,
+      type,
+      visible: true,
+    });
 
     setTimeout(() => {
-      setNotification((prev) => ({ ...prev, visible: false }));
-    }, 3000); 
+      setNotification((previous) => ({
+        ...previous,
+        visible: false,
+      }));
+    }, 3000);
   };
+
+  /* =========================================================
+     LOW STOCK TIMER
+  ========================================================= */
 
   useEffect(() => {
     let timer;
+
     if (isLowStock) {
-      setCountdown(120); 
-      showNotification("Hurry! Only a few left in stock ⚡", "warning");
+      setCountdown(120);
+
+      showNotification("Only a few pieces are left in stock.", "warning");
+
       timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
+        setCountdown((previous) => {
+          if (previous <= 1) {
             clearInterval(timer);
             return 0;
           }
-          return prev - 1;
+
+          return previous - 1;
         });
       }, 1000);
     }
 
-    return () => clearInterval(timer); 
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isLowStock]);
 
-  const images = useMemo(
-    () => product?.images?.map((img) => `${url}/img/${img}`) || [],
-    [product, url]
-  );
+  /* =========================================================
+     ZOOM
+  ========================================================= */
 
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.5, 3));
+    setZoomLevel((previous) => Math.min(previous + 0.5, 3));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => {
-      const newZoom = Math.max(prev - 0.5, 1);
-      if (newZoom === 1) {
-        setPosition({ x: 0, y: 0 });
+    setZoomLevel((previous) => {
+      const next = Math.max(previous - 0.5, 1);
+
+      if (next === 1) {
+        setPosition({
+          x: 0,
+          y: 0,
+        });
       }
-      return newZoom;
+
+      return next;
     });
   };
 
   const handleResetZoom = () => {
     setZoomLevel(1);
-    setPosition({ x: 0, y: 0 });
+
+    setPosition({
+      x: 0,
+      y: 0,
+    });
   };
 
-  const handleMouseDown = (e) => {
-    if (zoomLevel > 1) {
-      setIsDragging(true);
-      setStartPosition({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      });
-    }
+  const handleMouseDown = (event) => {
+    if (zoomLevel <= 1) return;
+
+    setIsDragging(true);
+
+    setStartPosition({
+      x: event.clientX - position.x,
+      y: event.clientY - position.y,
+    });
   };
 
-  const handleMouseMove = (e) => {
-    if (isDragging && zoomLevel > 1) {
-      setPosition({
-        x: e.clientX - startPosition.x,
-        y: e.clientY - startPosition.y
-      });
+  const handleMouseMove = (event) => {
+    if (!isDragging || zoomLevel <= 1) {
+      return;
     }
+
+    setPosition({
+      x: event.clientX - startPosition.x,
+      y: event.clientY - startPosition.y,
+    });
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
   };
 
-  const handleTouchStart = (e) => {
-    if (zoomLevel > 1) {
-      setIsDragging(true);
-      setStartPosition({
-        x: e.touches[0].clientX - position.x,
-        y: e.touches[0].clientY - position.y
-      });
-    }
+  const handleTouchStart = (event) => {
+    if (zoomLevel <= 1) return;
+
+    setIsDragging(true);
+
+    setStartPosition({
+      x: event.touches[0].clientX - position.x,
+      y: event.touches[0].clientY - position.y,
+    });
   };
 
-  const handleTouchMove = (e) => {
-    if (isDragging && zoomLevel > 1) {
-      setPosition({
-        x: e.touches[0].clientX - startPosition.x,
-        y: e.touches[0].clientY - startPosition.y
-      });
+  const handleTouchMove = (event) => {
+    if (!isDragging || zoomLevel <= 1) {
+      return;
     }
+
+    setPosition({
+      x: event.touches[0].clientX - startPosition.x,
+      y: event.touches[0].clientY - startPosition.y,
+    });
   };
 
   const handleTouchEnd = () => {
@@ -209,36 +319,51 @@ const ProductDetails = () => {
   };
 
   const toggleZoomMode = () => {
-    setZoomMode(!zoomMode);
-    if (!zoomMode) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-      setZoomLevel(1);
-      setPosition({ x: 0, y: 0 });
-    }
+    setZoomMode((previous) => {
+      const next = !previous;
+
+      document.body.style.overflow = next ? "hidden" : "auto";
+
+      if (!next) {
+        setZoomLevel(1);
+
+        setPosition({
+          x: 0,
+          y: 0,
+        });
+      }
+
+      return next;
+    });
   };
 
+  /* =========================================================
+     ADD TO CART
+  ========================================================= */
+
   const handleAddToCart = useCallback(async () => {
-    
     if (sizes.length > 0 && !size) {
-    showNotification("Please select a size", "error");
-    return;
-  }
+      showNotification("Please select a size.", "error");
+      return;
+    }
+
     if (!token) {
       setShowLoginPrompt(true);
       return;
     }
+
     if (!product) {
-      showNotification("Product data not found.", 'error');
+      showNotification("Product information not found.", "error");
       return;
     }
+
     if (quantity > stock) {
-      showNotification(`Only ${product.stock} items left in stock.`, 'error');
+      showNotification(`Only ${stock} items are available.`, "error");
       return;
     }
 
     setLoading(true);
+
     try {
       const cartDetails = {
         productId: id,
@@ -246,976 +371,2426 @@ const ProductDetails = () => {
         price: product.price * quantity,
         qty: quantity,
         size: size || null,
-        imgSrc: product.images[0],
+        imgSrc: product.images?.[0],
       };
 
       const response = await axios.post(
         `${url}/api/cart/addToCart`,
         cartDetails,
-        { headers: { Auth: token, "Content-Type": "application/json" } }
+        {
+          headers: {
+            Auth: token,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       if (response.data.success) {
         getCart();
-        showNotification("Item added to cart!", 'success');
+
+        showNotification("Saree added to your bag.", "success");
+
         setIsAdded(true);
       } else {
-        showNotification(response.data.message || "Failed to add item.", 'error');
+        showNotification(
+          response.data.message || "Unable to add item.",
+          "error",
+        );
       }
     } catch (error) {
-      console.error("Error adding to cart:", error);
-      showNotification("Something went wrong. Please try again.", 'error');
+      console.error("Add to cart error:", error);
+
+      showNotification("Something went wrong. Please try again.", "error");
     } finally {
       setLoading(false);
     }
-  }, [token, product, quantity, id, getCart, url, stock, size]);
+  }, [sizes, size, token, product, quantity, stock, id, url, getCart]);
+
+  /* =========================================================
+     LOGIN
+  ========================================================= */
 
   const handleQuickLogin = () => {
     setShowLoginPrompt(false);
-    navigate('/auth', { 
-      state: { 
+
+    navigate("/auth", {
+      state: {
         from: `/productDetails/${id}`,
-        message: "Please login to add items to your cart"
-      } 
+        message: "Please login to add items to your bag.",
+      },
     });
   };
 
+  /* =========================================================
+     SHARE
+  ========================================================= */
+
   const handleShare = async (platform) => {
     if (!product) return;
+
     const shareUrl = `${window.location.origin}/productDetails/${id}`;
-    const shareText = `Check out this product: ${product.productName} at ${shareUrl}`;
+
+    const shareText = `Discover ${product.productName} at Darsh Handlooms.`;
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: product.productName, text: shareText, url: shareUrl });
+        await navigator.share({
+          title: product.productName,
+          text: shareText,
+          url: shareUrl,
+        });
       } else {
         switch (platform) {
           case "whatsapp":
-            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-            break;
-          case "telegram":
             window.open(
-              `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(product.productName)}`,
-              "_blank"
+              `https://wa.me/?text=${encodeURIComponent(
+                `${shareText} ${shareUrl}`,
+              )}`,
+              "_blank",
             );
             break;
-          case "facebook":
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
+
+          case "telegram":
+            window.open(
+              `https://t.me/share/url?url=${encodeURIComponent(
+                shareUrl,
+              )}&text=${encodeURIComponent(product.productName)}`,
+              "_blank",
+            );
             break;
+
+          case "facebook":
+            window.open(
+              `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                shareUrl,
+              )}`,
+              "_blank",
+            );
+            break;
+
           case "copy":
             await navigator.clipboard.writeText(shareUrl);
+
+            showNotification("Product link copied.", "success");
             break;
+
           default:
             break;
         }
       }
     } catch (error) {
-      console.error("Failed to share:", error);
+      console.error("Share error:", error);
     } finally {
       setShowShareModal(false);
     }
   };
 
+  /* =========================================================
+     FAQ
+  ========================================================= */
+
+  const faqs = [
+    {
+      q: "How long does delivery take?",
+      a: "Usually 5–7 business days depending on your location.",
+    },
+    {
+      q: "Can I return the saree?",
+      a: "We offer a 7-day return policy for eligible products. The saree must be unused and in its original condition.",
+    },
+    {
+      q: "What if I receive a damaged product?",
+      a: "Please contact our support team within 48 hours with clear photographs and an opening video of the package.",
+    },
+    {
+      q: "Does the saree include a blouse piece?",
+      a: "Please check the product description and specifications for blouse-piece information.",
+    },
+  ];
+
+  const toggleFAQ = (index) => {
+    setShowFAQ((previous) => ({
+      ...previous,
+      [index]: !previous[index],
+    }));
+  };
+
+  /* =========================================================
+     PRODUCT NOT FOUND
+  ========================================================= */
+
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-inter p-4">
+      <div className="min-h-screen bg-[#f8f4ec] flex items-center justify-center px-5">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center bg-white p-8 rounded-lg shadow-lg max-w-lg"
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="
+            max-w-md
+            w-full
+            bg-[#fffdf8]
+            border
+            border-[#dfd4c2]
+            p-8
+            text-center
+            shadow-[0_20px_60px_rgba(55,30,20,0.08)]
+          "
         >
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[#927665] mb-4">
+            Darsh Handlooms
+          </p>
+
+          <h1 className="font-serif text-3xl text-[#42151a] mb-3">
+            Product not found
+          </h1>
+
+          <p className="text-sm text-[#806c60]">
+            The saree you are looking for is no longer available.
+          </p>
+
           <Link
-            to="/"
-            className="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            to="/allproducts"
+            className="
+              inline-flex
+              mt-7
+              px-6
+              py-3
+              bg-[#76131d]
+              text-white
+              text-[10px]
+              uppercase
+              tracking-[0.2em]
+              hover:bg-[#5f0e17]
+              transition
+            "
           >
-            Go to Home
+            Back to shop
           </Link>
         </motion.div>
       </div>
     );
   }
 
-  const rating = product.rating ?? 4.4;
+  const rating = product.rating ?? 4.5;
 
- const faqs = [
-  {
-    q: "What is the warranty?",
-    a: "This product does not come with a manufacturer's warranty.",
-  },
-  {
-    q: "How long does delivery take?",
-    a: "Usually 5–7 business days depending on your location.",
-  },
-  {
-    q: "Can I return the product?",
-    a: "Yes! We offer an easy 7-day return policy for eligible products. To ensure a smooth return or replacement process, an unboxing/opening video is mandatory from the moment the package is opened. The video should clearly show the sealed package, product condition, and any issue if present. Returns without a proper opening video may not be accepted. The product must be unused, with original packaging and tags intact.",
-  },
-  {
-    q: "What if I receive a damaged or wrong product?",
-    a: "If you receive a damaged, defective, or incorrect item, please contact our support team within 48 hours of delivery with clear photos and the mandatory opening video for quick assistance.",
-  },
-];
+  const discount =
+    product.originalPrice && product.price < product.originalPrice
+      ? Math.round(
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100,
+        )
+      : null;
 
-  const toggleFAQ = (index) => {
-    setShowFAQ(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    <div className="min-h-screen bg-gray-50 font-inter">
-      {notification.visible && (
-        <motion.div
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 16, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed top-4 inset-x-0 z-50 flex justify-center px-4 sm:px-6"
-        >
-          <div
-            className={`w-full max-w-[95%] sm:max-w-sm md:max-w-md lg:max-w-lg relative flex items-center gap-3 p-3 sm:p-4 rounded-xl shadow-lg border-l-4
-        ${notification.type === "success" ? "bg-green-50 border-green-400" : ""}
-        ${notification.type === "error" ? "bg-red-50 border-red-400" : ""}
-        ${
-          notification.type === "warning"
-            ? "bg-yellow-50 border-yellow-400"
-            : ""
-        }
-      `}
+    <div
+      className="
+        min-h-screen
+        bg-[#f8f4ec]
+        text-[#42151a]
+        font-sans
+      "
+    >
+      {/* =====================================================
+          NOTIFICATION
+      ===================================================== */}
+
+      <AnimatePresence>
+        {notification.visible && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: -30,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -30,
+            }}
+            className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md"
           >
-            <div className="flex-shrink-0">
-              {notification.type === "success" && (
-                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
-              )}
-              {notification.type === "error" && (
-                <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" />
-              )}
-              {notification.type === "warning" && (
-                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />
-              )}
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm sm:text-base font-medium text-gray-900 break-words">
-                {notification.message}
-              </p>
-            </div>
-
-            <div className="flex-shrink-0">
-              <motion.button
-                onClick={() =>
-                  setNotification({ ...notification, visible: false })
+            <div
+              className={`
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                border
+                shadow-xl
+                backdrop-blur-md
+                ${
+                  notification.type === "success"
+                    ? "bg-[#f5faf4] border-[#b8cdb1]"
+                    : notification.type === "warning"
+                      ? "bg-[#fff8e9] border-[#dfc181]"
+                      : "bg-[#fff3f2] border-[#d8aaa5]"
                 }
-                whileHover={{ rotate: 90 }}
-                className="p-1 rounded-full text-gray-500 hover:bg-gray-100"
-              >
-                <X className="h-4 w-4 sm:h-5 sm:w-5" />
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+              `}
+            >
+              <div className="flex-1 text-sm text-[#4c3b34]">
+                {notification.message}
+              </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        <div className="flex items-center justify-between">
+              <button
+                onClick={() =>
+                  setNotification({
+                    ...notification,
+                    visible: false,
+                  })
+                }
+                className="text-[#826d62] hover:text-[#42151a]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* =====================================================
+          PAGE CONTAINER
+      ===================================================== */}
+
+      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        {/* ===================================================
+            TOP BAR
+        =================================================== */}
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: -10,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="
+            flex
+            items-center
+            justify-between
+            mb-5
+          "
+        >
           <button
             onClick={() => {
-              navigate(-1);
-              window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+              navigate("/allproducts");
+
+              window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "smooth",
+              });
             }}
-            className="flex items-center gap-2 text-blue-600 hover:underline"
+            className="
+              group
+              inline-flex
+              items-center
+              gap-2
+              text-[9px]
+              sm:text-[10px]
+              uppercase
+              tracking-[0.2em]
+              text-[#806c60]
+              hover:text-[#76131d]
+              transition-colors
+            "
           >
-            <ArrowLeft className="h-5 w-5" /> Back
+            <ArrowLeft
+              className="
+                h-3.5
+                w-3.5
+                transition-transform
+                group-hover:-translate-x-1
+              "
+            />
+            Back to shop
           </button>
-          <div className="hidden sm:flex items-center gap-3 text-sm text-gray-600">
+
+          <div className="hidden sm:flex items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-[#8e786c]">
             <span className="flex items-center gap-1">
-              {" "}
-              <Star className="h-4 w-4 text-yellow-400" /> {rating}
+              <Star className="h-3 w-3 fill-[#b48a42] text-[#b48a42]" />
+              {rating}
             </span>
-            <span className="hidden md:inline">|</span>
-            <span className="hidden md:inline">Free returns • 7 days</span>
+
+            <span className="text-[#cfc1b0]">|</span>
+
+            <span>7 day returns</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden p-4 sm:p-8"
+        {/* ===================================================
+            MAIN PRODUCT
+        =================================================== */}
+
+        <motion.section
+          initial={{
+            opacity: 0,
+            y: 25,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.7,
+          }}
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-[1fr_1fr]
+            gap-8
+            lg:gap-12
+          "
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-            {/* Image Gallery Section */}
-            <div className="col-span-1">
-              <div className="relative bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <div
-                  className="relative h-80 sm:h-96 md:h-[500px] overflow-hidden cursor-zoom-in"
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onClick={toggleZoomMode}
+          {/* =================================================
+              IMAGE SIDE
+          ================================================= */}
+
+          <div>
+            <div
+              className="
+                relative
+                bg-[#eee4d3]
+                overflow-hidden
+                border
+                border-[#dfd2c0]
+              "
+            >
+              <div
+                className="
+                  relative
+                  aspect-[4/5]
+                  sm:aspect-[4/5]
+                  overflow-hidden
+                  cursor-zoom-in
+                "
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onClick={toggleZoomMode}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={images[selectedImage] || "placeholder"}
+                    src={images[selectedImage]}
+                    alt={product.productName}
+                    initial={{
+                      opacity: 0,
+                      scale: 1.03,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.45,
+                    }}
+                    className="
+                      w-full
+                      h-full
+                      object-cover
+                      select-none
+                    "
+                    draggable="false"
+                    style={{
+                      transform: `
+                        scale(${zoomLevel})
+                        translate(
+                          ${position.x}px,
+                          ${position.y}px
+                        )
+                      `,
+                      transition: isDragging ? "none" : "transform 0.35s ease",
+                      cursor: zoomLevel > 1 ? "grabbing" : "zoom-in",
+                    }}
+                  />
+                </AnimatePresence>
+
+                {/* Zoom */}
+
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleZoomMode();
+                  }}
+                  className="
+                    absolute
+                    right-4
+                    bottom-4
+                    h-9
+                    w-9
+                    flex
+                    items-center
+                    justify-center
+                    bg-[#fffaf2]/90
+                    text-[#5e4439]
+                    border
+                    border-[#dfd2c0]
+                    hover:bg-white
+                    transition
+                  "
+                  aria-label="Zoom image"
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={images[selectedImage] || "placeholder"}
-                      src={images[selectedImage]}
-                      alt={product.productName}
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.35 }}
-                      className="w-full h-full object-contain bg-white"
-                      style={{
-                        transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                        transition: isDragging ? "none" : "transform 0.3s ease",
-                        cursor: zoomLevel > 1 ? "grabbing" : "zoom-in",
-                      }}
-                    />
-                  </AnimatePresence>
+                  {zoomMode ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <ZoomIn className="h-4 w-4" />
+                  )}
+                </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleZoomMode();
-                    }}
-                    className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-md hover:bg-gray-200 transition-colors"
-                    aria-label="Fullscreen view"
+                {zoomLevel > 1 && (
+                  <div
+                    className="
+                    absolute
+                    top-4
+                    right-4
+                    px-2
+                    py-1
+                    bg-[#42151a]/80
+                    text-white
+                    text-[9px]
+                    tracking-widest
+                  "
                   >
-                    {zoomMode ? (
-                      <X className="h-4 w-4" />
-                    ) : (
-                      <ZoomIn className="h-4 w-4" />
-                    )}
-                  </button>
-
-                  {zoomLevel > 1 && (
-                    <div className="absolute top-4 left-4 px-2 py-1 bg-black/70 text-white text-xs rounded-md">
-                      {Math.round(zoomLevel * 100)}%
-                    </div>
-                  )}
-
-                  {zoomLevel > 1 && (
-                    <div className="absolute bottom-4 left-4 flex items-center gap-1 px-2 py-1 bg-black/70 text-white text-xs rounded-md">
-                      <Move className="h-3 w-3" /> Drag to pan
-                    </div>
-                  )}
-                </div>
+                    {Math.round(zoomLevel * 100)}%
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Thumbnails */}
-              <div className="mt-4 flex gap-3 overflow-x-auto py-2 px-1">
-                {images.map((img, idx) => (
+            {/* Thumbnails */}
+
+            {images.length > 1 && (
+              <div
+                className="
+                mt-4
+                flex
+                gap-3
+                overflow-x-auto
+                pb-2
+              "
+              >
+                {images.map((image, index) => (
                   <button
-                    key={idx}
+                    key={index}
                     onClick={() => {
-                      setSelectedImage(idx);
+                      setSelectedImage(index);
+
                       setZoomLevel(1);
-                      setPosition({ x: 0, y: 0 });
+
+                      setPosition({
+                        x: 0,
+                        y: 0,
+                      });
                     }}
-                    className={`w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
-                      selectedImage === idx
-                        ? "border-blue-600 shadow-lg"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    aria-label={`View image ${idx + 1}`}
+                    className={`
+                        flex-shrink-0
+                        w-16
+                        h-20
+                        overflow-hidden
+                        border
+                        transition-all
+                        duration-300
+                        ${
+                          selectedImage === index
+                            ? "border-[#76131d] ring-1 ring-[#76131d]/20"
+                            : "border-[#ddd0bf] opacity-70 hover:opacity-100"
+                        }
+                      `}
                   >
                     <img
-                      src={img}
-                      alt={`thumb-${idx}`}
-                      className="w-full h-full object-cover"
+                      src={image}
+                      alt={`View ${index + 1}`}
+                      className="
+                          w-full
+                          h-full
+                          object-cover
+                        "
                     />
                   </button>
                 ))}
               </div>
+            )}
+
+            <p
+              className="
+              mt-2
+              text-[9px]
+              uppercase
+              tracking-[0.18em]
+              text-[#988477]
+              text-center
+            "
+            >
+              Click image to enlarge
+            </p>
+          </div>
+
+          {/* =================================================
+              PRODUCT INFORMATION
+          ================================================= */}
+
+          <div className="flex flex-col">
+            {/* Category */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.1,
+              }}
+            >
+              <p
+                className="
+                text-[9px]
+                uppercase
+                tracking-[0.3em]
+                text-[#a27d5f]
+                mb-3
+              "
+              >
+                {product.category || "Handwoven Saree"}
+              </p>
+
+              <h1
+                className="
+                font-serif
+                text-3xl
+                sm:text-4xl
+                lg:text-[44px]
+                leading-[1.08]
+                font-normal
+                text-[#42151a]
+              "
+              >
+                {product.productName}
+              </h1>
+
+              <p
+                className="
+                mt-3
+                text-[9px]
+                sm:text-[10px]
+                uppercase
+                tracking-[0.2em]
+                text-[#947b6d]
+              "
+              >
+                Darsh Handlooms · Crafted with care
+              </p>
+            </motion.div>
+
+            {/* Price */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.2,
+              }}
+              className="
+                mt-7
+                pb-6
+                border-b
+                border-[#dfd2c0]
+              "
+            >
+              <div
+                className="
+                flex
+                items-center
+                flex-wrap
+                gap-3
+              "
+              >
+                <span
+                  className="
+                  font-serif
+                  text-2xl
+                  sm:text-3xl
+                  text-[#42151a]
+                "
+                >
+                  ₹{Number(product.price).toLocaleString("en-IN")}
+                </span>
+
+                {product.originalPrice && (
+                  <span
+                    className="
+                    text-sm
+                    text-[#9c8a7e]
+                    line-through
+                  "
+                  >
+                    ₹{Number(product.originalPrice).toLocaleString("en-IN")}
+                  </span>
+                )}
+
+                {discount && (
+                  <span
+                    className="
+                    px-2
+                    py-1
+                    bg-[#e8d6aa]
+                    text-[#6e511b]
+                    text-[8px]
+                    uppercase
+                    tracking-[0.15em]
+                  "
+                  >
+                    Save {discount}%
+                  </span>
+                )}
+              </div>
+
+              <p
+                className="
+                mt-2
+                text-[10px]
+                text-[#907d71]
+              "
+              >
+                Inclusive of applicable taxes · Shipping calculated at checkout
+              </p>
+            </motion.div>
+
+            {/* Description */}
+
+            <motion.p
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              transition={{
+                delay: 0.3,
+              }}
+              className="
+                mt-6
+                text-sm
+                leading-7
+                text-[#735f55]
+                max-w-xl
+              "
+            >
+              {product.description ||
+                "A thoughtfully crafted saree made for timeless elegance, everyday grace and special occasions."}
+            </motion.p>
+
+            {/* blouse Avaliable */}
+<div className="mt-6">
+              <label
+                className="
+                block
+                text-[9px]
+                uppercase
+                tracking-[0.2em]
+                text-[#6f594e]
+                mb-3
+              "
+              >
+                Blouse
+              </label>
+
+              <div
+                className="
+                flex
+                items-center
+                justify-between
+                gap-4
+              "
+              >
+                <span
+                  className="
+                  text-[10px]
+                  text-[#958176]
+                "
+                >
+                 {product.blouseAvaliable ? "Blouse piece available" : "No blouse piece"}
+                </span>
+              </div>
             </div>
+            {/*color */}
+<div className="mt-6">
+              <label
+                className="
+                block
+                text-[9px]
+                uppercase
+                tracking-[0.2em]
+                text-[#6f594e]
+                mb-3
+              "
+              >
+                Color
+              </label>
 
-            {/* Product Info Section */}
-            <div className="col-span-1">
-              <div className="flex flex-col h-full">
-                {/* Product Title and Rating */}
-                <div className="mb-4">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                    {product.productName}
-                  </h1>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                      <span className="ml-2 text-sm text-gray-600">
-                        {rating} • 142+ Reviews
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div
+                className="
+                flex
+                items-center
+                justify-between
+                gap-4
+              "
+              >
+                <span
+                  className="
+                  text-[10px]
+                  text-[#958176]
+                "
+                >
+                  {product.color || "N/A"}
+                </span>
+              </div>
+            </div>
+            {/* Size */}
 
-                {/* Price and Stock Info */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl font-bold text-gray-900">
-                      ₹{product.price}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-xl text-gray-500 line-through">
-                        ₹{product.originalPrice}
-                      </span>
-                    )}
-                    {product.originalPrice && (
-                      <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">
-                        {Math.round(
-                          ((product.originalPrice - product.price) /
-                            product.originalPrice) *
-                            100,
-                        )}
-                        % OFF
-                      </span>
-                    )}
-                  </div>
-{sizes.length > 0 && (
-  <div className="mb-6">
-    <label className="block text-lg font-semibold mb-3">
-      Select Size
-    </label>
-
-    <div className="flex flex-wrap gap-3">
-      {sizes.map((item) => (
-        <button
-          key={item}
-          type="button"
-          onClick={() => setSize(item)}
-          className={`px-5 py-2 rounded-lg border font-medium transition-all
-            ${
-              size === item
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:text-blue-600"
-            }`}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-                  {/* Stock Information */}
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
-                    {isOutOfStock ? (
-                      <div className="flex items-center text-red-600">
-                        <CircleOff className="h-4 w-4 mr-1" />
-                        <span>Out of stock</span>
-                      </div>
-                    ) : isLowStock ? (
-                      <div className="flex items-center text-yellow-600">
-                        <Hourglass className="h-4 w-4 mr-1 animate-spin" />
-                        <span>Only {stock} left in stock</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-green-600">
-                        <Check className="h-4 w-4 mr-1" />
-                        <span>In stock</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Countdown Timer for Low Stock */}
-                  {isLowStock && countdown !== null && (
-                    <div className="mt-2 flex items-center gap-2 text-sm text-yellow-700 bg-yellow-50 p-2 rounded-lg">
-                      <Clock className="h-4 w-4" />
-                      <span className="animate-pulse font-medium">
-                        Limited time offer: {Math.floor(countdown / 60)}:
-                        {String(countdown % 60).padStart(2, "0")}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Quantity Selector */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+            {sizes.length > 0 && (
+              <div className="mt-6">
+                <div
+                  className="
+                  flex
+                  items-center
+                  justify-between
+                  mb-3
+                "
                 >
                   <label
-                    htmlFor="quantity"
-                    className="block text-lg font-semibold mb-2"
+                    className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.2em]
+                    text-[#6f594e]
+                  "
                   >
-                    Quantity
+                    Select size
                   </label>
-                  <div className="flex items-center gap-3">
-                    <div className="flex mb-3 items-center border border-gray-300 rounded-xl overflow-hidden w-fit shadow-sm">
-                      <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
-                        disabled={quantity <= 1}
-                      >
-                        <Minus className="h-5 w-5 text-gray-600" />
-                      </button>
-                      <span className="px-6 font-bold text-lg text-gray-800">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setQuantity(Math.min(product.stock, quantity + 1))
-                        }
-                        className="p-3 bg-gray-100 hover:bg-gray-200 transition-colors"
-                        disabled={quantity >= stock}
-                      >
-                        <Plus className="h-5 w-5 text-gray-600" />
-                      </button>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {stock} available
-                    </span>
-                  </div>
-                </motion.div>
+                </div>
 
-                {/* Add to Cart Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                  className="w-full space-y-4"
+                <div
+                  className="
+                  flex
+                  flex-wrap
+                  gap-2
+                "
                 >
-                  {!isAdded ? (
-                    <motion.button
-                      whileHover={{
-                        scale: quantity > product.stock ? 1 : 1.01,
-                        boxShadow:
-                          quantity > product.stock
-                            ? "none"
-                            : "0 8px 24px rgba(37, 99, 235, 0.18)",
-                      }}
-                      whileTap={{ scale: quantity > product.stock ? 1 : 0.98 }}
-                      onClick={handleAddToCart}
-                      disabled={loading || quantity > product.stock}
-                      className={`w-full py-3 sm:py-4 px-4 rounded-2xl flex items-center justify-center gap-3 
-      font-semibold text-base sm:text-lg transition-all duration-300 disabled:cursor-not-allowed
-      ${
-        quantity > product.stock
-          ? "bg-gray-300 text-gray-600"
-          : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
-      }`}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-                      ) : quantity > product.stock ? (
-                        <CircleOff className="h-5 w-5 sm:h-6 sm:w-6" />
-                      ) : (
-                        <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
-                      )}
-
-                      <span>
-                        {loading
-                          ? "Adding..."
-                          : quantity > product.stock
-                            ? "Out of Stock"
-                            : "Add to Cart"}
-                      </span>
-                    </motion.button>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                      <button className="w-full py-3 sm:py-4 bg-green-500 text-white rounded-2xl flex items-center justify-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base hover:bg-green-600 transition-all duration-300 shadow-sm hover:shadow-md">
-                        <Check className="h-5 w-5" />
-                        Added Successfully
-                      </button>
-
-                      <Link
-                        onClick={() =>
-                          window.scrollTo({
-                            top: 0,
-                            left: 0,
-                            behavior: "smooth",
-                          })
-                        }
-                        to="/cart"
-                        className="w-full py-3 sm:py-4 bg-white text-blue-600 border-2 border-blue-600 rounded-2xl flex items-center justify-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base hover:bg-blue-50 transition-all duration-300"
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                        View Cart
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Share Buttons */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {sizes.map((item) => (
                     <button
-                      onClick={() => setShowShareModal(true)}
-                      className="py-3 border border-gray-300 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-all duration-300"
+                      key={item}
+                      type="button"
+                      onClick={() => setSize(item)}
+                      className={`
+                          min-w-[52px]
+                          px-4
+                          py-2.5
+                          border
+                          text-xs
+                          transition-all
+                          ${
+                            size === item
+                              ? "bg-[#76131d] border-[#76131d] text-white"
+                              : "bg-[#fffaf2] border-[#d9cbb9] text-[#5f4a40] hover:border-[#76131d]"
+                          }
+                        `}
                     >
-                      <Share2 className="h-5 w-5" />
-                      <span className="hidden sm:inline">Share Product</span>
-                      <span className="sm:hidden">Share</span>
+                      {item}
                     </button>
-
-                    <button
-                      onClick={() => {
-                        navigator.clipboard?.writeText(window.location.href);
-                        showNotification(
-                          "Link copied to clipboard!",
-                          "success",
-                        );
-                      }}
-                      className="py-3 border border-gray-300 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base text-gray-700 hover:bg-gray-100 transition-all duration-300"
-                      aria-label="Copy product link"
-                    >
-                      <Copy className="h-5 w-5" />
-                      <span className="hidden sm:inline">Copy Link</span>
-                      <span className="sm:hidden">Copy</span>
-                    </button>
-                  </div>
-                </motion.div>
-                {/* Trust badges */}
-                <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
-                  <div className="p-2 rounded-lg border flex flex-col items-center">
-                    <Truck className="h-5 w-5" />
-                    <span>Free Ship</span>
-                  </div>
-                  <div className="p-2 rounded-lg border flex flex-col items-center">
-                    <Shield className="h-5 w-5" />
-                    <span>Warranty</span>
-                  </div>
-                  <div className="p-2 rounded-lg border flex flex-col items-center">
-                    <RotateCcw className="h-5 w-5" />
-                    <span>7 Days</span>
-                  </div>
-                </div>
-
-                {/* Delivery Date Information */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="mb-6 mt-4 p-1 bg-blue-50 rounded-xl border border-blue-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold text-blue-800 text-xs md:text-sm">
-                        Expected Delivery
-                      </p>
-                      <p className="text-blue-700 font-bold text-sm md:text-lg">
-                        {deliveryDate}
-                      </p>
-                      <p className="text-blue-600 text-[10px] md:text-xs mt-1">
-                        Order within next 2 hours for same day processing
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Suggested bundle */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="mt-6 p-6 bg-gradient-to-br from-blue-50 via-white to-blue-50 border border-blue-100 rounded-3xl shadow-lg"
-                >
-                  <h4 className="text-sm font-semibold">
-                    Frequently bought together
-                  </h4>
-                  <div className="mt-3 flex items-center gap-3">
-                    <img
-                      src={images[0]}
-                      alt="mini"
-                      className="w-12 h-12 object-contain rounded-md bg-white p-1"
-                    />
-                    <div className="flex-1 text-sm">
-                      <div className="font-medium">{product.productName}</div>
-                      <div className="text-xs text-gray-500">
-                        ₹{product.price}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Details Tabs */}
-          <div className="mt-6 border-t border-gray-200">
-            <div className="flex space-x-4 border-b overflow-x-auto mb-6">
-              <button
-                onClick={() => setActiveTab("description")}
-                className={`px-4 py-3 font-medium text-sm sm:text-base ${
-                  activeTab === "description"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Description
-              </button>
-              <button
-                onClick={() => setActiveTab("specifications")}
-                className={`px-4 py-3 font-medium text-sm sm:text-base ${
-                  activeTab === "specifications"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Specifications
-              </button>
-              <button
-                onClick={() => setActiveTab("faq")}
-                className={`px-4 py-3 font-medium text-sm sm:text-base ${
-                  activeTab === "faq"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                FAQ
-              </button>
-            </div>
-
-            <div className="mb-8">
-              {activeTab === "specifications" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <p>
-                    {product.specification || "No specifications provided."}
-                  </p>
-                </div>
-              )}
-
-              {activeTab === "description" && (
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed">
-                    {product.description ||
-                      "No description available for this product."}
-                  </p>
-                </div>
-              )}
-
-              {activeTab === "faq" && (
-                <div className="space-y-4">
-                  {faqs.map((faq, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
-                    >
-                      <button
-                        onClick={() => toggleFAQ(index)}
-                        className="w-full p-4 sm:p-5 text-left font-medium text-gray-900 bg-gradient-to-r from-gray-50 to-white hover:bg-gray-100 flex items-center justify-between"
-                      >
-                        <span className="text-sm sm:text-base">{faq.q}</span>
-
-                        <Plus
-                          className={`h-5 w-5 text-blue-600 transition-transform duration-300 ${
-                            showFAQ[index] ? "rotate-45" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {showFAQ[index] && (
-                        <div className="p-4 sm:p-5 bg-white border-t border-gray-100">
-                          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                            {faq.a}
-                          </p>
-                        </div>
-                      )}
-                    </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Stock */}
+
+            <div className="mt-5">
+              {isOutOfStock ? (
+                <div
+                  className="
+                  flex
+                  items-center
+                  gap-2
+                  text-xs
+                  text-[#a33d3d]
+                "
+                >
+                  <CircleOff className="h-4 w-4" />
+                  Out of stock
+                </div>
+              ) : isLowStock ? (
+                <div
+                  className="
+                  flex
+                  items-center
+                  gap-2
+                  text-xs
+                  text-[#a16e25]
+                "
+                >
+                  <Hourglass className="h-4 w-4" />
+                  Only {stock} pieces remaining
+                </div>
+              ) : (
+                <div
+                  className="
+                  flex
+                  items-center
+                  gap-2
+                  text-xs
+                  text-[#58734c]
+                "
+                >
+                  <Check className="h-4 w-4" />
+                  In stock · Ready to dispatch
+                </div>
               )}
             </div>
-          </div>
-          
-          
 
-          {/* Similar Products Section */}
-          {similarProducts.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 text-center sm:text-left">
-                Similar Products
-              </h2>
+            {/* Countdown */}
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                {similarProducts.slice(0, 4).map((item) => (
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                    key={item._id}
-                    className="relative bg-white rounded-2xl shadow-md hover:shadow-xl p-3 sm:p-4 cursor-pointer group overflow-hidden border border-gray-100 hover:border-pink-300 transition-all"
-                    onClick={() => navigate(`/productDetails/${item._id}`)}
+            {isLowStock && countdown !== null && (
+              <div
+                className="
+                  mt-3
+                  px-3
+                  py-2
+                  bg-[#f4ead5]
+                  border
+                  border-[#dfceb0]
+                  flex
+                  items-center
+                  gap-2
+                  text-xs
+                  text-[#765526]
+                "
+              >
+                <Clock className="h-4 w-4" />
+
+                <span>
+                  Limited stock · {Math.floor(countdown / 60)}:
+                  {String(countdown % 60).padStart(2, "0")}
+                </span>
+              </div>
+            )}
+
+            {/* Quantity */}
+
+            <div className="mt-6">
+              <label
+                className="
+                block
+                text-[9px]
+                uppercase
+                tracking-[0.2em]
+                text-[#6f594e]
+                mb-3
+              "
+              >
+                Quantity
+              </label>
+
+              <div
+                className="
+                flex
+                items-center
+                justify-between
+                gap-4
+              "
+              >
+                <div
+                  className="
+                  flex
+                  items-center
+                  border
+                  border-[#d9cbb9]
+                  bg-[#fffaf2]
+                "
+                >
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                    className="
+                      w-10
+                      h-10
+                      flex
+                      items-center
+                      justify-center
+                      text-[#6f594e]
+                      hover:bg-[#f1e7d8]
+                      disabled:opacity-30
+                    "
                   >
-                    <div className="relative w-full h-32 sm:h-40 rounded-xl overflow-hidden flex items-center justify-center bg-gray-50">
-                      <img
-                        src={
-                          item.images?.[0]
-                            ? `${url}/img/${item.images[0]}`
-                            : "https://placehold.co/200x200"
-                        }
-                        alt={item.productName}
-                        className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500"></div>
-                    </div>
+                    <Minus className="h-4 w-4" />
+                  </button>
 
-                    <div className="mt-3 space-y-1">
-                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate group-hover:text-pink-600 transition-colors">
-                        {item.productName}
-                      </h3>
-                      <p className="text-blue-600 font-bold text-sm sm:text-lg">
-                        ₹{item.price}
-                      </p>
-                    </div>
+                  <span
+                    className="
+                    w-12
+                    text-center
+                    text-sm
+                    text-[#42151a]
+                  "
+                  >
+                    {quantity}
+                  </span>
 
-                    {item.originalPrice && item.price < item.originalPrice && (
-                      <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded-full shadow-md animate-bounce">
-                        -
-                        {Math.round(
-                          ((item.originalPrice - item.price) /
-                            item.originalPrice) *
-                            100,
-                        )}
-                        %
-                      </span>
-                    )}
-                  </motion.div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.min(stock, quantity + 1))}
+                    disabled={quantity >= stock}
+                    className="
+                      w-10
+                      h-10
+                      flex
+                      items-center
+                      justify-center
+                      text-[#6f594e]
+                      hover:bg-[#f1e7d8]
+                      disabled:opacity-30
+                    "
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <span
+                  className="
+                  text-[10px]
+                  text-[#958176]
+                "
+                >
+                  {stock} available
+                </span>
               </div>
             </div>
-          )}
-        </motion.div>
+
+            {/* Add to bag */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 15,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.45,
+              }}
+              className="mt-5"
+            >
+              {!isAdded ? (
+                <motion.button
+                  whileHover={{
+                    y: -2,
+                  }}
+                  whileTap={{
+                    scale: 0.98,
+                  }}
+                  onClick={handleAddToCart}
+                  disabled={loading || isOutOfStock}
+                  className="
+                    w-full
+                    h-12
+                    flex
+                    items-center
+                    justify-center
+                    gap-3
+                    bg-[#76131d]
+                    hover:bg-[#5e0e16]
+                    text-white
+                    text-[10px]
+                    uppercase
+                    tracking-[0.22em]
+                    transition-all
+                    duration-300
+                    disabled:bg-[#c8bdb4]
+                    disabled:cursor-not-allowed
+                    shadow-[0_8px_25px_rgba(118,19,29,0.15)]
+                  "
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Adding
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="h-4 w-4" />
+                      {isOutOfStock ? "Out of stock" : "Add to bag"}
+                    </>
+                  )}
+                </motion.button>
+              ) : (
+                <div
+                  className="
+                  grid
+                  grid-cols-1
+                  sm:grid-cols-2
+                  gap-2
+                "
+                >
+                  <div
+                    className="
+                    h-12
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    bg-[#e7eee2]
+                    border
+                    border-[#b8c9ad]
+                    text-[#536a4c]
+                    text-[9px]
+                    uppercase
+                    tracking-[0.15em]
+                  "
+                  >
+                    <Check className="h-4 w-4" />
+                    Added to bag
+                  </div>
+
+                  <Link
+                    to="/cart"
+                    onClick={() => {
+                      window.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "instant",
+                      });
+                    }}
+                    className="
+                      h-12
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
+                      bg-[#fffaf2]
+                      border
+                      border-[#76131d]
+                      text-[#76131d]
+                      text-[9px]
+                      uppercase
+                      tracking-[0.15em]
+                      hover:bg-[#f5eadc]
+                    "
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    View bag
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Share */}
+
+            <div
+              className="
+              grid
+              grid-cols-2
+              gap-2
+              mt-3
+            "
+            >
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="
+                  h-11
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  border
+                  border-[#d9cbb9]
+                  text-[#6d594e]
+                  text-[9px]
+                  uppercase
+                  tracking-[0.14em]
+                  hover:border-[#76131d]
+                  hover:text-[#76131d]
+                  transition
+                "
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href);
+
+                  showNotification("Product link copied.", "success");
+                }}
+                className="
+                  h-11
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  border
+                  border-[#d9cbb9]
+                  text-[#6d594e]
+                  text-[9px]
+                  uppercase
+                  tracking-[0.14em]
+                  hover:border-[#76131d]
+                  hover:text-[#76131d]
+                  transition
+                "
+              >
+                <Copy className="h-4 w-4" />
+                Copy link
+              </button>
+            </div>
+
+            {/* Trust */}
+
+            <div
+              className="
+              grid
+              grid-cols-3
+              border-y
+              border-[#dfd2c0]
+              mt-7
+              py-4
+            "
+            >
+              <div
+                className="
+                text-center
+                border-r
+                border-[#dfd2c0]
+              "
+              >
+                <Truck
+                  className="
+                  mx-auto
+                  h-4
+                  w-4
+                  text-[#ad823a]
+                  mb-2
+                "
+                />
+
+                <p
+                  className="
+                  text-[8px]
+                  uppercase
+                  tracking-[0.12em]
+                  text-[#735f55]
+                "
+                >
+                  Free shipping
+                </p>
+              </div>
+
+              <div
+                className="
+                text-center
+                border-r
+                border-[#dfd2c0]
+              "
+              >
+                <ShieldCheck
+                  className="
+                  mx-auto
+                  h-4
+                  w-4
+                  text-[#ad823a]
+                  mb-2
+                "
+                />
+
+                <p
+                  className="
+                  text-[8px]
+                  uppercase
+                  tracking-[0.12em]
+                  text-[#735f55]
+                "
+                >
+                  Authentic
+                </p>
+              </div>
+
+              <div className="text-center">
+                <RotateCcw
+                  className="
+                  mx-auto
+                  h-4
+                  w-4
+                  text-[#ad823a]
+                  mb-2
+                "
+                />
+
+                <p
+                  className="
+                  text-[8px]
+                  uppercase
+                  tracking-[0.12em]
+                  text-[#735f55]
+                "
+                >
+                  7 day returns
+                </p>
+              </div>
+            </div>
+
+            {/* Delivery */}
+
+            <div
+              className="
+              mt-5
+              flex
+              gap-3
+              bg-[#f1e7d8]
+              border
+              border-[#dfd0ba]
+              p-4
+            "
+            >
+              <CalendarDays
+                className="
+                h-5
+                w-5
+                flex-shrink-0
+                text-[#9e7737]
+              "
+              />
+
+              <div>
+                <p
+                  className="
+                  text-[9px]
+                  uppercase
+                  tracking-[0.16em]
+                  text-[#765f50]
+                "
+                >
+                  Expected delivery
+                </p>
+
+                <p
+                  className="
+                  font-serif
+                  text-base
+                  text-[#42151a]
+                  mt-1
+                "
+                >
+                  {deliveryDate}
+                </p>
+
+                <p
+                  className="
+                  text-[9px]
+                  text-[#927d70]
+                  mt-1
+                "
+                >
+                  Free shipping across India
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ===================================================
+            PRODUCT DETAILS
+        =================================================== */}
+
+        <section
+          className="
+          mt-16
+          sm:mt-20
+          border-t
+          border-[#dfd2c0]
+          pt-10
+        "
+        >
+          <div
+            className="
+            flex
+            overflow-x-auto
+            border-b
+            border-[#dfd2c0]
+          "
+          >
+            {[
+              ["description", "Description"],
+              ["specifications", "Specifications"],
+              ["faq", "FAQ"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`
+                    flex-shrink-0
+                    px-5
+                    sm:px-8
+                    pb-4
+                    text-[9px]
+                    uppercase
+                    tracking-[0.2em]
+                    transition
+                    ${
+                      activeTab === key
+                        ? "text-[#76131d] border-b-2 border-[#76131d]"
+                        : "text-[#927d70] hover:text-[#76131d]"
+                    }
+                  `}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className="
+            max-w-4xl
+            py-8
+          "
+          >
+            {activeTab === "description" && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+              >
+                <p
+                  className="
+                  text-sm
+                  leading-8
+                  text-[#735f55]
+                "
+                >
+                  {product.description ||
+                    "This handcrafted saree reflects the beauty of traditional Indian weaving. Each piece is carefully finished and carries the natural character of the textile."}
+                </p>
+              </motion.div>
+            )}
+
+            {activeTab === "specifications" && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  divide-y
+                  divide-[#dfd2c0]
+                "
+              >
+                <div
+                  className="
+                  flex
+                  justify-between
+                  gap-6
+                  py-4
+                  text-sm
+                "
+                >
+                  <span
+                    className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    text-[#927d70]
+                  "
+                  >
+                    Category
+                  </span>
+
+                  <span className="text-[#5c473e] text-right">
+                    {product.category || "Handloom"}
+                  </span>
+                </div>
+
+                <div
+                  className="
+                  flex
+                  justify-between
+                  gap-6
+                  py-4
+                  text-sm
+                "
+                >
+                  <span
+                    className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    text-[#927d70]
+                  "
+                  >
+                    Fabric
+                  </span>
+
+                  <span className="text-[#5c473e] text-right">
+                    {product.fabric || "Handwoven textile"}
+                  </span>
+                </div>
+
+                <div
+                  className="
+                  flex
+                  justify-between
+                  gap-6
+                  py-4
+                  text-sm
+                "
+                >
+                  <span
+                    className="
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    text-[#927d70]
+                  "
+                  >
+                    Stock
+                  </span>
+
+                  <span className="text-[#5c473e] text-right">
+                    {stock} available
+                  </span>
+                </div>
+
+                <div
+                  className="
+                  py-4
+                  text-sm
+                "
+                >
+                  <span
+                    className="
+                    block
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    text-[#927d70]
+                    mb-3
+                  "
+                  >
+                    Product details
+                  </span>
+
+                  <p
+                    className="
+                    leading-7
+                    text-[#735f55]
+                  "
+                  >
+                    {product.specification ||
+                      "No additional specifications provided."}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "faq" && (
+              <div className="space-y-2">
+                {faqs.map((faq, index) => (
+                  <div
+                    key={index}
+                    className="
+                        border-b
+                        border-[#dfd2c0]
+                      "
+                  >
+                    <button
+                      onClick={() => toggleFAQ(index)}
+                      className="
+                          w-full
+                          py-5
+                          flex
+                          items-center
+                          justify-between
+                          gap-4
+                          text-left
+                        "
+                    >
+                      <span
+                        className="
+                          font-serif
+                          text-lg
+                          text-[#42151a]
+                        "
+                      >
+                        {faq.q}
+                      </span>
+
+                      <ChevronDown
+                        className={`
+                            h-4
+                            w-4
+                            flex-shrink-0
+                            text-[#927d70]
+                            transition-transform
+                            ${showFAQ[index] ? "rotate-180" : ""}
+                          `}
+                      />
+                    </button>
+
+                    <AnimatePresence>
+                      {showFAQ[index] && (
+                        <motion.div
+                          initial={{
+                            height: 0,
+                            opacity: 0,
+                          }}
+                          animate={{
+                            height: "auto",
+                            opacity: 1,
+                          }}
+                          exit={{
+                            height: 0,
+                            opacity: 0,
+                          }}
+                          className="overflow-hidden"
+                        >
+                          <p
+                            className="
+                              pb-5
+                              pr-8
+                              text-sm
+                              leading-7
+                              text-[#806c60]
+                            "
+                          >
+                            {faq.a}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ===================================================
+            YOU MAY ALSO LIKE
+        =================================================== */}
+
+        {similarProducts.length > 0 && (
+          <section
+            className="
+            mt-10
+            sm:mt-16
+            pb-10
+          "
+          >
+            <div
+              className="
+              flex
+              items-end
+              justify-between
+              mb-7
+            "
+            >
+              <div>
+                <p
+                  className="
+                  text-[9px]
+                  uppercase
+                  tracking-[0.3em]
+                  text-[#a27d5f]
+                  mb-2
+                "
+                >
+                  The collection
+                </p>
+
+                <h2
+                  className="
+                  font-serif
+                  text-2xl
+                  sm:text-3xl
+                  text-[#42151a]
+                "
+                >
+                  You may also like
+                </h2>
+              </div>
+
+              <Sparkles
+                className="
+                hidden
+                sm:block
+                h-5
+                w-5
+                text-[#b48a42]
+              "
+              />
+            </div>
+
+            <div
+              className="
+              grid
+              grid-cols-2
+              md:grid-cols-4
+              gap-3
+              sm:gap-5
+            "
+            >
+              {similarProducts.slice(0, 4).map((item, index) => (
+                <motion.div
+                  key={item._id}
+                  initial={{
+                    opacity: 0,
+                    y: 20,
+                  }}
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  viewport={{
+                    once: true,
+                    amount: 0.2,
+                  }}
+                  transition={{
+                    delay: index * 0.08,
+                  }}
+                  whileHover={{
+                    y: -5,
+                  }}
+                  onClick={() => {
+                    navigate(`/productDetails/${item._id}`);
+
+                    window.scrollTo({
+                      top: 0,
+                      left: 0,
+                      behavior: "smooth",
+                    });
+                  }}
+                  className="
+                        group
+                        cursor-pointer
+                      "
+                >
+                  <div
+                    className="
+                        relative
+                        aspect-[4/5]
+                        overflow-hidden
+                        bg-[#eee4d3]
+                        border
+                        border-[#dfd2c0]
+                      "
+                  >
+                    <img
+                      src={
+                        item.images?.[0]
+                          ? `${url}/img/${item.images[0]}`
+                          : "https://placehold.co/400x500"
+                      }
+                      alt={item.productName}
+                      className="
+                            w-full
+                            h-full
+                            object-cover
+                            transition-transform
+                            duration-700
+                            group-hover:scale-105
+                          "
+                    />
+
+                    {item.originalPrice && item.price < item.originalPrice && (
+                      <span
+                        className="
+                              absolute
+                              top-3
+                              left-3
+                              bg-[#d0a34b]
+                              text-[#42151a]
+                              px-2
+                              py-1
+                              text-[7px]
+                              uppercase
+                              tracking-[0.15em]
+                            "
+                      >
+                        Sale
+                      </span>
+                    )}
+
+                    <div
+                      className="
+                          absolute
+                          inset-x-0
+                          bottom-0
+                          p-3
+                          bg-gradient-to-t
+                          from-black/30
+                          to-transparent
+                          opacity-0
+                          group-hover:opacity-100
+                          transition-opacity
+                        "
+                    >
+                      <span
+                        className="
+                            text-white
+                            text-[8px]
+                            uppercase
+                            tracking-[0.2em]
+                          "
+                      >
+                        View saree
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3">
+                    <h3
+                      className="
+                          font-serif
+                          text-base
+                          sm:text-lg
+                          text-[#42151a]
+                          truncate
+                        "
+                    >
+                      {item.productName}
+                    </h3>
+
+                    <p
+                      className="
+                          mt-1
+                          text-xs
+                          text-[#6f594e]
+                        "
+                    >
+                      ₹{Number(item.price).toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* Login Prompt Modal */}
+      {/* =====================================================
+          LOGIN MODAL
+      ===================================================== */}
+
       <AnimatePresence>
         {showLoginPrompt && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+            className="
+              fixed
+              inset-0
+              z-[90]
+              bg-[#321014]/50
+              backdrop-blur-sm
+              flex
+              items-center
+              justify-center
+              p-4
+            "
             onClick={() => setShowLoginPrompt(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative"
-              onClick={(e) => e.stopPropagation()}
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.94,
+                y: 20,
+              }}
+              onClick={(event) => event.stopPropagation()}
+              className="
+                relative
+                w-full
+                max-w-md
+                bg-[#fffaf2]
+                border
+                border-[#dfd2c0]
+                p-7
+                sm:p-9
+                shadow-2xl
+              "
             >
               <button
                 onClick={() => setShowLoginPrompt(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                className="
+                  absolute
+                  top-4
+                  right-4
+                  text-[#927d70]
+                  hover:text-[#76131d]
+                "
               >
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <LogIn className="h-8 w-8 text-blue-600" />
+              <div className="text-center">
+                <div
+                  className="
+                  mx-auto
+                  h-14
+                  w-14
+                  rounded-full
+                  bg-[#f1e3d2]
+                  flex
+                  items-center
+                  justify-center
+                  mb-5
+                "
+                >
+                  <LogIn
+                    className="
+                    h-6
+                    w-6
+                    text-[#76131d]
+                  "
+                  />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Login Required
+
+                <p
+                  className="
+                  text-[9px]
+                  uppercase
+                  tracking-[0.3em]
+                  text-[#a27d5f]
+                  mb-3
+                "
+                >
+                  Your Darsh bag
+                </p>
+
+                <h3
+                  className="
+                  font-serif
+                  text-2xl
+                  text-[#42151a]
+                "
+                >
+                  Sign in to continue
                 </h3>
-                <p className="text-gray-600">
-                  Please login to add items to your cart and continue shopping.
+
+                <p
+                  className="
+                  mt-3
+                  text-sm
+                  leading-6
+                  text-[#806c60]
+                "
+                >
+                  Please sign in to add this beautiful piece to your bag.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div
+                className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                gap-2
+                mt-7
+              "
+              >
                 <button
                   onClick={handleQuickLogin}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  className="
+                    h-11
+                    bg-[#76131d]
+                    text-white
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    hover:bg-[#5e0e16]
+                    transition
+                  "
                 >
-                  <LogIn className="h-5 w-5" />
-                  Login Now
+                  Sign in
                 </button>
+
                 <button
                   onClick={() => setShowLoginPrompt(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  className="
+                    h-11
+                    border
+                    border-[#d9cbb9]
+                    text-[#624e44]
+                    text-[9px]
+                    uppercase
+                    tracking-[0.18em]
+                    hover:bg-[#f3e9dc]
+                  "
                 >
-                  Continue Shopping
+                  Continue browsing
                 </button>
               </div>
-
-              <p className="text-center text-xs md:text-sm text-gray-500 mt-4">
-                New user?{" "}
-                <span className="text-blue-600 font-semibold">
-                  Create an account in seconds
-                </span>
-              </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* =====================================================
+          FULLSCREEN ZOOM
+      ===================================================== */}
+
       <AnimatePresence>
         {zoomMode && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black z-50 flex items-center justify-center p-4"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+            className="
+              fixed
+              inset-0
+              z-[110]
+              bg-[#241416]/95
+              flex
+              items-center
+              justify-center
+              p-4
+            "
             onClick={toggleZoomMode}
           >
-            <div className="relative w-full h-full flex items-center justify-center">
+            <button
+              onClick={toggleZoomMode}
+              className="
+                absolute
+                top-5
+                right-5
+                z-10
+                h-10
+                w-10
+                flex
+                items-center
+                justify-center
+                bg-white/10
+                border
+                border-white/20
+                text-white
+                hover:bg-white/20
+              "
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div
+              className="
+                relative
+                w-full
+                h-full
+                flex
+                items-center
+                justify-center
+              "
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img
+                src={images[selectedImage]}
+                alt={product.productName}
+                className="
+                  max-w-full
+                  max-h-[85vh]
+                  object-contain
+                  select-none
+                "
+                draggable="false"
+                style={{
+                  transform: `
+                    scale(${zoomLevel})
+                    translate(
+                      ${position.x}px,
+                      ${position.y}px
+                    )
+                  `,
+                  transition: isDragging ? "none" : "transform 0.3s ease",
+                  cursor: zoomLevel > 1 ? "grabbing" : "grab",
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              />
+
+              {/* Zoom Controls */}
+
               <div
-                className="relative max-w-4xl max-h-full overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
+                className="
+                absolute
+                bottom-5
+                left-1/2
+                -translate-x-1/2
+                flex
+                items-center
+                gap-1
+                bg-[#fffaf2]
+                p-1
+              "
               >
-                <img
-                  src={images[selectedImage]}
-                  alt={product.productName}
-                  className="max-w-full max-h-full object-contain"
-                  style={{
-                    transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                    transition: isDragging ? "none" : "transform 0.3s ease",
-                    cursor: zoomLevel > 1 ? "grabbing" : "grab",
-                  }}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                />
+                <button
+                  onClick={handleZoomOut}
+                  disabled={zoomLevel <= 1}
+                  className="
+                    h-9
+                    w-9
+                    flex
+                    items-center
+                    justify-center
+                    text-[#5c473e]
+                    hover:bg-[#f0e5d7]
+                    disabled:opacity-30
+                  "
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
 
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-                  <button
-                    onClick={handleZoomIn}
-                    disabled={zoomLevel >= 3}
-                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    aria-label="Zoom in"
-                  >
-                    <ZoomIn className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={handleZoomOut}
-                    disabled={zoomLevel <= 1}
-                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    aria-label="Zoom out"
-                  >
-                    <ZoomOut className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={handleResetZoom}
-                    disabled={zoomLevel === 1}
-                    className="p-2 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    aria-label="Reset zoom"
-                  >
-                    <RotateCw className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={toggleZoomMode}
-                    className="p-2 rounded-md hover:bg-gray-200 transition-colors"
-                    aria-label="Close fullscreen"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={handleResetZoom}
+                  className="
+                    h-9
+                    w-9
+                    flex
+                    items-center
+                    justify-center
+                    text-[#5c473e]
+                    hover:bg-[#f0e5d7]
+                  "
+                >
+                  <RotateCw className="h-4 w-4" />
+                </button>
 
-                {zoomLevel > 1 && (
-                  <div className="absolute top-4 left-4 px-3 py-1 bg-black/70 text-white text-sm rounded-md">
-                    {Math.round(zoomLevel * 100)}%
-                  </div>
-                )}
-
-                <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-full">
-                  {images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setSelectedImage(idx);
-                        setZoomLevel(1);
-                        setPosition({ x: 0, y: 0 });
-                      }}
-                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border transition-all ${
-                        selectedImage === idx
-                          ? "border-blue-500 shadow-md"
-                          : "border-gray-400"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`thumb-${idx}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
+                <button
+                  onClick={handleZoomIn}
+                  disabled={zoomLevel >= 3}
+                  className="
+                    h-9
+                    w-9
+                    flex
+                    items-center
+                    justify-center
+                    text-[#5c473e]
+                    hover:bg-[#f0e5d7]
+                    disabled:opacity-30
+                  "
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
               </div>
+
+              {zoomLevel > 1 && (
+                <div
+                  className="
+                  absolute
+                  top-5
+                  left-5
+                  flex
+                  items-center
+                  gap-2
+                  bg-black/40
+                  text-white
+                  px-3
+                  py-2
+                  text-[9px]
+                  uppercase
+                  tracking-[0.15em]
+                "
+                >
+                  <Move className="h-3 w-3" />
+                  Drag to explore
+                </div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* =====================================================
+          SHARE MODAL
+      ===================================================== */}
+
       <AnimatePresence>
         {showShareModal && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+            className="
+              fixed
+              inset-0
+              z-[100]
+              bg-[#321014]/50
+              backdrop-blur-sm
+              flex
+              items-center
+              justify-center
+              p-4
+            "
             onClick={() => setShowShareModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md relative"
-              onClick={(e) => e.stopPropagation()}
+              initial={{
+                opacity: 0,
+                y: 20,
+                scale: 0.96,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                y: 20,
+                scale: 0.96,
+              }}
+              onClick={(event) => event.stopPropagation()}
+              className="
+                relative
+                w-full
+                max-w-sm
+                bg-[#fffaf2]
+                border
+                border-[#dfd2c0]
+                p-7
+              "
             >
               <button
                 onClick={() => setShowShareModal(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                className="
+                  absolute
+                  top-4
+                  right-4
+                  text-[#927d70]
+                  hover:text-[#76131d]
+                "
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                Share this product
+
+              <p
+                className="
+                text-center
+                text-[9px]
+                uppercase
+                tracking-[0.3em]
+                text-[#a27d5f]
+              "
+              >
+                Share the weave
+              </p>
+
+              <h3
+                className="
+                mt-2
+                text-center
+                font-serif
+                text-2xl
+                text-[#42151a]
+              "
+              >
+                Share this saree
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+              <div
+                className="
+                grid
+                grid-cols-2
+                gap-2
+                mt-7
+              "
+              >
                 <button
                   onClick={() => handleShare("whatsapp")}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition"
+                  className="
+                    flex
+                    flex-col
+                    items-center
+                    gap-2
+                    py-4
+                    bg-[#eef6ed]
+                    border
+                    border-[#cbdcc8]
+                    hover:bg-[#e4f0e2]
+                  "
                 >
-                  <FaWhatsapp className="h-6 w-6 text-green-600" />
-                  <span className="text-xs font-medium text-gray-700">
+                  <FaWhatsapp className="h-5 w-5 text-[#4d8750]" />
+
+                  <span
+                    className="
+                    text-[8px]
+                    uppercase
+                    tracking-[0.12em]
+                    text-[#53654f]
+                  "
+                  >
                     WhatsApp
                   </span>
                 </button>
+
                 <button
                   onClick={() => handleShare("telegram")}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition"
+                  className="
+                    flex
+                    flex-col
+                    items-center
+                    gap-2
+                    py-4
+                    bg-[#edf4f8]
+                    border
+                    border-[#c9dce7]
+                    hover:bg-[#e5f0f6]
+                  "
                 >
-                  <FaTelegram className="h-6 w-6 text-blue-500" />
-                  <span className="text-xs font-medium text-gray-700">
+                  <FaTelegram className="h-5 w-5 text-[#4284a9]" />
+
+                  <span
+                    className="
+                    text-[8px]
+                    uppercase
+                    tracking-[0.12em]
+                    text-[#536570]
+                  "
+                  >
                     Telegram
                   </span>
                 </button>
+
                 <button
                   onClick={() => handleShare("facebook")}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-100 hover:bg-blue-200 transition"
+                  className="
+                    flex
+                    flex-col
+                    items-center
+                    gap-2
+                    py-4
+                    bg-[#eef1f8]
+                    border
+                    border-[#cbd3e4]
+                    hover:bg-[#e4e9f3]
+                  "
                 >
-                  <FaFacebook className="h-6 w-6 text-blue-700" />
-                  <span className="text-xs font-medium text-gray-700">
+                  <FaFacebook className="h-5 w-5 text-[#4267a9]" />
+
+                  <span
+                    className="
+                    text-[8px]
+                    uppercase
+                    tracking-[0.12em]
+                    text-[#536070]
+                  "
+                  >
                     Facebook
                   </span>
                 </button>
+
                 <button
                   onClick={() => handleShare("copy")}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
+                  className="
+                    flex
+                    flex-col
+                    items-center
+                    gap-2
+                    py-4
+                    bg-[#f1e9df]
+                    border
+                    border-[#dcd0c1]
+                    hover:bg-[#ebe0d4]
+                  "
                 >
-                  <Copy className="h-6 w-6 text-gray-600" />
-                  <span className="text-xs font-medium text-gray-700">
-                    Copy Link
+                  <Copy
+                    className="
+                    h-5
+                    w-5
+                    text-[#715d52]
+                  "
+                  />
+
+                  <span
+                    className="
+                    text-[8px]
+                    uppercase
+                    tracking-[0.12em]
+                    text-[#66554c]
+                  "
+                  >
+                    Copy link
                   </span>
                 </button>
               </div>

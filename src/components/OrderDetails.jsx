@@ -15,132 +15,219 @@ import {
   CalendarDays,
   HelpCircle,
   PhoneCall,
-  Download,
   Share2,
   Star,
-  MessageCircle,
   Shield,
   RotateCcw,
-  ChevronRight,
   User,
   Navigation,
+  Sparkles,
+  Crown,
+  ShoppingBag,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+
 import DeliveryEstimateSection from "./DeliveryEstimateSection";
 import { useAppContext } from "../context/AppContext";
 
+
 const OrderDetails = ({ order, onClose }) => {
+
   const { url } = useAppContext();
+
   const [copied, setCopied] = useState(false);
   const [progressWidth, setProgressWidth] = useState(0);
-  const [activeTab, setActiveTab] = useState("details");
   const [imageError, setImageError] = useState({});
 
-  const orderDate = new Date(order.orderDate);
-  const estimatedDate = new Date(orderDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const isDelivered = order.trackingId && order.orderAccept;
 
-  useEffect(() => {
-    const { step } = getStatusInfo();
-    setTimeout(() => {
-      setProgressWidth((step - 1) * 50);
-    }, 300);
-  }, [order]);
+  /* ============================================================
+     DATE
+  ============================================================ */
 
-  if (!order) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 min-h-[60vh] animate-fade-in bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="text-center">
-          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-medium text-gray-600 mb-2">
-            No order details found
-          </h2>
-          <p className="text-gray-500 mb-6">Please select a valid order</p>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 font-medium"
-          >
-            Back to Orders
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const orderDate = order?.orderDate
+    ? new Date(order.orderDate)
+    : new Date();
+
+  const estimatedDate = new Date(
+    orderDate.getTime() +
+      7 * 24 * 60 * 60 * 1000
+  );
+
+
+  /* ============================================================
+     ORDER STATUS
+  ============================================================ */
 
   const getStatusInfo = () => {
-    if (order.orderReject) {
+
+    if (order?.orderReject) {
       return {
-        status: "Rejected",
-        color: "red",
+        status: "Order Rejected",
         step: 0,
         icon: XCircle,
-        gradient: "from-red-500 to-red-600",
+        gradient:
+          "from-[#8f2431] to-[#5f111b]",
+        color: "red",
       };
     }
-    if (order.trackingId) {
+
+    if (order?.trackingId) {
       return {
-        status: "Shipped & Tracking ID Available",
-        color: "blue",
+        status: "Shipped & On The Way",
         step: 3,
         icon: Truck,
-        gradient: "from-blue-500 to-cyan-600",
+        gradient:
+          "from-[#741522] to-[#a57924]",
+        color: "gold",
       };
     }
-    if (order.orderAccept) {
+
+    if (order?.orderAccept) {
       return {
         status: "Accepted & Processing",
-        color: "green",
         step: 2,
         icon: Package,
-        gradient: "from-green-500 to-emerald-600",
+        gradient:
+          "from-[#741522] to-[#b88732]",
+        color: "maroon",
       };
     }
+
     return {
       status: "Order Placed",
-      color: "purple",
       step: 1,
       icon: CheckCircle,
-      gradient: "from-purple-500 to-indigo-600",
+      gradient:
+        "from-[#741522] to-[#b88732]",
+      color: "gold",
     };
   };
 
-  const { status, color, step, icon, gradient } = getStatusInfo();
+
+  const {
+    status,
+    step,
+    icon,
+    gradient,
+  } = getStatusInfo();
+
   const StatusIcon = icon;
 
-  const handleCopy = () => {
-    if (order.trackingId) {
-      navigator.clipboard.writeText(order.trackingId);
+
+  /* ============================================================
+     PROGRESS ANIMATION
+  ============================================================ */
+
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+
+      if (step <= 0) {
+        setProgressWidth(0);
+      } else {
+        setProgressWidth(
+          (step - 1) * 50
+        );
+      }
+
+    }, 300);
+
+    return () => clearTimeout(timer);
+
+  }, [step]);
+
+
+  /* ============================================================
+     COPY TRACKING ID
+  ============================================================ */
+
+  const handleCopy = async () => {
+
+    if (!order?.trackingId) return;
+
+    try {
+
+      await navigator.clipboard.writeText(
+        order.trackingId
+      );
+
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+
+      setTimeout(
+        () => setCopied(false),
+        2000
+      );
+
+    } catch (error) {
+      console.error(
+        "Copy failed:",
+        error
+      );
     }
   };
+
+
+  /* ============================================================
+     IMAGE ERROR
+  ============================================================ */
 
   const handleImageError = (index) => {
-    setImageError((prev) => ({ ...prev, [index]: true }));
+
+    setImageError((prev) => ({
+      ...prev,
+      [index]: true,
+    }));
+
   };
 
+
+  /* ============================================================
+     SHARE ORDER
+  ============================================================ */
+
   const handleShareOrder = async () => {
+
     if (navigator.share) {
+
       try {
+
         await navigator.share({
-          title: `Order #${order._id.substring(0, 8)}`,
-          text: `Check out my order details`,
+          title: `Darsh Order #${order._id?.substring(
+            0,
+            8
+          )}`,
+          text:
+            "Check out my Darsh order details.",
           url: window.location.href,
         });
+
       } catch (error) {
-        console.log("Sharing cancelled");
+        console.log(
+          "Sharing cancelled"
+        );
       }
+
     } else {
+
       handleCopy();
+
     }
   };
+
+
+  /* ============================================================
+     STATUS STEPS
+  ============================================================ */
 
   const statusSteps = [
     {
       label: "Placed",
       icon: CheckCircle,
       index: 1,
-      description: "Order received and confirmed",
+      description:
+        "Order received and confirmed",
       mobileDesc: "Confirmed",
       time: order.orderDate,
     },
@@ -148,464 +235,2163 @@ const OrderDetails = ({ order, onClose }) => {
       label: "Accepted",
       icon: Package,
       index: 2,
-      description: "Order accepted and being processed",
+      description:
+        "Order accepted and being prepared",
       mobileDesc: "Processing",
-      time: order.orderAccept ? order.orderDate : "Pending",
+      time: order.orderAccept
+        ? order.orderDate
+        : "Pending",
     },
     {
       label: "Shipped",
       icon: Truck,
       index: 3,
-      description: "Package dispatched with tracking",
+      description:
+        "Package dispatched with tracking",
       mobileDesc: "Shipped",
-      time: order.trackingId ? "Dispatched" : "Pending",
+      time: order.trackingId
+        ? "Dispatched"
+        : "Pending",
     },
   ];
 
-  const tabs = [
-    { id: "details", label: "Order Details", icon: Package },
-    { id: "shipping", label: "Shipping", icon: Truck },
-    { id: "support", label: "Support", icon: HelpCircle },
-  ];
+
+  /* ============================================================
+     INVALID ORDER
+  ============================================================ */
+
+  if (!order) {
+
+    return (
+      <div
+        className="
+          flex
+          min-h-[70vh]
+          items-center
+          justify-center
+          bg-[#fffdf8]
+          px-4
+        "
+      >
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            scale: 0.9,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          className="
+            w-full
+            max-w-md
+            rounded-3xl
+            border
+            border-[#d4ad54]/25
+            bg-white
+            p-8
+            text-center
+            shadow-xl
+          "
+        >
+
+          <div
+            className="
+              mx-auto
+              flex
+              h-20
+              w-20
+              items-center
+              justify-center
+              rounded-full
+              bg-[#f3e8d2]
+              text-[#741522]
+            "
+          >
+            <Package className="h-9 w-9" />
+          </div>
+
+          <h2
+            className="
+              mt-6
+              font-serif
+              text-2xl
+              font-bold
+              text-[#4a1815]
+            "
+          >
+            Order Details Not Found
+          </h2>
+
+          <p
+            className="
+              mt-2
+              text-sm
+              text-[#806c63]
+            "
+          >
+            Please select a valid order
+            from your order history.
+          </p>
+
+          <button
+            onClick={onClose}
+            className="
+              mt-6
+              inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              bg-[#741522]
+              px-6
+              py-3
+              text-sm
+              font-bold
+              text-white
+              shadow-lg
+              transition
+              hover:bg-[#5f111b]
+            "
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Orders
+          </button>
+
+        </motion.div>
+
+      </div>
+    );
+  }
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-fade-in">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg group"
-              >
-                <ArrowLeft className="h-5 w-5 text-gray-600 group-hover:text-indigo-600 transition-colors" />
-              </button>
-              <div className="flex flex-col">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-1">
-                  Order #{order._id.substring(0, 10)}...
-                </h1>
-                <p className="text-xs text-gray-500 flex items-center">
-                  <CalendarDays className="h-3 w-3 mr-1" />
-                  {new Date(order.orderDate).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleShareOrder}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-300 hidden sm:flex"
-              >
-                <Share2 className="h-5 w-5 text-gray-600" />
-              </button>
-              {!order.orderReject && (
-                <div className="hidden sm:flex items-center space-x-2 bg-white px-3 py-2 rounded-xl shadow-sm border">
-                  <CalendarDays className="h-4 w-4 text-blue-500" />
-                  <div>
-                    <p className="text-xs text-gray-500">Est. Delivery</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {estimatedDate.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div
+      className="
+        min-h-screen
+        bg-[#fffdf8]
+        text-[#4a1815]
+      "
+    >
 
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        {/* Status Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-6 mb-6 animate-fade-in-up">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center space-x-4">
+      {/* ======================================================
+          TOP HEADER
+      ====================================================== */}
+
+      <div
+        className="
+          sticky
+          top-0
+          z-50
+          border-b
+          border-[#d4ad54]/20
+          bg-[#fffdf8]/95
+          backdrop-blur-xl
+        "
+      >
+
+        <div
+          className="
+            mx-auto
+            flex
+            h-16
+            max-w-7xl
+            items-center
+            justify-between
+            px-4
+            sm:px-6
+            lg:px-8
+          "
+        >
+
+          <div className="flex min-w-0 items-center gap-3">
+
+            <motion.button
+              whileHover={{
+                scale: 1.08,
+              }}
+              whileTap={{
+                scale: 0.94,
+              }}
+              onClick={onClose}
+              className="
+                flex
+                h-10
+                w-10
+                flex-shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-[#d4ad54]/20
+                bg-white
+                text-[#741522]
+                shadow-sm
+                transition
+                hover:bg-[#f3e8d2]
+              "
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </motion.button>
+
+
+            <div className="min-w-0">
+
               <div
-                className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}
+                className="
+                  flex
+                  items-center
+                  gap-1.5
+                "
               >
-                <StatusIcon className="h-6 w-6 text-white" />
+
+                <Crown
+                  className="
+                    h-3
+                    w-3
+                    text-[#b88732]
+                  "
+                />
+
+                <span
+                  className="
+                    text-[9px]
+                    font-bold
+                    uppercase
+                    tracking-[0.25em]
+                    text-[#b88732]
+                  "
+                >
+                  Darsh
+                </span>
+
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {status}
-                </h2>
-                <p className="text-sm text-gray-600">
-                  {order.orderReject
-                    ? "Contact support for assistance"
-                    : `Step ${step} of ${statusSteps.length} completed`}
-                </p>
-              </div>
+
+              <h1
+                className="
+                  truncate
+                  font-serif
+                  text-base
+                  font-bold
+                  text-[#4a1815]
+                  sm:text-lg
+                "
+              >
+                Order #
+                {order._id?.substring(
+                  0,
+                  10
+                )}
+                ...
+              </h1>
+
             </div>
+
+          </div>
+
+
+          <div className="flex items-center gap-2">
+
+            <motion.button
+              whileHover={{
+                scale: 1.06,
+              }}
+              whileTap={{
+                scale: 0.94,
+              }}
+              onClick={handleShareOrder}
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-[#d4ad54]/20
+                bg-white
+                text-[#741522]
+                shadow-sm
+              "
+            >
+              <Share2 className="h-4 w-4" />
+            </motion.button>
+
 
             {!order.orderReject && (
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">Estimated Delivery</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {estimatedDate.toDateString()}
+
+              <div
+                className="
+                  hidden
+                  items-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-[#d4ad54]/20
+                  bg-[#faf3e5]
+                  px-3
+                  py-2
+                  sm:flex
+                "
+              >
+
+                <CalendarDays
+                  className="
+                    h-4
+                    w-4
+                    text-[#b88732]
+                  "
+                />
+
+                <div>
+
+                  <p
+                    className="
+                      text-[9px]
+                      text-[#9b806d]
+                    "
+                  >
+                    Est. Delivery
                   </p>
+
+                  <p
+                    className="
+                      text-xs
+                      font-bold
+                      text-[#741522]
+                    "
+                  >
+                    {estimatedDate.toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                  </p>
+
                 </div>
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+
               </div>
+
             )}
+
           </div>
 
-          {/* Progress Timeline */}
-          {!order.orderReject && (
-            <div className="mt-6">
-              <div className="relative">
-                {/* Progress Bar */}
-                <div className="absolute top-4 left-0 right-0 h-1.5 bg-gray-200 rounded-full z-0 overflow-hidden">
-                  <div
-                    className={`h-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-full transition-all duration-1000 ease-out ${
-                      progressWidth > 0 ? "shadow-lg" : ""
-                    }`}
-                    style={{ width: `${progressWidth}%` }}
+        </div>
+
+      </div>
+
+
+      {/* ======================================================
+          MAIN
+      ====================================================== */}
+
+      <main
+        className="
+          mx-auto
+          max-w-7xl
+          space-y-5
+          px-4
+          py-5
+          sm:space-y-6
+          sm:px-6
+          sm:py-7
+          lg:px-8
+        "
+      >
+
+
+        {/* ====================================================
+            ORDER HERO / STATUS
+        ==================================================== */}
+
+        <motion.section
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="
+            relative
+            overflow-hidden
+            rounded-3xl
+            bg-gradient-to-br
+            from-[#741522]
+            via-[#861d29]
+            to-[#5f111b]
+            p-5
+            shadow-xl
+            sm:p-7
+          "
+        >
+
+          {/* Decorative circles */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -right-16
+              -top-16
+              h-44
+              w-44
+              rounded-full
+              bg-[#e7c875]/10
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -bottom-20
+              left-1/3
+              h-48
+              w-48
+              rounded-full
+              bg-[#e7c875]/5
+              blur-3xl
+            "
+          />
+
+
+          <div
+            className="
+              relative
+              z-10
+              flex
+              flex-col
+              gap-5
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
+
+            <div className="flex items-center gap-4">
+
+              <motion.div
+                animate={{
+                  y: [0, -4, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+                className="
+                  flex
+                  h-14
+                  w-14
+                  flex-shrink-0
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border
+                  border-[#e7c875]/40
+                  bg-white/10
+                  text-[#f5d98a]
+                  backdrop-blur-sm
+                  sm:h-16
+                  sm:w-16
+                "
+              >
+
+                <StatusIcon className="h-7 w-7" />
+
+              </motion.div>
+
+
+              <div>
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <Sparkles
+                    className="
+                      h-3.5
+                      w-3.5
+                      text-[#f5d98a]
+                    "
+                  />
+
+                  <span
+                    className="
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.25em]
+                      text-[#f5d98a]
+                    "
                   >
-                    {progressWidth > 0 && progressWidth < 100 && (
-                      <div
-                        className="absolute top-0 h-full w-8 bg-white opacity-70 animate-shine rounded-full"
-                        style={{ left: `${progressWidth - 4}%` }}
-                      ></div>
-                    )}
-                  </div>
+                    Order Status
+                  </span>
+
                 </div>
 
-                {/* Steps */}
-                <div className="relative flex justify-between items-start z-10">
-                  {statusSteps.map((s, index) => {
-                    const StepIcon = s.icon;
-                    const isCompleted = step >= s.index;
-                    const isCurrent = step === s.index;
+                <h2
+                  className="
+                    mt-1
+                    font-serif
+                    text-xl
+                    font-bold
+                    text-white
+                    sm:text-2xl
+                  "
+                >
+                  {status}
+                </h2>
 
-                    return (
-                      <div
-                        key={index}
-                        className="flex flex-col items-center w-1/3 relative"
-                      >
+                <p
+                  className="
+                    mt-1
+                    text-xs
+                    text-white/65
+                  "
+                >
+                  {order.orderReject
+                    ? "Please contact our support team for assistance."
+                    : `Step ${step} of ${statusSteps.length} completed`}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {!order.orderReject && (
+
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-white/10
+                  p-4
+                  backdrop-blur-sm
+                "
+              >
+
+                <p
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-wider
+                    text-white/55
+                  "
+                >
+                  Estimated Delivery
+                </p>
+
+                <div
+                  className="
+                    mt-1
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <Clock
+                    className="
+                      h-4
+                      w-4
+                      text-[#f5d98a]
+                    "
+                  />
+
+                  <span
+                    className="
+                      text-sm
+                      font-bold
+                      text-[#f5d98a]
+                    "
+                  >
+                    {estimatedDate.toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
+                  </span>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </div>
+
+
+          {/* ==================================================
+              STATUS TIMELINE
+          ================================================== */}
+
+          {!order.orderReject && (
+
+            <div className="relative z-10 mt-8">
+
+              <div className="relative">
+
+                {/* Background line */}
+
+                <div
+                  className="
+                    absolute
+                    left-[16%]
+                    right-[16%]
+                    top-5
+                    h-1
+                    rounded-full
+                    bg-white/15
+                  "
+                />
+
+
+                {/* Progress */}
+
+                <motion.div
+                  initial={{
+                    width: 0,
+                  }}
+                  animate={{
+                    width: `${progressWidth * 0.68}%`,
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: "easeOut",
+                  }}
+                  className="
+                    absolute
+                    left-[16%]
+                    top-5
+                    h-1
+                    rounded-full
+                    bg-gradient-to-r
+                    from-[#d4ad54]
+                    to-[#f5d98a]
+                  "
+                />
+
+
+                <div
+                  className="
+                    relative
+                    flex
+                    justify-between
+                  "
+                >
+
+                  {statusSteps.map(
+                    (s, index) => {
+
+                      const StepIcon =
+                        s.icon;
+
+                      const completed =
+                        step >= s.index;
+
+                      const current =
+                        step === s.index;
+
+                      return (
                         <div
-                          className={`p-2 rounded-full border-4 transition-all duration-500 transform ${
-                            isCompleted
-                              ? `bg-gradient-to-r ${gradient} border-white scale-110 shadow-lg`
-                              : `bg-white border-gray-300 ${
-                                  isCurrent ? "border-indigo-300 scale-110" : ""
-                                }`
-                          } ${
-                            isCurrent
-                              ? "animate-pulse ring-4 ring-indigo-100"
-                              : ""
-                          }`}
+                          key={index}
+                          className="
+                            flex
+                            w-1/3
+                            flex-col
+                            items-center
+                          "
                         >
-                          <StepIcon
-                            className={`h-4 w-4 ${
-                              isCompleted ? "text-white" : "text-gray-400"
-                            }`}
-                          />
-                        </div>
-                        <div className="text-center mt-3 space-y-1">
+
+                          <motion.div
+                            animate={
+                              current
+                                ? {
+                                    scale: [
+                                      1,
+                                      1.08,
+                                      1,
+                                    ],
+                                  }
+                                : {}
+                            }
+                            transition={{
+                              duration: 1.6,
+                              repeat: current
+                                ? Infinity
+                                : 0,
+                            }}
+                            className={`
+                              relative
+                              z-10
+                              flex
+                              h-10
+                              w-10
+                              items-center
+                              justify-center
+                              rounded-full
+                              border-4
+                              ${
+                                completed
+                                  ? "border-[#f5d98a] bg-[#741522] text-[#f5d98a]"
+                                  : "border-white/20 bg-[#5f111b] text-white/40"
+                              }
+                            `}
+                          >
+
+                            <StepIcon className="h-4 w-4" />
+
+                          </motion.div>
+
+
                           <p
-                            className={`text-xs font-medium ${
-                              isCompleted
-                                ? "text-gray-900 font-semibold"
-                                : "text-gray-500"
-                            }`}
+                            className={`
+                              mt-3
+                              text-[10px]
+                              font-bold
+                              sm:text-xs
+                              ${
+                                completed
+                                  ? "text-white"
+                                  : "text-white/45"
+                              }
+                            `}
                           >
                             {s.label}
                           </p>
-                          <p className="text-xs text-gray-500 hidden sm:block">
+
+                          <p
+                            className="
+                              mt-1
+                              hidden
+                              text-[9px]
+                              text-white/45
+                              sm:block
+                            "
+                          >
                             {s.description}
                           </p>
-                          <p className="text-xs text-gray-400 block sm:hidden">
-                            {s.mobileDesc}
-                          </p>
+
                         </div>
-                        {/* Connector lines between steps */}
-                        {index < statusSteps.length - 1 && (
-                          <div
-                            className={`hidden sm:block absolute top-2 left-2/3 w-1/3 h-0.5 ${
-                              step > s.index ? "bg-blue-500" : "bg-gray-300"
-                            }`}
-                          ></div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+
+                    }
+                  )}
+
                 </div>
+
               </div>
+
             </div>
+
           )}
-        </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left Column - Order Items & Tracking */}
-          <div className="xl:col-span-2 space-y-6">
-            {!order.orderReject && order.trackingId && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg mb-8 transform transition-all duration-500 animate-fade-in-up">
-                <h2 className="text-sm whitespace-nowrap sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Truck className="h-6 w-6 text-blue-500 animate-bounce" />
-                  Tracking Information
-                </h2>
-                <span className="text-sm xs:text-lg  text-gray-900">
-                  Tracking ID:{" "}
-                </span>{" "}
-                {/* Tracking ID with Copy */}
-                <div className="flex items-center justify-between gap-3 flex-wrap bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl shadow-inner">
-                  <span className="font-semibold text-blue-700 break-all text-sm sm:text-base animate-pulse">
-                    {order.trackingId}
-                  </span>
-                  <button
-                    onClick={handleCopy}
-                    className="p-2 rounded-xl bg-white hover:bg-blue-100 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
-                  >
-                    {copied ? (
-                      <Check className="h-5 w-5 text-green-600 animate-scale-in" />
-                    ) : (
-                      <Copy className="h-5 w-5 text-gray-600" />
-                    )}
-                  </button>
-                </div>
-                {/* Track Link */}
-                <Link
-                  to={`https://www.google.com/search?q=${order.trackingId}`}
-                  target="_blank"
-                  className="flex items-center justify-center mt-4 px-4 py-2 rounded-xl 
-                 bg-gradient-to-r from-blue-500 to-indigo-500 text-white 
-                 text-sm font-medium shadow-md hover:shadow-lg 
-                 transform hover:scale-105 transition-all duration-300"
+        </motion.section>
+
+
+        {/* ====================================================
+            TRACKING
+        ==================================================== */}
+
+        {order.trackingId &&
+          !order.orderReject && (
+
+            <motion.section
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              className="
+                overflow-hidden
+                rounded-2xl
+                border
+                border-[#d4ad54]/25
+                bg-[#fffdf8]
+                shadow-sm
+              "
+            >
+
+              <div
+                className="
+                  bg-gradient-to-r
+                  from-[#faf3e5]
+                  to-[#f3e8d2]
+                  p-4
+                  sm:p-5
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                  "
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Track Package
-                </Link>
-              </div>
-            )}
-            {/* Order Items Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-4 md:p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Package className="w-5 h-5 text-indigo-600 mr-2" />
-                  Order Items ({order.orderItems?.length || 0})
-                </h2>
-              </div>
 
-              <div className="space-y-4">
-                {order.orderItems?.map((item, index) => (
                   <div
-                    key={index}
-                    className="flex items-start space-x-2 md:space-x-4 p-1 md:p-4 bg-gray-50/50 rounded-xl border border-gray-200/60 hover:border-indigo-200 transition-all duration-300 group"
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[#741522]
+                      text-[#f5d98a]
+                    "
                   >
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={
-                          !imageError[index] && item.imgSrc
-                            ? `${url}/img/${item.imgSrc}`
-                            : "https://images.unsplash.com/photo-1601599561213-832382fd07ba?w=150&h=150&fit=crop"
-                        }
-                        alt={item.title}
-                        onError={() => handleImageError(index)}
-                        className="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
-                      />
-                      <div className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                        {item.qty}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-indigo-700 transition-colors">
-                        {item.title}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs sm:text-sm text-gray-600">
-                        <span className="whitespace-nowrap">
-                          ₹{(item.price / item.qty).toLocaleString()} each
-                        </span>
-
-                        <span className="hidden sm:inline">•</span>
-
-                        <span className="font-medium text-gray-900 whitespace-nowrap">
-                          Qty: {item.qty}
-                        </span>
-
-                        {item.size && (
-                          <>
-                            <span className="hidden sm:inline">•</span>
-
-                            <span className="font-medium text-gray-900 whitespace-nowrap">
-                              Size: {item.size}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <button className="p-2 hover:bg-white rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                      <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
-                    </button>
+                    <Truck className="h-5 w-5" />
                   </div>
-                ))}
+
+                  <div>
+
+                    <h2
+                      className="
+                        font-serif
+                        text-base
+                        font-bold
+                        text-[#4a1815]
+                        sm:text-lg
+                      "
+                    >
+                      Tracking Information
+                    </h2>
+
+                    <p
+                      className="
+                        text-[10px]
+                        text-[#9b806d]
+                      "
+                    >
+                      Your package is on its way
+                    </p>
+
+                  </div>
+
+                </div>
+
               </div>
-            </div>
 
-            {/* Delivery Estimate */}
-            {!order.orderReject && <DeliveryEstimateSection order={order} />}
 
-            {/* Support Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-6 animate-fade-in-up">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <HelpCircle className="w-5 h-5 text-blue-500 mr-2" />
-                Help & Support
-              </h2>
+              <div className="p-4 sm:p-5">
 
-              <div className="grid grid-cols-1  gap-4 mb-6">
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <RotateCcw className="h-4 w-4 text-green-600" />
+                <p
+                  className="
+                    text-[9px]
+                    font-bold
+                    uppercase
+                    tracking-wider
+                    text-[#9b806d]
+                  "
+                >
+                  Tracking ID
+                </p>
+
+                <div
+                  className="
+                    mt-2
+                    flex
+                    flex-col
+                    gap-3
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
+                  "
+                >
+
+                  <div
+                    className="
+                      flex-1
+                      break-all
+                      rounded-xl
+                      border
+                      border-[#d4ad54]/20
+                      bg-[#faf6ee]
+                      p-3
+                      font-mono
+                      text-xs
+                      font-bold
+                      text-[#741522]
+                      sm:text-sm
+                    "
+                  >
+                    {order.trackingId}
+                  </div>
+
+                  <motion.button
+                    whileHover={{
+                      scale: 1.04,
+                    }}
+                    whileTap={{
+                      scale: 0.96,
+                    }}
+                    onClick={handleCopy}
+                    className="
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      bg-[#741522]
+                      px-4
+                      py-3
+                      text-xs
+                      font-bold
+                      text-white
+                      shadow-sm
+                    "
+                  >
+
+                    {copied ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        Copy ID
+                      </>
+                    )}
+
+                  </motion.button>
+
+                </div>
+
+
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(
+                    order.trackingId
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    mt-3
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-[#741522]
+                    py-2.5
+                    text-xs
+                    font-bold
+                    text-[#741522]
+                    transition
+                    hover:bg-[#741522]
+                    hover:text-white
+                  "
+                >
+
+                  <ExternalLink className="h-4 w-4" />
+
+                  Track Package
+
+                </a>
+
+              </div>
+
+            </motion.section>
+
+          )}
+
+
+        {/* ====================================================
+            CONTENT GRID
+        ==================================================== */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            xl:grid-cols-3
+          "
+        >
+
+
+          {/* ==================================================
+              LEFT
+          ================================================== */}
+
+          <div
+            className="
+              space-y-5
+              xl:col-span-2
+            "
+          >
+
+
+            {/* =================================================
+                ORDER ITEMS
+            ================================================= */}
+
+            <motion.section
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.1,
+              }}
+              className="
+                rounded-2xl
+                border
+                border-[#d4ad54]/20
+                bg-[#fffdf8]
+                p-4
+                shadow-sm
+                sm:p-6
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  border-b
+                  border-[#d4ad54]/15
+                  pb-4
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-[#f3e8d2]
+                      text-[#741522]
+                    "
+                  >
+                    <ShoppingBag className="h-5 w-5" />
+                  </div>
+
+                  <div>
+
+                    <h2
+                      className="
+                        font-serif
+                        text-lg
+                        font-bold
+                        text-[#4a1815]
+                      "
+                    >
+                      Order Items
+                    </h2>
+
+                    <p
+                      className="
+                        text-[10px]
+                        text-[#9b806d]
+                      "
+                    >
+                      {order.orderItems
+                        ?.length || 0}{" "}
+                      item
+                      {order.orderItems
+                        ?.length !== 1
+                        ? "s"
+                        : ""}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="mt-5 space-y-3">
+
+                {order.orderItems?.map(
+                  (item, index) => (
+
+                    <motion.div
+                      key={index}
+                      initial={{
+                        opacity: 0,
+                        x: -15,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                      }}
+                      transition={{
+                        delay:
+                          index * 0.07,
+                      }}
+                      whileHover={{
+                        y: -2,
+                      }}
+                      className="
+                        group
+                        flex
+                        gap-3
+                        rounded-2xl
+                        border
+                        border-[#d4ad54]/15
+                        bg-[#faf6ee]
+                        p-3
+                        transition-all
+                        hover:border-[#d4ad54]/35
+                        hover:shadow-sm
+                        sm:gap-4
+                        sm:p-4
+                      "
+                    >
+
+                      {/* Image */}
+
+                      <div
+                        className="
+                          relative
+                          h-20
+                          w-20
+                          flex-shrink-0
+                          overflow-hidden
+                          rounded-xl
+                          bg-[#f3e8d2]
+                          sm:h-24
+                          sm:w-24
+                        "
+                      >
+
+                        <img
+                          src={
+                            !imageError[index] &&
+                            item.imgSrc
+                              ? `${url}/img/${item.imgSrc}`
+                              : "https://images.unsplash.com/photo-1601599561213-832382fd07ba?w=200&h=200&fit=crop"
+                          }
+                          alt={
+                            item.title ||
+                            "Product"
+                          }
+                          onError={() =>
+                            handleImageError(
+                              index
+                            )
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                            transition-transform
+                            duration-500
+                            group-hover:scale-105
+                          "
+                        />
+
+
+                        <span
+                          className="
+                            absolute
+                            right-1
+                            top-1
+                            flex
+                            h-6
+                            min-w-6
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-[#741522]
+                            px-1.5
+                            text-[9px]
+                            font-bold
+                            text-[#f5d98a]
+                            shadow-md
+                          "
+                        >
+                          ×{item.qty}
+                        </span>
+
+                      </div>
+
+
+                      {/* Product info */}
+
+                      <div className="min-w-0 flex-1">
+
+                        <h3
+                          className="
+                            line-clamp-2
+                            text-sm
+                            font-bold
+                            text-[#4a1815]
+                            transition
+                            group-hover:text-[#741522]
+                            sm:text-base
+                          "
+                        >
+                          {item.title}
+                        </h3>
+
+
+                        <div
+                          className="
+                            mt-2
+                            flex
+                            flex-wrap
+                            gap-x-3
+                            gap-y-1
+                            text-[10px]
+                            text-[#806c63]
+                            sm:text-xs
+                          "
+                        >
+
+                          <span>
+                            ₹
+                            {(
+                              item.price /
+                              item.qty
+                            ).toLocaleString()}
+                            {" "}each
+                          </span>
+
+                          <span className="text-[#d4ad54]">
+                            •
+                          </span>
+
+                          <span
+                            className="
+                              font-semibold
+                              text-[#4a1815]
+                            "
+                          >
+                            Qty: {item.qty}
+                          </span>
+
+                          {item.size && (
+                            <>
+                              <span className="text-[#d4ad54]">
+                                •
+                              </span>
+
+                              <span
+                                className="
+                                  font-semibold
+                                  text-[#4a1815]
+                                "
+                              >
+                                Size:{" "}
+                                {item.size}
+                              </span>
+                            </>
+                          )}
+
+                        </div>
+
+
+                        <div
+                          className="
+                            mt-3
+                            text-sm
+                            font-bold
+                            text-[#741522]
+                          "
+                        >
+                          ₹
+                          {item.price?.toLocaleString()}
+                        </div>
+
+                      </div>
+
+
+                      <button
+                        className="
+                          hidden
+                          h-8
+                          w-8
+                          items-center
+                          justify-center
+                          self-center
+                          rounded-lg
+                          text-[#b88732]
+                          transition
+                          hover:bg-[#f3e8d2]
+                          sm:flex
+                        "
+                      >
+                        <Star className="h-4 w-4" />
+                      </button>
+
+                    </motion.div>
+
+                  )
+                )}
+
+              </div>
+
+            </motion.section>
+
+
+            {/* =================================================
+                DELIVERY
+            ================================================= */}
+
+            {!order.orderReject && (
+              <DeliveryEstimateSection
+                order={order}
+              />
+            )}
+
+
+            {/* =================================================
+                SUPPORT
+            ================================================= */}
+
+            <motion.section
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.2,
+              }}
+              className="
+                overflow-hidden
+                rounded-2xl
+                border
+                border-[#d4ad54]/20
+                bg-[#fffdf8]
+                shadow-sm
+              "
+            >
+
+              <div
+                className="
+                  bg-gradient-to-r
+                  from-[#741522]
+                  to-[#5f111b]
+                  p-5
+                  text-white
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      h-10
+                      w-10
+                      items-center
+                      justify-center
+                      rounded-xl
+                      bg-white/10
+                      text-[#f5d98a]
+                    "
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </div>
+
+                  <div>
+
+                    <h2
+                      className="
+                        font-serif
+                        text-lg
+                        font-bold
+                      "
+                    >
+                      Help & Support
+                    </h2>
+
+                    <p
+                      className="
+                        text-[10px]
+                        text-white/60
+                      "
+                    >
+                      We're here to help
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div className="p-5">
+
+                <div
+                  className="
+                    rounded-xl
+                    border
+                    border-[#d4ad54]/15
+                    bg-[#faf6ee]
+                    p-4
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex
+                        h-9
+                        w-9
+                        items-center
+                        justify-center
+                        rounded-lg
+                        bg-[#f3e8d2]
+                        text-[#741522]
+                      "
+                    >
+                      <RotateCcw className="h-4 w-4" />
                     </div>
+
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Returns
+
+                      <p
+                        className="
+                          text-sm
+                          font-bold
+                          text-[#4a1815]
+                        "
+                      >
+                        Easy Returns
                       </p>
-                      <p className="text-xs text-gray-600">
+
+                      <p
+                        className="
+                          text-[10px]
+                          text-[#806c63]
+                        "
+                      >
                         7-day return policy
                       </p>
+
                     </div>
+
                   </div>
+
                 </div>
+
+
+                <p
+                  className="
+                    mt-5
+                    text-xs
+                    text-[#806c63]
+                  "
+                >
+                  Need immediate help with
+                  your order?
+                </p>
+
+                <a
+                  href="tel:+919907804710"
+                  className="
+                    mt-3
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-[#741522]
+                    px-4
+                    py-3
+                    text-xs
+                    font-bold
+                    text-white
+                    shadow-sm
+                    transition
+                    hover:bg-[#5f111b]
+                  "
+                >
+                  <Phone className="h-4 w-4" />
+                  Call Darsh Support
+                </a>
+
               </div>
 
-              <div className="border-t border-gray-200 pt-4">
-                <p className="text-sm text-gray-600 mb-3">
-                  Need immediate help?
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a
-                    href="tel:+919474048860"
-                    className="flex items-center justify-center space-x-2 px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 font-medium flex-1"
-                  >
-                    <Phone className="h-4 w-4" />
-                    <span>Call Support</span>
-                  </a>
-                </div>
-              </div>
-            </div>
+            </motion.section>
+
           </div>
 
-          {/* Right Column - Summary Cards */}
-          <div className="space-y-6">
-            {/* Order Summary */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-6 animate-fade-in-up">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <CreditCard className="w-5 h-5 text-green-500 mr-2" />
-                Order Summary
-              </h2>
 
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">
-                    ₹{order.amount?.toLocaleString()}
-                  </span>
+          {/* ==================================================
+              RIGHT SIDEBAR
+          ================================================== */}
+
+          <div className="space-y-5">
+
+
+            {/* =================================================
+                ORDER SUMMARY
+            ================================================= */}
+
+            <motion.section
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.15,
+              }}
+              className="
+                rounded-2xl
+                border
+                border-[#d4ad54]/25
+                bg-[#fffdf8]
+                p-5
+                shadow-sm
+                sm:p-6
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  border-b
+                  border-[#d4ad54]/15
+                  pb-4
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[#f3e8d2]
+                    text-[#741522]
+                  "
+                >
+                  <CreditCard className="h-5 w-5" />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-green-600 font-medium">Free</span>
+
+                <div>
+
+                  <h2
+                    className="
+                      font-serif
+                      text-lg
+                      font-bold
+                      text-[#4a1815]
+                    "
+                  >
+                    Order Summary
+                  </h2>
+
+                  <p
+                    className="
+                      text-[10px]
+                      text-[#9b806d]
+                    "
+                  >
+                    Payment information
+                  </p>
+
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-medium">Included</span>
-                </div>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-bold text-gray-900">
-                      ₹{order.amount?.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
+
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Payment Method</span>
-                  <span className="font-medium text-gray-900">
-                    {order.paymentMethod || "UPI"}
+
+              <div className="space-y-3 py-5">
+
+                <div
+                  className="
+                    flex
+                    justify-between
+                    text-xs
+                  "
+                >
+                  <span className="text-[#806c63]">
+                    Subtotal
+                  </span>
+
+                  <span className="font-semibold">
+                    ₹
+                    {order.amount?.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-gray-600">Payment Status</span>
-                  <span className="font-medium text-green-600 capitalize">
+
+
+                <div
+                  className="
+                    flex
+                    justify-between
+                    text-xs
+                  "
+                >
+                  <span className="text-[#806c63]">
+                    Shipping
+                  </span>
+
+                  <span
+                    className="
+                      font-semibold
+                      text-[#496b35]
+                    "
+                  >
+                    Free
+                  </span>
+                </div>
+
+
+                <div
+                  className="
+                    flex
+                    justify-between
+                    text-xs
+                  "
+                >
+                  <span className="text-[#806c63]">
+                    Tax
+                  </span>
+
+                  <span className="font-semibold">
+                    Included
+                  </span>
+                </div>
+
+
+                <div
+                  className="
+                    border-t
+                    border-[#d4ad54]/15
+                    pt-4
+                  "
+                >
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                    "
+                  >
+
+                    <span
+                      className="
+                        font-bold
+                        text-[#4a1815]
+                      "
+                    >
+                      Total
+                    </span>
+
+                    <span
+                      className="
+                        font-serif
+                        text-xl
+                        font-bold
+                        text-[#741522]
+                      "
+                    >
+                      ₹
+                      {order.amount?.toLocaleString()}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <div
+                className="
+                  rounded-xl
+                  bg-[#faf3e5]
+                  p-3
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    text-xs
+                  "
+                >
+
+                  <span className="text-[#806c63]">
+                    Payment Method
+                  </span>
+
+                  <span className="font-bold text-[#4a1815]">
+                    {order.paymentMethod ||
+                      "UPI"}
+                  </span>
+
+                </div>
+
+
+                <div
+                  className="
+                    mt-2
+                    flex
+                    items-center
+                    justify-between
+                    text-xs
+                  "
+                >
+
+                  <span className="text-[#806c63]">
+                    Payment Status
+                  </span>
+
+                  <span
+                    className="
+                      flex
+                      items-center
+                      gap-1
+                      font-bold
+                      capitalize
+                      text-[#496b35]
+                    "
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
                     {order.payStatus}
                   </span>
+
                 </div>
+
               </div>
-            </div>
 
-            {/* Shipping Address */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/60 p-6 animate-fade-in-up">
-              <h2 className=" md:text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="w-5 h-5 text-indigo-500 mr-2" />
-                Shipping Address
-              </h2>
+            </motion.section>
 
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <User className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {order.userShipping?.FullName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {order.userShipping?.Phone}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start space-x-3">
-                  <Navigation className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-gray-700 space-y-1">
-                    <p>{order.userShipping?.Add}</p>
-                    <p>
-                      {order.userShipping?.VillorCity},{" "}
-                      {order.userShipping?.Dist}
-                    </p>
-                    <p>
-                      {order.userShipping?.State} - {order.userShipping?.Pin}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* =================================================
+                SHIPPING ADDRESS
+            ================================================= */}
 
-            {/* Need Help Card */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white animate-fade-in-up">
-              <h3 className="font-semibold mb-2 flex items-center">
-                <PhoneCall className="h-4 w-4 mr-2 animate-pulse" />
-                24/7 Support
-              </h3>
-              <p className="text-blue-100 text-sm mb-4">
-                Our team is here to help you with any questions
-              </p>
-              <a
-                href="tel:+919474048860"
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-300 font-medium text-sm"
+            <motion.section
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.25,
+              }}
+              className="
+                rounded-2xl
+                border
+                border-[#d4ad54]/20
+                bg-[#fffdf8]
+                p-5
+                shadow-sm
+                sm:p-6
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  border-b
+                  border-[#d4ad54]/15
+                  pb-4
+                "
               >
-                <Phone className="h-4 w-4" />
-                <span>+91 9474048860</span>
-              </a>
-            </div>
+
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[#f3e8d2]
+                    text-[#741522]
+                  "
+                >
+                  <MapPin className="h-5 w-5" />
+                </div>
+
+                <div>
+
+                  <h2
+                    className="
+                      font-serif
+                      text-lg
+                      font-bold
+                      text-[#4a1815]
+                    "
+                  >
+                    Shipping Address
+                  </h2>
+
+                  <p
+                    className="
+                      text-[10px]
+                      text-[#9b806d]
+                    "
+                  >
+                    Delivery destination
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="space-y-4 pt-5">
+
+                <div
+                  className="
+                    flex
+                    items-start
+                    gap-3
+                  "
+                >
+
+                  <User
+                    className="
+                      mt-0.5
+                      h-4
+                      w-4
+                      flex-shrink-0
+                      text-[#b88732]
+                    "
+                  />
+
+                  <div>
+
+                    <p
+                      className="
+                        text-sm
+                        font-bold
+                        text-[#4a1815]
+                      "
+                    >
+                      {order.userShipping
+                        ?.FullName}
+                    </p>
+
+                    <p
+                      className="
+                        mt-1
+                        text-xs
+                        text-[#806c63]
+                      "
+                    >
+                      {order.userShipping
+                        ?.Phone}
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <div
+                  className="
+                    flex
+                    items-start
+                    gap-3
+                  "
+                >
+
+                  <Navigation
+                    className="
+                      mt-0.5
+                      h-4
+                      w-4
+                      flex-shrink-0
+                      text-[#b88732]
+                    "
+                  />
+
+                  <div
+                    className="
+                      space-y-1
+                      text-xs
+                      leading-5
+                      text-[#806c63]
+                    "
+                  >
+
+                    <p>
+                      {order.userShipping
+                        ?.Add}
+                    </p>
+
+                    <p>
+                      {order.userShipping
+                        ?.VillorCity}
+                      ,{" "}
+                      {order.userShipping
+                        ?.Dist}
+                    </p>
+
+                    <p>
+                      {order.userShipping
+                        ?.State}{" "}
+                      -{" "}
+                      {order.userShipping
+                        ?.Pin}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </motion.section>
+
+
+            {/* =================================================
+                PREMIUM SUPPORT
+            ================================================= */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.97,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+              }}
+              transition={{
+                delay: 0.35,
+              }}
+              className="
+                relative
+                overflow-hidden
+                rounded-2xl
+                bg-gradient-to-br
+                from-[#741522]
+                to-[#5f111b]
+                p-5
+                text-white
+                shadow-lg
+              "
+            >
+
+              <div
+                className="
+                  pointer-events-none
+                  absolute
+                  -right-8
+                  -top-8
+                  h-24
+                  w-24
+                  rounded-full
+                  bg-[#e7c875]/10
+                  blur-2xl
+                "
+              />
+
+              <div className="relative z-10">
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+
+                  <Shield
+                    className="
+                      h-5
+                      w-5
+                      text-[#f5d98a]
+                    "
+                  />
+
+                  <h3
+                    className="
+                      font-serif
+                      font-bold
+                    "
+                  >
+                    Darsh Care
+                  </h3>
+
+                </div>
+
+                <p
+                  className="
+                    mt-2
+                    text-xs
+                    leading-5
+                    text-white/65
+                  "
+                >
+                  Need assistance with your
+                  order? Our support team is
+                  happy to help.
+                </p>
+
+                <a
+                  href="tel:+919474048860"
+                  className="
+                    mt-4
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-[#f5d98a]
+                    px-4
+                    py-3
+                    text-xs
+                    font-bold
+                    text-[#5f111b]
+                    transition
+                    hover:bg-white
+                  "
+                >
+
+                  <PhoneCall className="h-4 w-4" />
+
+                  +91 9907804710
+
+                </a>
+
+              </div>
+
+            </motion.div>
+
           </div>
+
         </div>
-      </div>
+
+
+        {/* ====================================================
+            BOTTOM TRUST BAR
+        ==================================================== */}
+
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 0.5,
+          }}
+          className="
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-2
+            rounded-2xl
+            border
+            border-[#d4ad54]/20
+            bg-gradient-to-r
+            from-[#faf3e5]
+            via-[#fffdf8]
+            to-[#faf3e5]
+            p-4
+            text-center
+            sm:flex-row
+          "
+        >
+
+          <Shield
+            className="
+              h-4
+              w-4
+              text-[#b88732]
+            "
+          />
+
+          <span
+            className="
+              text-[10px]
+              font-medium
+              text-[#806c63]
+              sm:text-xs
+            "
+          >
+            Your order information is securely
+            managed by Darsh.
+          </span>
+
+          <Sparkles
+            className="
+              h-3.5
+              w-3.5
+              text-[#b88732]
+            "
+          />
+
+        </motion.div>
+
+      </main>
+
     </div>
   );
 };

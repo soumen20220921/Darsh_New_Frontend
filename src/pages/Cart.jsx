@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Trash2,
   ShoppingBag,
@@ -13,14 +13,23 @@ import {
   MapPin,
   Plus,
   Navigation,
-  IndianRupee
+  IndianRupee,
+  ArrowRight,
+  ShieldCheck,
+  Truck,
+  Sparkles,
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
-import { useState } from "react";
-import ImportantNotice from "./ImportantNotice";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "react-responsive";
+import ImportantNotice from "./ImportantNotice";
+
+
+
+/* =========================================================
+   ORDER CONFIRMATION MODAL
+   ========================================================= */
 
 const OrderConfirmationModal = ({
   cart,
@@ -42,143 +51,210 @@ const OrderConfirmationModal = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#2b1114]/70 backdrop-blur-sm p-3 sm:p-5"
     >
       <motion.div
-        initial={{ scale: 0.9, y: isMobile ? 100 : 50 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: isMobile ? 100 : 50 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className={`bg-white rounded-3xl shadow-2xl relative flex flex-col w-full max-w-lg 
-          ${isMobile ? "h-[95vh]" : "max-h-[90vh]"} overflow-hidden`}
+        initial={{
+          opacity: 0,
+          scale: 0.92,
+          y: isMobile ? 60 : 30,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
+        exit={{
+          opacity: 0,
+          scale: 0.92,
+          y: isMobile ? 60 : 30,
+        }}
+        transition={{
+          duration: 0.35,
+          ease: "easeOut",
+        }}
+        className={`relative flex flex-col w-full max-w-2xl overflow-hidden bg-[#fcfaf5] border border-[#dfd2c1] shadow-[0_30px_80px_rgba(61,20,20,0.3)] ${
+          isMobile ? "max-h-[94vh]" : "max-h-[90vh]"
+        }`}
       >
+        {/* Top accent */}
+        <div className="h-1 bg-[#76131d]" />
+
         {/* Header */}
-        <div className="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
-            📝 Confirm Your Order
-          </h2>
+        <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-[#e3d8c8]">
+          <div>
+            <p className="text-[9px] tracking-[0.35em] uppercase text-[#9a806f] mb-1">
+              Darsh Handlooms
+            </p>
+
+            <h2 className="font-serif text-xl sm:text-2xl text-[#351216]">
+              Confirm your order
+            </h2>
+          </div>
+
           <button
+            type="button"
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 transition"
+            aria-label="Close confirmation"
+            className="w-9 h-9 flex items-center justify-center border border-[#dfd2c1] text-[#765c52] hover:text-[#76131d] hover:border-[#76131d] transition-all duration-300"
           >
-            <X size={24} />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-            {cart.map((item) => (
-              <div
-                key={item._id}
-                className="flex items-center gap-4 p-2 rounded-xl border border-gray-100 hover:shadow-md transition"
-              >
-                <img
-                  src={`${url}/img/${item.imgSrc}`}
-                  alt={item.title}
-                  className="w-16 h-16 rounded-lg object-cover shadow-sm"
-                />
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-800 line-clamp-1">
-                    {item.title}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Qty: {item.qty} | Price: ₹{item.price}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-7 py-5 space-y-5">
+          {/* Products */}
+          <div>
+            <p className="text-[9px] tracking-[0.3em] uppercase text-[#977e73] mb-3">
+              Your selection
+            </p>
+
+            <div className="space-y-2">
+              {cart.map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center gap-3 p-2.5 border border-[#e6dccd] bg-white/60"
+                >
+                  <img
+                    src={`${url}/img/${item.imgSrc}`}
+                    alt={item.title}
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-cover"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-serif text-[#351216] text-sm sm:text-base truncate">
+                      {item.title}
+                    </p>
+
+                    <p className="text-[11px] text-[#8b746a] mt-1">
+                      Quantity: {item.qty}
+                    </p>
+                  </div>
+
+                  <p className="font-medium text-sm text-[#76131d]">
+                    ₹{item.price}
                   </p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Address */}
           {address && (
-            <div className="bg-white p-4 rounded-xl border border-gray-200 relative group hover:shadow-md transition cursor-pointer">
-              <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-500" />
-                Shipping to
-              </h4>
-              <div className="text-sm space-y-1">
-                <p className="font-semibold text-gray-800">
+            <div className="border border-[#dfd2c1] bg-white/60 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-serif text-lg text-[#351216] flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#c9a24a]" />
+                  Shipping address
+                </h4>
+
+                <Link
+                  to="/account?tab=2"
+                  onClick={() =>
+                    window.scrollTo({
+                      top: 0,
+                      left: 0,
+                      behavior: "smooth",
+                    })
+                  }
+                  className="text-[10px] tracking-[0.18em] uppercase text-[#76131d] hover:text-[#5d0e16]"
+                >
+                  Edit
+                </Link>
+              </div>
+
+              <div className="text-xs sm:text-sm text-[#765c52] space-y-1 leading-relaxed">
+                <p className="font-semibold text-[#351216]">
                   {address.FullName}
                 </p>
+
                 <p>{address.Address}</p>
+
                 <p>
                   {address.Add}, {address.VillorCity}, {address.Dist},{" "}
                   {address.State} {address.Pin}
                 </p>
-                <p className="text-gray-500">Ph: {address.Phone}</p>
+
+                <p>Phone: {address.Phone}</p>
               </div>
-              <Link
-                to="/account?tab=2"
-                 onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
-                className="absolute top-2 right-2 p-1 text-gray-600 rounded-full hover:bg-gray-200 transition"
-              >
-                <SquarePen size={16} />
-              </Link>
             </div>
           )}
 
-          {/* Detailed Summary */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-l-4 border-blue-500 shadow-sm">
-            <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <IndianRupee className="h-5 w-5" />
-              Order Summary
-            </h4>
-            
-            <div className="space-y-2 text-sm">
+          {/* Summary */}
+          <div className="border border-[#dfd2c1] bg-[#f7f0e4] p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <IndianRupee className="w-4 h-4 text-[#c9a24a]" />
+
+              <h4 className="font-serif text-lg text-[#351216]">
+                Order summary
+              </h4>
+            </div>
+
+            <div className="space-y-2.5 text-sm text-[#765c52]">
               <div className="flex justify-between">
-                <span>Subtotal ({cart.length} items)</span>
+                <span>Subtotal</span>
                 <span>₹{subtotal}</span>
               </div>
-              
+
               <div className="flex justify-between">
-                <span>Platform Charge</span>
+                <span>Platform charge</span>
                 <span>₹{platformCharge}</span>
               </div>
-              
+
               <div className="flex justify-between">
-                <span>Shipping Charge</span>
+                <span>Shipping</span>
                 <span>₹{shippingCharge}</span>
               </div>
-              
-              <div className="flex justify-between text-green-600">
+
+              <div className="flex justify-between text-green-700">
                 <span>Discount</span>
                 <span>-₹{discount}</span>
               </div>
-              
-              <div className="border-t border-gray-300 pt-2 mt-2">
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total Amount</span>
-                  <span className="text-indigo-600">₹{total}</span>
-                </div>
+
+              <div className="border-t border-[#d8cbb9] pt-3 mt-3 flex justify-between">
+                <span className="font-serif text-lg text-[#351216]">
+                  Total
+                </span>
+
+                <span className="font-semibold text-lg text-[#76131d]">
+                  ₹{total}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50 flex flex-col sm:flex-row gap-3 shrink-0">
+        <div className="border-t border-[#e3d8c8] p-4 sm:p-5 flex flex-col sm:flex-row gap-3 bg-[#faf6ee]">
           <button
+            type="button"
             onClick={onCancel}
-            className="w-full py-3 bg-slate-200 text-sm sm:text-base text-gray-600 rounded-xl hover:bg-gray-100 transition"
+            className="w-full py-3 border border-[#d8cbb9] text-[#765c52] text-xs tracking-[0.18em] uppercase hover:border-[#76131d] hover:text-[#76131d] transition-all duration-300"
           >
             Cancel
           </button>
+
           <button
+            type="button"
             onClick={onConfirm}
             disabled={loadingPayment}
-            className={`w-full py-3 rounded-xl font-semibold text-base sm:text-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+            className={`w-full py-3 text-xs tracking-[0.18em] uppercase transition-all duration-300 flex items-center justify-center gap-2 ${
               loadingPayment
-                ? "bg-blue-300 text-white cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:scale-105 shadow-lg"
+                ? "bg-[#c9a8a8] text-white cursor-not-allowed"
+                : "bg-[#76131d] text-white hover:bg-[#5d0e16] hover:-translate-y-0.5 shadow-lg"
             }`}
           >
             {loadingPayment ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Processing...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing
               </>
             ) : (
-              "Confirm & Pay"
+              <>
+                Confirm & Pay
+                <ArrowRight className="w-4 h-4" />
+              </>
             )}
           </button>
         </div>
@@ -187,60 +263,95 @@ const OrderConfirmationModal = ({
   );
 };
 
+/* =========================================================
+   ADDRESS REQUIRED SECTION
+   ========================================================= */
+
 const AddressSection = ({ onAddAddress }) => {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      initial={{ opacity: 0, y: 25 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6"
+      transition={{ duration: 0.5 }}
+      className="bg-[#fcfaf5] border border-[#dfd2c1] p-5 sm:p-6 mb-6 shadow-[0_15px_40px_rgba(89,50,40,0.08)]"
     >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-red-100 rounded-full">
-          <CircleAlert className="h-6 w-6 text-red-500" />
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-10 h-10 flex items-center justify-center bg-[#f4e3df] text-[#76131d]">
+          <CircleAlert className="w-5 h-5" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Shipping Address Required</h3>
+
+        <div>
+          <p className="text-[9px] tracking-[0.3em] uppercase text-[#977e73] mb-1">
+            Checkout
+          </p>
+
+          <h3 className="font-serif text-xl text-[#351216]">
+            Shipping address required
+          </h3>
+        </div>
       </div>
-      
-      <p className="text-gray-600 mb-6">
-        You need to add a shipping address before proceeding to checkout. This helps us deliver your order to the right place.
+
+      <p className="text-sm text-[#765c52] leading-6 mb-5">
+        Add your delivery address before placing your order. Your address is
+        used only for safe and accurate delivery.
       </p>
-      
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-xl border-l-4 border-red-400 mb-6">
+
+      <div className="border-l-2 border-[#c9a24a] bg-[#f8f0e3] p-4 mb-5">
         <div className="flex items-start gap-3">
-          <Navigation className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <Navigation className="w-4 h-4 text-[#c9a24a] mt-1 flex-shrink-0" />
+
           <div>
-            <h4 className="font-semibold text-red-700 mb-1">Why we need your address</h4>
-            <p className="text-sm text-red-600">
-              We need your complete address to estimate delivery time, calculate shipping charges, and ensure your order reaches you safely.
+            <p className="text-sm font-semibold text-[#5d0e16] mb-1">
+              Why we need it
+            </p>
+
+            <p className="text-xs sm:text-sm text-[#765c52] leading-5">
+              We need the complete address to process delivery and ensure your
+              handloom reaches you safely.
             </p>
           </div>
         </div>
       </div>
-      
+
       <button
+        type="button"
         onClick={onAddAddress}
-        className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+        className="w-full py-3.5 bg-[#76131d] text-white text-xs tracking-[0.2em] uppercase flex items-center justify-center gap-2 hover:bg-[#5d0e16] hover:-translate-y-0.5 shadow-lg transition-all duration-300"
       >
-        <Plus className="h-5 w-5" />
-        Add Shipping Address
+        <Plus className="w-4 h-4" />
+        Add shipping address
       </button>
-      
-      <p className="text-xs text-gray-500 mt-4 text-center">
-        Your address information is secure and will only be used for delivery purposes.
+
+      <p className="text-[10px] text-[#977e73] text-center mt-4">
+        Your information is kept secure.
       </p>
     </motion.div>
   );
 };
 
+/* =========================================================
+   CART PAGE
+   ========================================================= */
+
 const Cart = () => {
   const navigate = useNavigate();
-  const { cart: rawCart, getCart, token, address, user, url } = useAppContext();
+
+  const {
+    cart: rawCart,
+    getCart,
+    token,
+    address,
+    user,
+    url,
+  } = useAppContext();
+
   const cart = rawCart || [];
+
+  const isMobile = useMediaQuery({ maxWidth: 640 });
+
   const [showAddressWarning, setShowAddressWarning] = useState(false);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-
-  const isMobile = useMediaQuery({ maxWidth: 640 });
 
   const [notification, setNotification] = useState({
     message: "",
@@ -248,76 +359,152 @@ const Cart = () => {
     visible: false,
   });
 
+  /* -------------------------------------------------------
+     Notification
+  ------------------------------------------------------- */
+
   const showNotification = (message, type) => {
-    setNotification({ message, type, visible: true });
+    setNotification({
+      message,
+      type,
+      visible: true,
+    });
+
     setTimeout(() => {
-      setNotification((prev) => ({ ...prev, visible: false }));
+      setNotification((previous) => ({
+        ...previous,
+        visible: false,
+      }));
     }, 3000);
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+  /* -------------------------------------------------------
+     Price calculations
+  ------------------------------------------------------- */
+
+  const subtotal = cart.reduce(
+    (sum, item) => sum + Number(item.price || 0),
+    0
+  );
+
   const platformCharge = 0;
-  const discount = 0;
-  
-  // const shippingCharge = address?.State?.toLowerCase() === "west bengal" ? 10 : 20;
   const shippingCharge = 0;
-  
-  const total = subtotal + platformCharge + shippingCharge - discount;
-  
+  const discount = 0;
+
+  const total =
+    subtotal + platformCharge + shippingCharge - discount;
+
   const productCount = cart.length;
+
+  /* -------------------------------------------------------
+     Check stock
+  ------------------------------------------------------- */
 
   const checkProductAvailability = async () => {
     try {
-      if (cart.length > 0) {
-        let allProductsAvailable = true;
-        for (let i = 0; i < cart.length; i++) {
-          const response = await axios.get(
-            `${url}/api/product/${cart[i].productId}`
-          );
-          if (
-            response.data.success &&
-            cart[i].qty > response.data.product.stock
-          ) {
-            await axios.delete(
-              `${url}/api/cart/remove/${cart[i].productId}`,
-              { headers: { Auth: token } }
-            );
-            getCart();
-            showNotification(
-              `${cart[i].title} quantity reduced due to low stock.`,
-              'error'
-            );
-            allProductsAvailable = false;
-          }
-        }
-        return allProductsAvailable;
-      } else {
+      if (cart.length === 0) {
         return false;
       }
+
+      let allProductsAvailable = true;
+
+      for (let i = 0; i < cart.length; i += 1) {
+        const item = cart[i];
+
+        const response = await axios.get(
+          `${url}/api/product/${item.productId}`
+        );
+
+        if (
+          response.data &&
+          response.data.success &&
+          item.qty > response.data.product.stock
+        ) {
+          await axios.delete(
+            `${url}/api/cart/remove/${item.productId}`,
+            {
+              headers: {
+                Auth: token,
+              },
+            }
+          );
+
+          await getCart();
+
+          showNotification(
+            `${item.title} quantity reduced due to low stock.`,
+            "error"
+          );
+
+          allProductsAvailable = false;
+        }
+      }
+
+      return allProductsAvailable;
     } catch (error) {
-      console.log("Error checking product availability", error);
-      showNotification("Error checking product availability", 'error');
+      console.error(
+        "Error checking product availability:",
+        error
+      );
+
+      showNotification(
+        "Unable to check product availability.",
+        "error"
+      );
+
       return false;
     }
   };
 
+  /* -------------------------------------------------------
+     Remove item
+  ------------------------------------------------------- */
+
   const removeFromCart = async (productId) => {
     try {
-      if (!token) throw new Error("User not authenticated");
+      if (!token) {
+        throw new Error("User not authenticated");
+      }
+
       await axios.delete(
-         `${url}/api/cart/remove/${productId}`,
-        { headers: { Auth: token } }
+        `${url}/api/cart/remove/${productId}`,
+        {
+          headers: {
+            Auth: token,
+          },
+        }
       );
-      getCart();
-      showNotification("Item removed from cart successfully!", 'success');
+
+      await getCart();
+
+      showNotification(
+        "Item removed from your cart.",
+        "success"
+      );
     } catch (error) {
-      console.error("Error removing item from cart:", error);
-      showNotification("Failed to remove item", 'error');
+      console.error(
+        "Error removing item from cart:",
+        error
+      );
+
+      showNotification(
+        "Unable to remove item.",
+        "error"
+      );
     }
   };
 
+  /* -------------------------------------------------------
+     Checkout
+  ------------------------------------------------------- */
+
   const handleProceedToCheckout = () => {
-    if (address?.FullName && address?.Phone && cart.length > 0) {
+    if (
+      address &&
+      address.FullName &&
+      address.Phone &&
+      cart.length > 0
+    ) {
       setShowAddressWarning(false);
       setShowConfirmation(true);
     } else {
@@ -325,131 +512,234 @@ const Cart = () => {
     }
   };
 
+  /* -------------------------------------------------------
+     Add address
+     FIXED: navigate() only receives path + options
+  ------------------------------------------------------- */
+
   const handleAddAddress = () => {
-    navigate("/account?tab=2", { state: { scrollToAddress: true } },window.scrollTo(0, 0));
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+
+    navigate("/account?tab=2", {
+      state: {
+        scrollToAddress: true,
+      },
+    });
   };
+
+  /* -------------------------------------------------------
+     Payment
+  ------------------------------------------------------- */
 
   const handleConfirmAndPay = async () => {
     setLoadingPayment(true);
+
     try {
-      const productAvailable = await checkProductAvailability();
-      if (productAvailable) {
-        const transactionId = "T" + Date.now();
-        const MUID = "MUID" + Date.now();
-        const data = {
-          amount: total,
-          MUID,
-          transactionId,
-          cartItems: cart,
-          usershipping: address,
-          userId: user?.id || "124",
-        };
-        const orderResponse = await axios.post(
-          `${url}/api/phonepe/payment`,
-          data
-        );
-        if (orderResponse?.data?.redirectUrl) {
-          showNotification("Redirecting to PhonePe...", "warning");
-          window.location.href = orderResponse.data.redirectUrl;
-        } else {
-          showNotification(
-            "Redirecting user to PhonePe payment page...",
-            "warning"
-          );
-        }
-      } else {
+      const productAvailable =
+        await checkProductAvailability();
+
+      if (!productAvailable) {
         showNotification(
           "Some products are unavailable. Please refresh your cart.",
           "error"
         );
+
+        return;
+      }
+
+      const transactionId = `T${Date.now()}`;
+      const MUID = `MUID${Date.now()}`;
+
+      const data = {
+        amount: total,
+        MUID,
+        transactionId,
+        cartItems: cart,
+        usershipping: address,
+        userId: user && user.id ? user.id : "124",
+      };
+
+      const orderResponse = await axios.post(
+        `${url}/api/phonepe/payment`,
+        data
+      );
+
+      if (
+        orderResponse &&
+        orderResponse.data &&
+        orderResponse.data.redirectUrl
+      ) {
+        showNotification(
+          "Redirecting to PhonePe...",
+          "warning"
+        );
+
+        window.location.href =
+          orderResponse.data.redirectUrl;
+      } else {
+        showNotification(
+          "Unable to open payment page.",
+          "error"
+        );
       }
     } catch (error) {
-      console.error("Error in handlePayment:", error);
-      showNotification("Payment failed. Try again later.", "error");
+      console.error(
+        "Error in handlePayment:",
+        error
+      );
+
+      showNotification(
+        "Payment failed. Please try again.",
+        "error"
+      );
+
       navigate("/failure");
     } finally {
       setLoadingPayment(false);
-      setShowConfirmation(false); 
+      setShowConfirmation(false);
     }
   };
 
-  if (cart?.length === 0) {
+  /* =======================================================
+     EMPTY CART
+  ======================================================= */
+
+  if (cart.length === 0) {
     return (
-      <section
-        role="status"
-        aria-live="polite"
-        className="min-h-[90vh] flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-12"
-      >
-        <div className="w-full max-w-3xl mx-auto text-center">
-          <div className="mx-auto bg-white/70 backdrop-blur-lg rounded-full shadow-xl p-6 sm:p-8 mb-6 animate-bounce-slow w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
-            <ShoppingBag className="h-10 w-10 sm:h-16 sm:w-16 text-blue-500" />
-          </div>
+      <section className="min-h-[85vh] bg-[#f8f3e9] flex items-center justify-center px-4 py-16">
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.7,
+          }}
+          className="w-full max-w-xl text-center"
+        >
+          <motion.div
+            animate={{
+              y: [0, -8, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center border border-[#dfd2c1] bg-[#fcfaf5] shadow-[0_15px_40px_rgba(89,50,40,0.08)]"
+          >
+            <ShoppingBag
+              className="w-10 h-10 sm:w-12 sm:h-12 text-[#76131d]"
+              strokeWidth={1.2}
+            />
+          </motion.div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-800 mb-2 animate-fadeIn">
-            Your Cart is Empty
-          </h2>
-
-          <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-xl mx-auto animate-fadeIn delay-200">
-            Looks like you haven't added anything yet. Explore our collection and
-            add your favorites!
+          <p className="mt-8 text-[9px] tracking-[0.35em] uppercase text-[#977e73]">
+            Your collection
           </p>
 
-          <div className="flex justify-center">
-            <Link
-              to="/"
-              className="w-full sm:w-auto block text-center px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transform transition-all duration-300 font-semibold text-base sm:text-lg focus:outline-none focus:ring-4 focus:ring-blue-200"
-            >
-              Continue Shopping
-            </Link>
-          </div>
-        </div>
+          <h1 className="font-serif text-3xl sm:text-5xl text-[#351216] mt-2">
+            Your cart is empty
+          </h1>
+
+          <p className="text-sm sm:text-base text-[#765c52] leading-7 max-w-md mx-auto mt-4">
+            Your handpicked sarees will appear here once you find something
+            special.
+          </p>
+
+          <Link
+            to="/allproducts"
+            className="inline-flex items-center justify-center gap-2 mt-7 px-7 py-3.5 bg-[#76131d] text-white text-xs tracking-[0.2em] uppercase hover:bg-[#5d0e16] hover:-translate-y-0.5 shadow-lg transition-all duration-300"
+          >
+            Explore sarees
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </motion.div>
       </section>
     );
   }
 
+  /* =======================================================
+     MAIN CART
+  ======================================================= */
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 font-inter py-6 sm:py-8">
+    <div className="min-h-screen bg-[#f8f3e9] text-[#351216] py-8 sm:py-12">
+      {/* ---------------------------------------------------
+          Notification
+      --------------------------------------------------- */}
+
       <AnimatePresence>
         {notification.visible && (
           <motion.div
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 16, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed top-4 inset-x-0 z-50 flex justify-center px-4 sm:px-6"
+            initial={{
+              opacity: 0,
+              y: -30,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -30,
+            }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] w-[calc(100%-2rem)] max-w-md"
           >
             <div
-              className={`w-full max-w-[95%] sm:max-w-sm md:max-w-md lg:max-w-lg relative flex items-center gap-3 p-3 sm:p-4 rounded-xl shadow-lg border-l-4
-                ${notification.type === "success" ? "bg-green-50 border-green-400" : ""}
-                ${notification.type === "error" ? "bg-red-50 border-red-400" : ""}
-                ${notification.type === "warning" ? "bg-yellow-50 border-yellow-400" : ""}
-              `}
+              className={`flex items-center gap-3 px-4 py-3 border shadow-xl ${
+                notification.type === "success"
+                  ? "bg-[#f2f8f2] border-green-200"
+                  : notification.type === "error"
+                  ? "bg-[#fff4f3] border-red-200"
+                  : "bg-[#fff9ed] border-[#ead9a7]"
+              }`}
             >
-              <div className="flex-shrink-0">
-                {notification.type === "success" && <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />}
-                {notification.type === "error" && <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" />}
-                {notification.type === "warning" && <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />}
-              </div>
+              {notification.type === "success" && (
+                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+              )}
 
-              <div className="flex-1">
-                <p className="text-sm sm:text-base font-medium text-gray-900 break-words">
-                  {notification.message}
-                </p>
-              </div>
+              {notification.type === "error" && (
+                <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              )}
 
-              <div className="flex-shrink-0">
-                <motion.button
-                  onClick={() => setNotification({ ...notification, visible: false })}
-                  whileHover={{ rotate: 90 }}
-                  className="p-1 rounded-full text-gray-500 hover:bg-gray-100"
-                >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                </motion.button>
-              </div>
+              {notification.type === "warning" && (
+                <AlertCircle className="w-5 h-5 text-[#b3831f] flex-shrink-0" />
+              )}
+
+              <p className="flex-1 text-sm text-[#4d3631]">
+                {notification.message}
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setNotification({
+                    ...notification,
+                    visible: false,
+                  })
+                }
+                className="text-[#977e73] hover:text-[#76131d]"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ---------------------------------------------------
+          Confirmation Modal
+      --------------------------------------------------- */}
+
       <AnimatePresence>
         {showConfirmation && (
           <OrderConfirmationModal
@@ -461,236 +751,542 @@ const Cart = () => {
             discount={discount}
             address={address}
             onConfirm={handleConfirmAndPay}
-            onCancel={() => setShowConfirmation(false)}
+            onCancel={() =>
+              setShowConfirmation(false)
+            }
             loadingPayment={loadingPayment}
           />
         )}
       </AnimatePresence>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8 animate-fadeIn">
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 flex items-center gap-3">
-            <span>🛒</span> Shopping Cart
-            <span className="bg-blue-600 text-white text-base font-bold px-3 py-1 rounded-full">{productCount}</span>
-          </h1>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* -------------------------------------------------
+            Header
+        ------------------------------------------------- */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            {cart?.map((item, index) => (
-              <motion.div
-                key={item._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/30 p-4 sm:p-6 flex gap-4 hover:shadow-2xl transition-all duration-500 ${isMobile ? "flex-col items-center text-center" : "flex-row items-center"}`}
-              >
-                <Link
-                  to={`/productDetails/${item.productId}`}
-                  className={`flex-shrink-0 overflow-hidden rounded-xl group ${isMobile ? "w-40 h-40" : "w-36 h-36"}`}
-                >
-                  <img
-                    src={`${url}/img/${item.imgSrc}`}
-                    alt={item.title}
-                    className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110 shadow-md"
-                  />
-                </Link>
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="mb-8 sm:mb-10"
+        >
+          <p className="text-[9px] sm:text-[10px] tracking-[0.35em] uppercase text-[#977e73] mb-2">
+            Your selection
+          </p>
 
-                <div className={`flex-1 w-full space-y-2 ${isMobile ? "text-center" : "text-left"}`}>
-                  <Link
-                    to={`/productDetails/${item.productId}`}
-                    className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2"
-                  >
-                    {item.title}
-                  </Link>
-                  <div className={`flex items-center gap-2 text-sm text-gray-700 font-medium ${isMobile ? "justify-center" : ""}`}>
-                    <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                      Qty: <span className="text-blue-600 font-bold">{item.qty}</span>
-                    </span>
-                    {
-                      item.size && (
-                        <span className="bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-                          Size: <span className="text-blue-600 font-bold">{item.size}</span>
-                        </span>
-                      )
-                    }
-                    <span className="text-gray-500">
-                      (₹{item.price / item.qty} each)
-                    </span>
-                  </div>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <h1 className="font-serif text-3xl sm:text-5xl text-[#351216]">
+                Shopping bag
+              </h1>
 
-                <div className={`flex items-center gap-4 ${isMobile ? "flex-row justify-center mt-4" : "flex-col items-end sm:ml-auto w-auto"}`}>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">₹{item.price}</p>
+              <p className="text-sm text-[#765c52] mt-2">
+                {productCount}{" "}
+                {productCount === 1
+                  ? "saree"
+                  : "sarees"}{" "}
+                selected for you.
+              </p>
+            </div>
 
-                  <div className="flex items-center gap-2">
-                    <Link
-                      to={`/productDetails/${item.productId}`}
-                      className="p-3 rounded-full bg-white/70 text-blue-600 hover:bg-blue-100 transition-all transform hover:scale-110 shadow-md"
-                    >
-                      <SquarePen className="h-5 w-5" />
-                    </Link>
-                    <button
-                      onClick={() => removeFromCart(item.productId)}
-                      className="p-3 rounded-full bg-white/70 text-red-600 hover:bg-red-100 transition-all transform hover:scale-110 shadow-md"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            <Link
+              to="/allproducts"
+              className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase text-[#76131d] hover:text-[#5d0e16] transition-colors"
+            >
+              Continue browsing
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
+          <div className="w-full h-px bg-[#dfd2c1] mt-7" />
+        </motion.div>
+
+        {/* -------------------------------------------------
+            Main Grid
+        ------------------------------------------------- */}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+          {/* =================================================
+              CART ITEMS
+          ================================================= */}
+
+          <div className="lg:col-span-2 space-y-4">
+            {cart.map((item, index) => (
+              <motion.div
+                key={item._id}
+                initial={{
+                  opacity: 0,
+                  y: 25,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: index * 0.08,
+                  duration: 0.45,
+                }}
+                className="group relative bg-[#fcfaf5] border border-[#dfd2c1] p-3 sm:p-5 shadow-[0_10px_35px_rgba(89,50,40,0.05)] hover:shadow-[0_18px_45px_rgba(89,50,40,0.1)] transition-all duration-500"
+              >
+                <div
+                  className={`flex gap-4 sm:gap-6 ${
+                    isMobile
+                      ? "flex-col"
+                      : "flex-row items-center"
+                  }`}
+                >
+                  {/* Image */}
+
+                  <Link
+                    to={`/productDetails/${item.productId}`}
+                    onClick={() =>
+                      window.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "smooth",
+                      })
+                    }
+                    className={`relative flex-shrink-0 overflow-hidden bg-[#f3eadc] ${
+                      isMobile
+                        ? "w-full aspect-[4/3]"
+                        : "w-32 h-36 sm:w-40 sm:h-44"
+                    }`}
+                  >
+                    <img
+                      src={`${url}/img/${item.imgSrc}`}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#351216]/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </Link>
+
+                  {/* Information */}
+
+                  <div
+                    className={`flex-1 min-w-0 ${
+                      isMobile ? "text-center" : ""
+                    }`}
+                  >
+                    <p className="text-[9px] tracking-[0.25em] uppercase text-[#977e73] mb-2">
+                      Handloom collection
+                    </p>
+
+                    <Link
+                      to={`/productDetails/${item.productId}`}
+                      onClick={() =>
+                        window.scrollTo({
+                          top: 0,
+                          left: 0,
+                          behavior: "smooth",
+                        })
+                      }
+                      className="font-serif text-xl sm:text-2xl text-[#351216] hover:text-[#76131d] transition-colors line-clamp-2"
+                    >
+                      {item.title}
+                    </Link>
+
+                    <div
+                      className={`flex flex-wrap items-center gap-2 mt-3 ${
+                        isMobile
+                          ? "justify-center"
+                          : ""
+                      }`}
+                    >
+                      <span className="px-3 py-1 bg-[#f5ede1] border border-[#e1d5c4] text-[10px] tracking-[0.08em] text-[#765c52]">
+                        Qty:{" "}
+                        <span className="font-semibold text-[#76131d]">
+                          {item.qty}
+                        </span>
+                      </span>
+
+                      {item.size && (
+                        <span className="px-3 py-1 bg-[#f5ede1] border border-[#e1d5c4] text-[10px] tracking-[0.08em] text-[#765c52]">
+                          Size:{" "}
+                          <span className="font-semibold text-[#76131d]">
+                            {item.size}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-[#977e73] mt-3">
+                      ₹
+                      {Number(item.price || 0) /
+                        Number(item.qty || 1)}{" "}
+                      each
+                    </p>
+                  </div>
+
+                  {/* Price + Actions */}
+
+                  <div
+                    className={`flex ${
+                      isMobile
+                        ? "items-center justify-between"
+                        : "flex-col items-end"
+                    } gap-4`}
+                  >
+                    <p className="font-serif text-xl sm:text-2xl text-[#76131d]">
+                      ₹{item.price}
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/productDetails/${item.productId}`}
+                        onClick={() =>
+                          window.scrollTo({
+                            top: 0,
+                            left: 0,
+                            behavior: "smooth",
+                          })
+                        }
+                        aria-label={`Edit ${item.title}`}
+                        className="w-10 h-10 flex items-center justify-center border border-[#dfd2c1] text-[#765c52] hover:border-[#76131d] hover:text-[#76131d] hover:bg-[#f8f0e4] transition-all duration-300"
+                      >
+                        <SquarePen className="w-4 h-4" />
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removeFromCart(item.productId)
+                        }
+                        aria-label={`Remove ${item.title}`}
+                        className="w-10 h-10 flex items-center justify-center border border-[#e1caca] text-[#8f3038] hover:bg-[#f8eaea] hover:border-[#8f3038] transition-all duration-300"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hover gold line */}
+
+                <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-[#c9a24a] group-hover:w-full transition-all duration-700" />
+              </motion.div>
+            ))}
+
+            {/* Trust information */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.4,
+              }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3"
+            >
+              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
+                <Truck className="w-5 h-5 text-[#c9a24a]" />
+
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
+                    Shipping
+                  </p>
+
+                  <p className="text-[10px] text-[#977e73] mt-1">
+                    Safe delivery
+                  </p>
+                </div>
+              </div>
+
+              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-[#c9a24a]" />
+
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
+                    Authentic
+                  </p>
+
+                  <p className="text-[10px] text-[#977e73] mt-1">
+                    Handloom collection
+                  </p>
+                </div>
+              </div>
+
+              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-[#c9a24a]" />
+
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
+                    Curated
+                  </p>
+
+                  <p className="text-[10px] text-[#977e73] mt-1">
+                    Selected with care
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* =================================================
+              CHECKOUT SIDEBAR
+          ================================================= */}
+
           <div className="lg:col-span-1">
-            {!address?.FullName && (
-              <AddressSection onAddAddress={handleAddAddress} />
-            )}
-            
-            {address?.FullName && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 mb-6"
+            {/* Address */}
+
+            {!address || !address.FullName ? (
+              <AddressSection
+                onAddAddress={handleAddAddress}
+              />
+            ) : (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 25,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="bg-[#fcfaf5] border border-[#dfd2c1] p-5 sm:p-6 mb-6 shadow-[0_15px_40px_rgba(89,50,40,0.07)]"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-500" />
-                    Shipping Address
-                  </h3>
+                  <div>
+                    <p className="text-[9px] tracking-[0.25em] uppercase text-[#977e73] mb-1">
+                      Delivery
+                    </p>
+
+                    <h3 className="font-serif text-xl text-[#351216] flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-[#c9a24a]" />
+                      Shipping address
+                    </h3>
+                  </div>
+
                   <Link
                     to="/account?tab=2"
-                     onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                    onClick={() =>
+                      window.scrollTo({
+                        top: 0,
+                        left: 0,
+                        behavior: "smooth",
+                      })
+                    }
+                    className="text-[9px] tracking-[0.18em] uppercase text-[#76131d] hover:text-[#5d0e16]"
                   >
-                    <SquarePen className="h-4 w-4" />
                     Change
                   </Link>
                 </div>
-                
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                  <p className="font-semibold text-gray-800 mb-1">{address.FullName}</p>
-                  <p className="text-sm text-gray-600">{address.Address}</p>
-                  <p className="text-sm text-gray-600">
-                    {address.Add}, {address.VillorCity}, {address.Dist}, {address.State} {address.Pin}
+
+                <div className="bg-[#f8f0e4] border border-[#e3d5c3] p-4 text-sm text-[#765c52] leading-6">
+                  <p className="font-semibold text-[#351216]">
+                    {address.FullName}
                   </p>
-                  <p className="text-sm text-gray-600 mt-2">Phone: {address.Phone}</p>
+
+                  <p>{address.Address}</p>
+
+                  <p>
+                    {address.Add}, {address.VillorCity},{" "}
+                    {address.Dist}, {address.State}{" "}
+                    {address.Pin}
+                  </p>
+
+                  <p className="mt-2">
+                    Phone: {address.Phone}
+                  </p>
                 </div>
               </motion.div>
             )}
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/40 animate-fadeIn"
+            {/* Order Summary */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 25,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.15,
+              }}
+              className="bg-[#fcfaf5] border border-[#dfd2c1] p-5 sm:p-6 shadow-[0_15px_40px_rgba(89,50,40,0.07)]"
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">
-                Order Summary
-              </h3>
-              
-              <div className="space-y-3 mb-4 text-gray-700">
-                <div className="flex justify-between">
-                  <span>Subtotal ({productCount} items)</span>
-                  <span className="font-semibold text-gray-900">₹{subtotal}</span>
+              <div className="flex items-end justify-between border-b border-[#dfd2c1] pb-4 mb-5">
+                <div>
+                  <p className="text-[9px] tracking-[0.3em] uppercase text-[#977e73] mb-1">
+                    Your order
+                  </p>
+
+                  <h3 className="font-serif text-2xl text-[#351216]">
+                    Summary
+                  </h3>
                 </div>
-                
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex justify-between"
-                >
-                  <span>Platform Charge</span>
+
+                <span className="text-[10px] text-[#977e73]">
+                  {productCount} items
+                </span>
+              </div>
+
+              <div className="space-y-3 text-sm text-[#765c52]">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="text-[#351216]">
+                    ₹{subtotal}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span>Platform charge</span>
                   <span>₹{platformCharge}</span>
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="flex justify-between"
-                >
-                  <span>Shipping Charge</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+
                   <span>
                     ₹{shippingCharge}
-                    {address?.State && (
-                      <span className="text-xs text-gray-500 ml-1">
+
+                    {address && address.State && (
+                      <span className="text-[10px] text-[#977e73] ml-1">
                         ({address.State})
                       </span>
                     )}
                   </span>
-                </motion.div>
-                
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex justify-between text-green-600"
-                >
+                </div>
+
+                <div className="flex justify-between text-green-700">
                   <span>Discount</span>
                   <span>-₹{discount}</span>
-                </motion.div>
-                
-                <div className="border-t border-gray-300 pt-3 mt-2">
-                  <div className="flex justify-between font-bold text-xl text-gray-900">
-                    <span>Total</span>
-                    <motion.span 
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500 }}
-                      className="text-indigo-600"
-                    >
-                      ₹{total}
-                    </motion.span>
-                  </div>
                 </div>
               </div>
 
-              {showAddressWarning && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-red-100/80 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md animate-shake"
-                >
-                  <CircleAlert className="h-5 w-5 inline mr-2" />
-                  Please add a <span className="font-semibold">shipping address</span>.
-                </motion.div>
-              )}
+              {/* Total */}
+
+              <div className="border-t border-[#dfd2c1] mt-5 pt-5">
+                <div className="flex justify-between items-center">
+                  <span className="font-serif text-xl text-[#351216]">
+                    Total
+                  </span>
+
+                  <motion.span
+                    initial={{
+                      scale: 0.9,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      scale: 1,
+                      opacity: 1,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 250,
+                    }}
+                    className="font-serif text-2xl text-[#76131d]"
+                  >
+                    ₹{total}
+                  </motion.span>
+                </div>
+              </div>
+
+              {/* Warning */}
+
+              <AnimatePresence>
+                {showAddressWarning && (
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      height: 0,
+                      y: -5,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      height: "auto",
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      height: 0,
+                    }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-5 border-l-2 border-[#76131d] bg-[#f8eaea] p-3 text-sm text-[#76131d] flex items-start gap-2">
+                      <CircleAlert className="w-4 h-4 mt-0.5 flex-shrink-0" />
+
+                      <p>
+                        Please add a shipping address before
+                        checkout.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Checkout */}
 
               <motion.button
-                whileHover={{ scale: address?.FullName ? 1.03 : 1 }}
-                whileTap={{ scale: address?.FullName ? 0.97 : 1 }}
+                type="button"
+                whileHover={
+                  address && address.FullName
+                    ? { y: -2 }
+                    : {}
+                }
+                whileTap={
+                  address && address.FullName
+                    ? { scale: 0.98 }
+                    : {}
+                }
                 onClick={handleProceedToCheckout}
-                disabled={!address?.FullName}
-                className={`w-full py-3 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg transition-all duration-300 ${
-                  address?.FullName 
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl" 
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                className={`w-full mt-6 py-3.5 flex items-center justify-center gap-2 text-xs tracking-[0.2em] uppercase transition-all duration-300 ${
+                  address && address.FullName
+                    ? "bg-[#76131d] text-white hover:bg-[#5d0e16] shadow-lg hover:shadow-xl"
+                    : "bg-[#e2dcd3] text-[#8f8178] cursor-not-allowed"
                 }`}
               >
-                {address?.FullName ? (
+                {address && address.FullName ? (
                   <>
-                    
-                    Proceed to Checkout
+                    Proceed to checkout
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
-                  "Add Address First"
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    Add address first
+                  </>
                 )}
               </motion.button>
 
+              {/* Continue shopping */}
+
               <Link
-                to="/"
-                className="block text-center text-blue-600 hover:text-blue-800 mt-4 font-medium transition-colors"
+                to="/allproducts"
+                className="w-full mt-4 flex items-center justify-center gap-2 py-3 border border-[#dfd2c1] text-[#765c52] text-[10px] tracking-[0.18em] uppercase hover:border-[#76131d] hover:text-[#76131d] transition-all duration-300"
               >
-                Continue Shopping
+                Continue shopping
               </Link>
             </motion.div>
-            
+
+            {/* Important Notice */}
+
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              initial={{
+                opacity: 0,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.3,
+              }}
+              className="mt-5"
             >
               <ImportantNotice />
             </motion.div>

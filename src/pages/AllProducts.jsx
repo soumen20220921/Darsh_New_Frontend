@@ -1,51 +1,79 @@
-import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context/AppContext.jsx";
 import ProductCard from "../components/ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Search,
-  Filter,
   X,
-  ArrowLeft,
   ChevronDown,
   RotateCcw,
   CheckCircle,
   PackageCheck,
   PackageX,
-  Sparkles,
-  Blocks,
+  SlidersHorizontal,
+  ArrowUpRight,
 } from "lucide-react";
 
+
+/* =========================================================
+   CATEGORIES
+========================================================= */
+
 const ALL_CATEGORIES = [
-  "all",
-  "saree",
-  "blouse",
-  "men",
-  "kids",
-  "jewellery",
-  "acceceries",
-  "home decor",
-  "footwear",
-  "beauty",
-  "electronics",
-  "others",
-  
+"Bridal collection",
+    "Kanthastitch",
+    "Saraswati Pujo Special",
+    "Pure Silk Replica",
+    "Pure Silk",
+    "Fancy Saree",
+    "All saree",
 ];
 
+
+/* =========================================================
+   MAIN COMPONENT
+========================================================= */
+
 const AllProducts = () => {
-  const navigate = useNavigate();
+
   const { allProduct, url } = useAppContext();
 
+
+  /* =======================================================
+     STATES
+  ======================================================= */
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("default");
-  const [priceRange, setPriceRange] = useState([0, 3000]);
-  const [stockStatus, setStockStatus] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [openSection, setOpenSection] = useState("price");
+
+  const [sortBy, setSortBy] =
+    useState("default");
+
+  const [priceRange, setPriceRange] =
+    useState([0, 3000]);
+
+  const [stockStatus, setStockStatus] =
+    useState("all");
+
+  const [selectedCategory, setSelectedCategory] =
+    useState("all");
+
+  const [selectedSubCategory, setSelectedSubCategory] =
+    useState("all");
+
+  const [showFilters, setShowFilters] =
+    useState(false);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [openSection, setOpenSection] =
+    useState("price");
+
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
 
   useEffect(() => {
     if (allProduct) {
@@ -53,58 +81,134 @@ const AllProducts = () => {
     }
   }, [allProduct]);
 
-  // Extract unique subCategories for selected category
+
+  /* =======================================================
+     SUB CATEGORIES
+  ======================================================= */
+
   const availableSubCategories = useMemo(() => {
     if (!allProduct) return [];
-    if (selectedCategory === "all") return [];
+
+    if (selectedCategory === "all") {
+      return [];
+    }
 
     const subs = [
       ...new Set(
         allProduct
-          .filter((p) => p.category === selectedCategory)
-          .map((p) => p.subCategory || "other")
+          .filter(
+            (product) =>
+              product.category === selectedCategory
+          )
+          .map(
+            (product) =>
+              product.subCategory || "other"
+          )
       ),
     ];
-    return ["all", ...subs];
-  }, [allProduct, selectedCategory]);
 
-  // Filtering logic
+    return ["all", ...subs];
+  }, [
+    allProduct,
+    selectedCategory,
+  ]);
+
+
+  /* =======================================================
+     FILTERING
+  ======================================================= */
+
   const filteredProducts = useMemo(() => {
-    let products = allProduct || [];
+    let products = [...(allProduct || [])];
+
+
+    /* Category */
 
     if (selectedCategory !== "all") {
-      products = products.filter((p) => p.category === selectedCategory);
-    }
-
-    if (selectedSubCategory !== "all") {
-      products = products.filter((p) => p.subCategory === selectedSubCategory);
-    }
-
-    if (searchQuery) {
-      products = products.filter((p) =>
-        p.productName.toLowerCase().includes(searchQuery.toLowerCase())
+      products = products.filter(
+        (product) =>
+          product.category === selectedCategory
       );
     }
 
+
+    /* Subcategory */
+
+    if (selectedSubCategory !== "all") {
+      products = products.filter(
+        (product) =>
+          product.subCategory ===
+          selectedSubCategory
+      );
+    }
+
+
+    /* Search */
+
+    if (searchQuery.trim()) {
+      const query =
+        searchQuery.toLowerCase().trim();
+
+      products = products.filter(
+        (product) =>
+          product.productName
+            ?.toLowerCase()
+            .includes(query)
+      );
+    }
+
+
+    /* Price */
+
     products = products.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+      (product) =>
+        product.price >= priceRange[0] &&
+        product.price <= priceRange[1]
     );
 
+
+    /* Stock */
+
     if (stockStatus === "inStock") {
-      products = products.filter((p) => p.stock > 0);
-    } else if (stockStatus === "outOfStock") {
-      products = products.filter((p) => !p.stock || p.stock === 0);
+      products = products.filter(
+        (product) => product.stock > 0
+      );
     }
+
+    if (stockStatus === "outOfStock") {
+      products = products.filter(
+        (product) =>
+          !product.stock ||
+          product.stock === 0
+      );
+    }
+
+
+    /* Sorting */
 
     if (sortBy === "priceLowHigh") {
-      products.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "priceHighLow") {
-      products.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "newest") {
-      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      products.sort(
+        (a, b) => a.price - b.price
+      );
     }
 
+    if (sortBy === "priceHighLow") {
+      products.sort(
+        (a, b) => b.price - a.price
+      );
+    }
+
+    if (sortBy === "newest") {
+      products.sort(
+        (a, b) =>
+          new Date(b.createdAt) -
+          new Date(a.createdAt)
+      );
+    }
+
+
     return products;
+
   }, [
     allProduct,
     searchQuery,
@@ -114,6 +218,11 @@ const AllProducts = () => {
     selectedCategory,
     selectedSubCategory,
   ]);
+
+
+  /* =======================================================
+     RESET
+  ======================================================= */
 
   const handleResetFilters = () => {
     setSearchQuery("");
@@ -125,204 +234,631 @@ const AllProducts = () => {
     setShowFilters(false);
   };
 
-  const handleApplyFilters = () => {
-    setShowFilters(false);
+
+  /* =======================================================
+     FILTER SECTION
+  ======================================================= */
+
+  const FilterSection = ({
+    id,
+    title,
+    children,
+  }) => {
+    const isOpen =
+      openSection === id;
+
+    return (
+      <div
+        className="
+          border-b
+          border-[#741522]/10
+          pb-5
+          mb-5
+        "
+      >
+
+        <button
+          type="button"
+          onClick={() =>
+            setOpenSection(
+              isOpen ? "" : id
+            )
+          }
+          className="
+            w-full
+            flex
+            items-center
+            justify-between
+            text-left
+          "
+        >
+
+          <span
+            className="
+              text-[9px]
+              tracking-[0.22em]
+              uppercase
+              text-[#4b2929]
+            "
+          >
+            {title}
+          </span>
+
+          <ChevronDown
+            size={15}
+            strokeWidth={1}
+            className={`
+              text-[#741522]
+              transition-transform
+              duration-300
+              ${isOpen ? "rotate-180" : ""}
+            `}
+          />
+
+        </button>
+
+
+        <AnimatePresence initial={false}>
+
+          {isOpen && (
+            <motion.div
+              initial={{
+                height: 0,
+                opacity: 0,
+              }}
+              animate={{
+                height: "auto",
+                opacity: 1,
+              }}
+              exit={{
+                height: 0,
+                opacity: 0,
+              }}
+              transition={{
+                duration: 0.3,
+              }}
+              className="
+                overflow-hidden
+                mt-5
+              "
+            >
+              {children}
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+
+      </div>
+    );
   };
 
-  const FilterSection = ({ id, title, children }) => (
-    <div className="border-b pb-3 mb-3">
-      <button
-        className="flex justify-between items-center w-full text-left font-medium text-gray-700"
-        onClick={() => setOpenSection(openSection === id ? "" : id)}
-      >
-        {title}
-        <ChevronDown
-          className={`w-5 h-5 transition-transform ${
-            openSection === id ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <AnimatePresence>
-        {openSection === id && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mt-3 text-sm text-gray-600 space-y-2"
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+
+  /* =======================================================
+     LOADING SCREEN
+  ======================================================= */
 
   if (isLoading) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-gray-700 animate-pulse">
-          Loading products...
-        </p>
+      <div
+        className="
+          min-h-screen
+          bg-[#f8f4eb]
+          flex
+          items-center
+          justify-center
+        "
+      >
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="text-center"
+        >
+
+          <div
+            className="
+              font-serif
+              text-[32px]
+              tracking-[0.25em]
+              text-[#741522]
+            "
+          >
+            DARSH
+          </div>
+
+          <div
+            className="
+              mt-4
+              w-20
+              h-px
+              mx-auto
+              bg-[#d4ad54]
+            "
+          />
+
+          <p
+            className="
+              mt-4
+              text-[8px]
+              tracking-[0.35em]
+              uppercase
+              text-[#806c63]
+              animate-pulse
+            "
+          >
+            Loading the collection
+          </p>
+
+        </motion.div>
+
       </div>
     );
   }
 
+
+  /* =======================================================
+     MAIN
+  ======================================================= */
+
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <motion.div
-        className="relative h-60 md:h-80 rounded-b-3xl mb-10 overflow-hidden"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8 }}
+    <main
+      className="
+        min-h-screen
+        bg-[#f8f4eb]
+        text-[#3f1616]
+        overflow-hidden
+      "
+    >
+
+
+      {/* ===================================================
+          HEADER / SHOP INTRO
+      =================================================== */}
+
+      <section
+        className="
+          relative
+          border-b
+          border-[#741522]/10
+        "
       >
-        <img
-          src="./IMG/all.png"
-          alt="All Products"
-          className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center text-white px-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 bg-white/20 hover:bg-white/40 backdrop-blur-md p-2 rounded-full transition"
-          >
-            <ArrowLeft className="w-6 h-6 text-white" />
-          </button>
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 flex items-center gap-2 animate-fade-in-down">
-            <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-            All Products
-          </h1>
-          <p className="text-lg">Discover our entire collection</p>
-        </div>
-      </motion.div>
 
-      {/* Category Tabs */}
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
-        <motion.div
-          className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+        <div
+          className="
+            max-w-[1180px]
+            mx-auto
+            px-5
+            sm:px-8
+            lg:px-10
+            pt-16
+            sm:pt-20
+            lg:pt-24
+            pb-10
+          "
         >
-          {ALL_CATEGORIES.map((category) => (
-            <motion.button
-              key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                setSelectedSubCategory("all");
-              }}
-              className={`
-                flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap transition-all duration-300
-                ${
-                  selectedCategory === category
-                    ? "bg-white text-gray-800 border-2 border-indigo-500 shadow-lg"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              whileHover={{ scale: 1.05, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {category}
-            </motion.button>
-          ))}
-        </motion.div>
-      </div>
 
-      {/* Subcategory Tabs */}
-      {selectedCategory !== "all" && availableSubCategories.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-          <motion.h3
-            className="text-center text-lg md:text-xl font-bold text-gray-800 mb-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-          >
-            Explore {selectedCategory}
-          </motion.h3>
           <motion.div
-            className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100 scrollbar-thumb-rounded-full"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.4 }}
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.8,
+              ease: [
+                0.22,
+                1,
+                0.36,
+                1,
+              ],
+            }}
           >
-            {availableSubCategories.map((sub) => (
-              <motion.button
-                key={sub}
-                onClick={() => setSelectedSubCategory(sub)}
-                className={`
-                  flex-shrink-0 px-5 py-1.5 rounded-full font-medium text-xs capitalize transition-all duration-300
-                  ${
-                    selectedSubCategory === sub
-                      ? "bg-indigo-600 text-white shadow-md"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {sub}
-              </motion.button>
-            ))}
-          </motion.div>
-        </div>
-      )}
-      {/* Filters + Products */}
-      <div className="flex flex-col md:flex-row gap-6 px-4 md:px-10">
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              className="fixed inset-0 bg-black/40 z-30 md:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowFilters(false)}
-            />
-          )}
-        </AnimatePresence>
 
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              className="fixed left-0 top-0 h-full w-full max-w-sm z-40 bg-white p-6 overflow-y-auto rounded-r-2xl md:hidden"
-              initial={{ x: -300 }}
-              animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: "spring", stiffness: 120 }}
+            {/* Eyebrow */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+                mb-5
+              "
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-700">Filters</h3>
-                <X
-                  className="w-6 h-6 cursor-pointer"
-                  onClick={() => setShowFilters(false)}
-                />
+
+              <span
+                className="
+                  w-7
+                  h-px
+                  bg-[#d4ad54]
+                "
+              />
+
+              <span
+                className="
+                  text-[8px]
+                  tracking-[0.4em]
+                  uppercase
+                  text-[#977e73]
+                "
+              >
+                THE SHOP
+              </span>
+
+            </div>
+
+
+            {/* Heading */}
+
+            <h1
+              className="
+                font-serif
+                font-normal
+                text-[#3f1616]
+                text-[42px]
+                sm:text-[52px]
+                md:text-[60px]
+                leading-[1.05]
+                tracking-[-0.025em]
+              "
+            >
+              Every saree,
+              <span className="italic">
+                {" "}one place.
+              </span>
+            </h1>
+
+
+            {/* Description */}
+
+            <p
+              className="
+                mt-5
+                max-w-[560px]
+                text-[10px]
+                sm:text-[12px]
+                leading-6
+                text-[#806c63]
+              "
+            >
+              Explore our complete collection
+              of handpicked sarees and
+              handcrafted pieces. Each weave
+              carries its own story, texture and
+              character.
+            </p>
+
+          </motion.div>
+
+
+          {/* =================================================
+              CATEGORY TABS
+          ================================================= */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 15,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.25,
+              duration: 0.6,
+            }}
+            className="
+              mt-8
+              flex
+              gap-2
+              overflow-x-auto
+              pb-2
+              scrollbar-hide
+            "
+          >
+
+            {ALL_CATEGORIES.map(
+              (category) => {
+
+                const active =
+                  selectedCategory ===
+                  category;
+
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(
+                        category
+                      );
+
+                      setSelectedSubCategory(
+                        "all"
+                      );
+                    }}
+                    className={`
+                      shrink-0
+                      px-5
+                      py-2.5
+                      border
+                      text-[8px]
+                      tracking-[0.22em]
+                      uppercase
+                      transition-all
+                      duration-300
+                      ${
+                        active
+                          ? `
+                            bg-[#741522]
+                            text-[#f8f4eb]
+                            border-[#741522]
+                          `
+                          : `
+                            bg-transparent
+                            text-[#6f5b53]
+                            border-[#741522]/15
+                            hover:border-[#741522]/40
+                            hover:text-[#741522]
+                          `
+                      }
+                    `}
+                  >
+                    {category}
+                  </button>
+                );
+              }
+            )}
+
+          </motion.div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================================
+          SUBCATEGORY
+      =================================================== */}
+
+      <AnimatePresence>
+
+        {selectedCategory !== "all" &&
+          availableSubCategories.length >
+            0 && (
+
+            <motion.section
+              initial={{
+                opacity: 0,
+                height: 0,
+              }}
+              animate={{
+                opacity: 1,
+                height: "auto",
+              }}
+              exit={{
+                opacity: 0,
+                height: 0,
+              }}
+              className="
+                border-b
+                border-[#741522]/10
+                overflow-hidden
+              "
+            >
+
+              <div
+                className="
+                  max-w-[1180px]
+                  mx-auto
+                  px-5
+                  sm:px-8
+                  lg:px-10
+                  py-5
+                "
+              >
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-4
+                    overflow-x-auto
+                    scrollbar-hide
+                  "
+                >
+
+                  <span
+                    className="
+                      shrink-0
+                      text-[7px]
+                      tracking-[0.25em]
+                      uppercase
+                      text-[#977e73]
+                    "
+                  >
+                    {selectedCategory}
+                  </span>
+
+
+                  <span
+                    className="
+                      w-px
+                      h-4
+                      bg-[#741522]/15
+                    "
+                  />
+
+
+                  {availableSubCategories.map(
+                    (sub) => {
+
+                      const active =
+                        selectedSubCategory ===
+                        sub;
+
+                      return (
+                        <button
+                          key={sub}
+                          type="button"
+                          onClick={() =>
+                            setSelectedSubCategory(
+                              sub
+                            )
+                          }
+                          className={`
+                            shrink-0
+                            text-[8px]
+                            uppercase
+                            tracking-[0.16em]
+                            transition-colors
+                            ${
+                              active
+                                ? "text-[#741522]"
+                                : "text-[#806c63] hover:text-[#741522]"
+                            }
+                          `}
+                        >
+                          {sub}
+                        </button>
+                      );
+                    }
+                  )}
+
+                </div>
+
               </div>
 
-              {/* Accordion Filters */}
-              <FilterSection id="price" title="Price Range">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min="0"
-                      max="3000"
-                      step="100"
-                      value={priceRange[0]}
-                      onChange={(e) =>
-                        setPriceRange([Number(e.target.value), priceRange[1]])
-                      }
-                      className="w-20 border rounded-lg px-2 py-1 text-sm"
-                    />
-                    <span className="text-gray-500">-</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="3000"
-                      step="100"
-                      value={priceRange[1]}
-                      onChange={(e) =>
-                        setPriceRange([priceRange[0], Number(e.target.value)])
-                      }
-                      className="w-20 border rounded-lg px-2 py-1 text-sm"
-                    />
+            </motion.section>
+
+          )}
+
+      </AnimatePresence>
+
+
+      {/* ===================================================
+          PRODUCTS AREA
+      =================================================== */}
+
+      <section
+        className="
+          max-w-[1180px]
+          mx-auto
+          px-5
+          sm:px-8
+          lg:px-10
+          py-12
+          sm:py-14
+          lg:py-16
+        "
+      >
+
+        <div
+          className="
+            flex
+            flex-col
+            lg:flex-row
+            gap-10
+          "
+        >
+
+
+          {/* =================================================
+              DESKTOP FILTER
+          ================================================= */}
+
+          <aside
+            className="
+              hidden
+              lg:block
+              w-[235px]
+              shrink-0
+            "
+          >
+
+            <div
+              className="
+                sticky
+                top-24
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  mb-7
+                "
+              >
+
+                <h2
+                  className="
+                    font-serif
+                    text-[22px]
+                    text-[#3f1616]
+                  "
+                >
+                  Refine
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="
+                    text-[7px]
+                    tracking-[0.18em]
+                    uppercase
+                    text-[#977e73]
+                    hover:text-[#741522]
+                    transition-colors
+                  "
+                >
+                  Reset
+                </button>
+
+              </div>
+
+
+              {/* PRICE */}
+
+              <FilterSection
+                id="priceDesktop"
+                title="Price Range"
+              >
+
+                <div className="space-y-4">
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      text-[10px]
+                      text-[#806c63]
+                    "
+                  >
+
+                    <span>
+                      ₹{priceRange[0]}
+                    </span>
+
+                    <span>
+                      ₹{priceRange[1]}
+                    </span>
+
                   </div>
+
+
                   <input
                     type="range"
                     min="0"
@@ -330,253 +866,1222 @@ const AllProducts = () => {
                     step="100"
                     value={priceRange[1]}
                     onChange={(e) =>
-                      setPriceRange([priceRange[0], Number(e.target.value)])
+                      setPriceRange([
+                        priceRange[0],
+                        Number(
+                          e.target.value
+                        ),
+                      ])
                     }
-                    className="w-full mt-3"
+                    className="
+                      w-full
+                      accent-[#741522]
+                    "
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    ₹{priceRange[0]} - ₹{priceRange[1]}
-                  </p>
+
                 </div>
+
               </FilterSection>
 
-              <FilterSection id="stock" title="Availability">
-                <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="all"
-                    checked={stockStatus === "all"}
-                    onChange={() => setStockStatus("all")}
+
+              {/* AVAILABILITY */}
+
+              <FilterSection
+                id="stockDesktop"
+                title="Availability"
+              >
+
+                <div className="space-y-3">
+
+                  <StockRadio
+                    name="desktop-stock"
+                    checked={
+                      stockStatus ===
+                      "all"
+                    }
+                    onChange={() =>
+                      setStockStatus("all")
+                    }
+                    label="All pieces"
                   />
-                  <span className="text-sm text-gray-600">All</span>
-                </label>
-                <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="inStock"
-                    checked={stockStatus === "inStock"}
-                    onChange={() => setStockStatus("inStock")}
+
+
+                  <StockRadio
+                    name="desktop-stock"
+                    checked={
+                      stockStatus ===
+                      "inStock"
+                    }
+                    onChange={() =>
+                      setStockStatus(
+                        "inStock"
+                      )
+                    }
+                    label="In stock"
+                    icon={
+                      <PackageCheck
+                        size={13}
+                      />
+                    }
                   />
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <PackageCheck className="w-4 h-4 text-green-500" /> In Stock
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="outOfStock"
-                    checked={stockStatus === "outOfStock"}
-                    onChange={() => setStockStatus("outOfStock")}
+
+
+                  <StockRadio
+                    name="desktop-stock"
+                    checked={
+                      stockStatus ===
+                      "outOfStock"
+                    }
+                    onChange={() =>
+                      setStockStatus(
+                        "outOfStock"
+                      )
+                    }
+                    label="Out of stock"
+                    icon={
+                      <PackageX
+                        size={13}
+                      />
+                    }
                   />
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <PackageX className="w-4 h-4 text-red-500" /> Out of Stock
-                  </span>
-                </label>
+
+                </div>
+
               </FilterSection>
 
-              <FilterSection id="sort" title="Sort By">
+
+              {/* SORT */}
+
+              <FilterSection
+                id="sortDesktop"
+                title="Sort By"
+              >
+
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) =>
+                    setSortBy(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    h-10
+                    px-3
+                    bg-transparent
+                    border
+                    border-[#741522]/15
+                    outline-none
+                    text-[9px]
+                    text-[#5e4941]
+                    focus:border-[#741522]
+                  "
                 >
-                  <option value="default">Default</option>
-                  <option value="priceLowHigh">Price: Low → High</option>
-                  <option value="priceHighLow">Price: High → Low</option>
-                  <option value="newest">Newest</option>
+
+                  <option value="default">
+                    Recommended
+                  </option>
+
+                  <option value="priceLowHigh">
+                    Price: Low → High
+                  </option>
+
+                  <option value="priceHighLow">
+                    Price: High → Low
+                  </option>
+
+                  <option value="newest">
+                    Newest First
+                  </option>
+
                 </select>
+
               </FilterSection>
 
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleResetFilters}
-                  className="flex-1 px-4 py-2 flex items-center justify-center gap-2 border rounded-xl text-gray-600 hover:bg-gray-100"
-                >
-                  <RotateCcw className="w-4 h-4" /> Reset
-                </button>
-                <button
-                  onClick={handleApplyFilters}
-                  className="flex-1 px-4 py-2 flex items-center justify-center gap-2 bg-indigo-500 text-white rounded-xl shadow hover:bg-indigo-600"
-                >
-                  <CheckCircle className="w-4 h-4" /> Apply
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* Desktop Filters */}
-        <motion.div
-          className="hidden md:block md:w-1/4 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 h-fit sticky top-4"
-          initial={{ x: -40, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-        >
-          <h3 className="text-lg font-semibold text-indigo-600 mb-4">
-            Filters
-          </h3>
-          <FilterSection id="priceDesktop" title="Price Range">
-            <input
-              type="range"
-              min="0"
-              max="3000"
-              step="100"
-              value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([priceRange[0], Number(e.target.value)])
-              }
-              className="w-full accent-indigo-500"
-            />
-            <p>
-              ₹{priceRange[0]} - ₹{priceRange[1]}
-            </p>
-          </FilterSection>
-          <FilterSection id="stockDesktop" title="Availability">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="all"
-                checked={stockStatus === "all"}
-                onChange={() => setStockStatus("all")}
-              />
-              All
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="inStock"
-                checked={stockStatus === "inStock"}
-                onChange={() => setStockStatus("inStock")}
-              />
-              <PackageCheck className="w-4 h-4 text-green-500" /> In Stock
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="outOfStock"
-                checked={stockStatus === "outOfStock"}
-                onChange={() => setStockStatus("outOfStock")}
-              />
-              <PackageX className="w-4 h-4 text-red-500" /> Out of Stock
-            </label>
-          </FilterSection>
-          <FilterSection id="sortDesktop" title="Sort By">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500"
+              {/* FILTER SUMMARY */}
+
+              <div
+                className="
+                  mt-7
+                  pt-6
+                  border-t
+                  border-[#741522]/10
+                "
+              >
+
+                <p
+                  className="
+                    text-[8px]
+                    tracking-[0.15em]
+                    uppercase
+                    text-[#977e73]
+                  "
+                >
+                  SHOWING
+                </p>
+
+                <p
+                  className="
+                    font-serif
+                    text-[26px]
+                    text-[#741522]
+                    mt-1
+                  "
+                >
+                  {filteredProducts.length}
+                </p>
+
+                <p
+                  className="
+                    text-[9px]
+                    text-[#806c63]
+                  "
+                >
+                  pieces in this collection
+                </p>
+
+              </div>
+
+            </div>
+
+          </aside>
+
+
+          {/* =================================================
+              PRODUCTS
+          ================================================= */}
+
+          <div className="flex-1 min-w-0">
+
+
+            {/* ===============================================
+                TOOLBAR
+            =============================================== */}
+
+            <div
+              className="
+                flex
+                flex-col
+                sm:flex-row
+                sm:items-center
+                justify-between
+                gap-4
+                mb-7
+              "
             >
-              <option value="default">Default</option>
-              <option value="priceLowHigh">Price: Low → High</option>
-              <option value="priceHighLow">Price: High → Low</option>
-              <option value="newest">Newest</option>
-            </select>
-          </FilterSection>
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={handleResetFilters}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow hover:shadow-lg transition"
-            >
-              <RotateCcw className="inline w-4 h-4 mr-1" /> Reset
-            </button>
+
+              {/* Search */}
+
+              <div
+                className="
+                  relative
+                  w-full
+                  sm:max-w-[390px]
+                "
+              >
+
+                <Search
+                  size={16}
+                  strokeWidth={1.2}
+                  className="
+                    absolute
+                    left-0
+                    top-1/2
+                    -translate-y-1/2
+                    text-[#977e73]
+                  "
+                />
+
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) =>
+                    setSearchQuery(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Search the collection..."
+                  className="
+                    w-full
+                    h-10
+                    pl-7
+                    pr-7
+                    bg-transparent
+                    border-b
+                    border-[#741522]/20
+                    outline-none
+                    text-[10px]
+                    text-[#3f1616]
+                    placeholder:text-[#a6948b]
+                    focus:border-[#741522]
+                    transition-colors
+                  "
+                />
+
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSearchQuery("")
+                    }
+                    className="
+                      absolute
+                      right-0
+                      top-1/2
+                      -translate-y-1/2
+                      text-[#977e73]
+                      hover:text-[#741522]
+                    "
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+
+              </div>
+
+
+              {/* Right controls */}
+
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  sm:justify-end
+                  gap-4
+                "
+              >
+
+                <p
+                  className="
+                    text-[8px]
+                    tracking-[0.16em]
+                    uppercase
+                    text-[#977e73]
+                  "
+                >
+                  {filteredProducts.length}
+                  {" "}products
+                </p>
+
+
+                {/* Mobile Filter */}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowFilters(true)
+                  }
+                  className="
+                    lg:hidden
+                    inline-flex
+                    items-center
+                    gap-2
+                    h-9
+                    px-4
+                    border
+                    border-[#741522]/20
+                    text-[8px]
+                    tracking-[0.18em]
+                    uppercase
+                    text-[#741522]
+                  "
+                >
+
+                  <SlidersHorizontal
+                    size={13}
+                    strokeWidth={1.2}
+                  />
+
+                  Filter
+
+                </button>
+
+
+                {/* Mobile Sort */}
+
+                <select
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    lg:hidden
+                    h-9
+                    px-3
+                    bg-transparent
+                    border
+                    border-[#741522]/20
+                    text-[8px]
+                    text-[#741522]
+                    outline-none
+                  "
+                >
+
+                  <option value="default">
+                    Sort
+                  </option>
+
+                  <option value="priceLowHigh">
+                    Price ↑
+                  </option>
+
+                  <option value="priceHighLow">
+                    Price ↓
+                  </option>
+
+                  <option value="newest">
+                    Newest
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            {/* ===============================================
+                PRODUCT GRID
+            =============================================== */}
+
+            {filteredProducts.length > 0 ? (
+
+              <motion.div
+                layout
+                className="
+                  grid
+                  grid-cols-2
+                  md:grid-cols-3
+                  gap-x-4
+                  sm:gap-x-5
+                  gap-y-9
+                  sm:gap-y-12
+                "
+              >
+
+                <AnimatePresence mode="popLayout">
+
+                  {filteredProducts.map(
+                    (product, index) => (
+
+                      <motion.div
+                        layout
+                        key={product._id}
+                        initial={{
+                          opacity: 0,
+                          y: 25,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.96,
+                        }}
+                        transition={{
+                          duration: 0.45,
+                          delay:
+                            index * 0.035,
+                        }}
+                        className="
+                          min-w-0
+                          group
+                        "
+                      >
+
+                        <div
+                          className="
+                            relative
+                            transition-transform
+                            duration-500
+                            group-hover:-translate-y-1
+                          "
+                        >
+
+                          <ProductCard
+                            product={{
+                              id: product._id,
+                              name:
+                                product.productName,
+                              image:
+                                product
+                                  .images?.[0]
+                                  ? `${url}/img/${product.images[0]}`
+                                  : "",
+                              price:
+                                product.price,
+                              description:
+                                product.description,
+                              stock:
+                                product.stock,
+                            }}
+                            isCompactMobile={true}
+                            onAddToCart={() => {}}
+                            onToggleWishlist={() => {}}
+                          />
+
+                        </div>
+
+                      </motion.div>
+
+                    )
+                  )}
+
+                </AnimatePresence>
+
+              </motion.div>
+
+            ) : (
+
+              /* =============================================
+                 EMPTY STATE
+              ============================================= */
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  min-h-[420px]
+                  flex
+                  flex-col
+                  items-center
+                  justify-center
+                  text-center
+                  border-t
+                  border-b
+                  border-[#741522]/10
+                "
+              >
+
+                <div
+                  className="
+                    w-16
+                    h-16
+                    border
+                    border-[#d4ad54]
+                    flex
+                    items-center
+                    justify-center
+                    mb-6
+                  "
+                >
+
+                  <span
+                    className="
+                      font-serif
+                      text-[22px]
+                      italic
+                      text-[#741522]
+                    "
+                  >
+                    D
+                  </span>
+
+                </div>
+
+
+                <h3
+                  className="
+                    font-serif
+                    text-[27px]
+                    text-[#3f1616]
+                  "
+                >
+                  No pieces found.
+                </h3>
+
+
+                <p
+                  className="
+                    mt-3
+                    max-w-[350px]
+                    text-[10px]
+                    leading-5
+                    text-[#806c63]
+                  "
+                >
+                  Try another search or
+                  adjust your filters to
+                  discover more of the
+                  collection.
+                </p>
+
+
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="
+                    group
+                    mt-6
+                    inline-flex
+                    items-center
+                    gap-2
+                    px-6
+                    py-3
+                    bg-[#741522]
+                    text-[#f8f4eb]
+                    text-[8px]
+                    tracking-[0.2em]
+                    uppercase
+                    hover:bg-[#d4ad54]
+                    hover:text-[#741522]
+                    transition-all
+                    duration-300
+                  "
+                >
+
+                  <RotateCcw size={13} />
+
+                  Reset Filters
+
+                </button>
+
+              </motion.div>
+
+            )}
+
           </div>
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================================
+          MOBILE FILTER DRAWER
+      =================================================== */}
+
+      <AnimatePresence>
+
+        {showFilters && (
+          <>
+            {/* Overlay */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+              onClick={() =>
+                setShowFilters(false)
+              }
+              className="
+                fixed
+                inset-0
+                z-[80]
+                bg-[#3f1616]/40
+                backdrop-blur-[2px]
+                lg:hidden
+              "
+            />
+
+
+            {/* Drawer */}
+
+            <motion.aside
+              initial={{
+                x: "-100%",
+              }}
+              animate={{
+                x: 0,
+              }}
+              exit={{
+                x: "-100%",
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 280,
+                damping: 30,
+              }}
+              className="
+                fixed
+                left-0
+                top-0
+                bottom-0
+                z-[90]
+                w-[88%]
+                max-w-[390px]
+                bg-[#f8f4eb]
+                overflow-y-auto
+                lg:hidden
+              "
+            >
+
+              <div
+                className="
+                  px-6
+                  py-7
+                "
+              >
+
+                {/* Drawer Header */}
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    pb-6
+                    border-b
+                    border-[#741522]/10
+                  "
+                >
+
+                  <div>
+
+                    <p
+                      className="
+                        text-[7px]
+                        tracking-[0.3em]
+                        uppercase
+                        text-[#977e73]
+                      "
+                    >
+                      THE SHOP
+                    </p>
+
+                    <h2
+                      className="
+                        font-serif
+                        text-[28px]
+                        mt-1
+                        text-[#3f1616]
+                      "
+                    >
+                      Refine
+                    </h2>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowFilters(false)
+                    }
+                    className="
+                      w-9
+                      h-9
+                      border
+                      border-[#741522]/15
+                      flex
+                      items-center
+                      justify-center
+                      text-[#741522]
+                    "
+                  >
+
+                    <X size={17} />
+
+                  </button>
+
+                </div>
+
+
+                <div className="pt-7">
+
+                  {/* Price */}
+
+                  <FilterSection
+                    id="mobilePrice"
+                    title="Price Range"
+                  >
+
+                    <div className="space-y-5">
+
+                      <div
+                        className="
+                          flex
+                          justify-between
+                          text-[10px]
+                          text-[#806c63]
+                        "
+                      >
+
+                        <span>
+                          ₹{priceRange[0]}
+                        </span>
+
+                        <span>
+                          ₹{priceRange[1]}
+                        </span>
+
+                      </div>
+
+
+                      <input
+                        type="range"
+                        min="0"
+                        max="3000"
+                        step="100"
+                        value={
+                          priceRange[1]
+                        }
+                        onChange={(e) =>
+                          setPriceRange([
+                            priceRange[0],
+                            Number(
+                              e.target.value
+                            ),
+                          ])
+                        }
+                        className="
+                          w-full
+                          accent-[#741522]
+                        "
+                      />
+
+                    </div>
+
+                  </FilterSection>
+
+
+                  {/* Availability */}
+
+                  <FilterSection
+                    id="mobileStock"
+                    title="Availability"
+                  >
+
+                    <div className="space-y-4">
+
+                      <StockRadio
+                        name="mobile-stock"
+                        checked={
+                          stockStatus ===
+                          "all"
+                        }
+                        onChange={() =>
+                          setStockStatus(
+                            "all"
+                          )
+                        }
+                        label="All pieces"
+                      />
+
+
+                      <StockRadio
+                        name="mobile-stock"
+                        checked={
+                          stockStatus ===
+                          "inStock"
+                        }
+                        onChange={() =>
+                          setStockStatus(
+                            "inStock"
+                          )
+                        }
+                        label="In stock"
+                        icon={
+                          <PackageCheck
+                            size={13}
+                          />
+                        }
+                      />
+
+
+                      <StockRadio
+                        name="mobile-stock"
+                        checked={
+                          stockStatus ===
+                          "outOfStock"
+                        }
+                        onChange={() =>
+                          setStockStatus(
+                            "outOfStock"
+                          )
+                        }
+                        label="Out of stock"
+                        icon={
+                          <PackageX
+                            size={13}
+                          />
+                        }
+                      />
+
+                    </div>
+
+                  </FilterSection>
+
+
+                  {/* Sort */}
+
+                  <FilterSection
+                    id="mobileSort"
+                    title="Sort By"
+                  >
+
+                    <select
+                      value={sortBy}
+                      onChange={(e) =>
+                        setSortBy(
+                          e.target.value
+                        )
+                      }
+                      className="
+                        w-full
+                        h-11
+                        px-3
+                        bg-transparent
+                        border
+                        border-[#741522]/15
+                        text-[9px]
+                        outline-none
+                      "
+                    >
+
+                      <option value="default">
+                        Recommended
+                      </option>
+
+                      <option value="priceLowHigh">
+                        Price: Low → High
+                      </option>
+
+                      <option value="priceHighLow">
+                        Price: High → Low
+                      </option>
+
+                      <option value="newest">
+                        Newest First
+                      </option>
+
+                    </select>
+
+                  </FilterSection>
+
+
+                  {/* Buttons */}
+
+                  <div
+                    className="
+                      grid
+                      grid-cols-2
+                      gap-3
+                      mt-8
+                    "
+                  >
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleResetFilters
+                      }
+                      className="
+                        h-11
+                        border
+                        border-[#741522]/20
+                        text-[#741522]
+                        text-[8px]
+                        tracking-[0.18em]
+                        uppercase
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                      "
+                    >
+
+                      <RotateCcw
+                        size={13}
+                      />
+
+                      Reset
+
+                    </button>
+
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowFilters(
+                          false
+                        )
+                      }
+                      className="
+                        h-11
+                        bg-[#741522]
+                        text-[#f8f4eb]
+                        text-[8px]
+                        tracking-[0.18em]
+                        uppercase
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                      "
+                    >
+
+                      <CheckCircle
+                        size={13}
+                      />
+
+                      Apply
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </motion.aside>
+          </>
+        )}
+
+      </AnimatePresence>
+
+
+      {/* ===================================================
+          BOTTOM EDITORIAL CTA
+      =================================================== */}
+
+      <section
+        className="
+          bg-[#741522]
+          text-center
+          py-16
+          sm:py-20
+          px-5
+        "
+      >
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+          }}
+          transition={{
+            duration: 0.7,
+          }}
+        >
+
+          <p
+            className="
+              text-[7px]
+              tracking-[0.4em]
+              uppercase
+              text-[#d4ad54]
+              mb-4
+            "
+          >
+            DARSH HANDWOVEN
+          </p>
+
+
+          <h2
+            className="
+              font-serif
+              italic
+              text-[#f8f4eb]
+              text-[30px]
+              sm:text-[40px]
+            "
+          >
+            Find a weave worth keeping.
+          </h2>
+
+
+          <button
+            type="button"
+            onClick={() =>
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              })
+            }
+            className="
+              group
+              inline-flex
+              items-center
+              gap-3
+              mt-7
+              border
+              border-[#d4ad54]
+              px-7
+              py-3
+              text-[8px]
+              tracking-[0.25em]
+              uppercase
+              text-[#d4ad54]
+              hover:bg-[#d4ad54]
+              hover:text-[#741522]
+              transition-all
+              duration-300
+            "
+          >
+
+            Explore Again
+
+            <ArrowUpRight
+              size={14}
+              strokeWidth={1.2}
+              className="
+                transition-transform
+                duration-300
+                group-hover:translate-x-1
+                group-hover:-translate-y-1
+              "
+            />
+
+          </button>
+
         </motion.div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <button
-              className="flex md:hidden items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow"
-              onClick={() => setShowFilters(true)}
-            >
-              <Filter className="w-5 h-5" /> Filters
-            </button>
-          </div>
+      </section>
 
-          <motion.p
-            className="text-gray-600 mb-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Showing <b>{filteredProducts.length}</b> products
-          </motion.p>
 
-          <motion.div
-            className="grid grid-cols-2 mb-7 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product._id}
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{
-                    y: -6,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <ProductCard
-                    product={{
-                      id: product._id,
-                      name: product.productName,
-                      image: product.images?.[0]
-                        ? `${url}/img/${product.images[0]}`
-                        : "",
-                      price: product.price,
-                      description: product.description,
-                      stock: product.stock,
-                    }}
-                    isCompactMobile={true}
-                    onAddToCart={() => {}}
-                    onToggleWishlist={() => {}}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                className="text-gray-600 col-span-full text-center py-10 text-lg"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                 <motion.div
-                className="col-span-full text-center py-10 flex flex-col items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <Blocks className="w-16 h-16 text-gray-400 mb-4" />
-                <p className="text-gray-600 text-lg">No products found for this subcategory.</p>
-                <button
-                  onClick={handleResetFilters}
-                  className="mt-4 text-sm text-indigo-500 hover:text-indigo-600 flex items-center gap-1 transition"
-                >
-                  <RotateCcw className="w-4 h-4" /> Reset Filters
-                </button>
-              </motion.div>
-              </motion.div>
-            )}
-          </motion.div>
-        </div>
-      </div>
-    </div>
+      {/* ===================================================
+          LOCAL STYLES
+      =================================================== */}
+
+      <style>
+        {`
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+
+          input[type="range"] {
+            height: 2px;
+            cursor: pointer;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}
+      </style>
+
+    </main>
   );
 };
+
+
+/* =========================================================
+   STOCK RADIO
+========================================================= */
+
+const StockRadio = ({
+  name,
+  checked,
+  onChange,
+  label,
+  icon,
+}) => {
+  return (
+    <label
+      className="
+        flex
+        items-center
+        gap-3
+        cursor-pointer
+        group
+      "
+    >
+
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="
+          sr-only
+        "
+      />
+
+
+      <span
+        className={`
+          w-4
+          h-4
+          rounded-full
+          border
+          flex
+          items-center
+          justify-center
+          transition-all
+          ${
+            checked
+              ? "border-[#741522]"
+              : "border-[#806c63]/40"
+          }
+        `}
+      >
+
+        {checked && (
+          <span
+            className="
+              w-2
+              h-2
+              rounded-full
+              bg-[#741522]
+            "
+          />
+        )}
+
+      </span>
+
+
+      <span
+        className={`
+          flex
+          items-center
+          gap-2
+          text-[10px]
+          transition-colors
+          ${
+            checked
+              ? "text-[#741522]"
+              : "text-[#806c63] group-hover:text-[#741522]"
+          }
+        `}
+      >
+
+        {icon}
+
+        {label}
+
+      </span>
+
+    </label>
+  );
+};
+
 
 export default AllProducts;

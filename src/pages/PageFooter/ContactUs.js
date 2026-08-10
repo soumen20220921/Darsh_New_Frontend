@@ -1,6 +1,17 @@
 import React, { useState } from "react";
-import { useSpring, animated, useTrail } from "react-spring";
-import { Mail, Phone, MapPin, Send, ShoppingBag, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  ArrowRight,
+  Facebook,
+  Sparkles,
+  Instagram,
+  Youtube,
+} from "lucide-react";
+
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -9,147 +20,1007 @@ const ContactUs = () => {
     message: "",
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
-    setFormData({ name: "", email: "", message: "" });
-  };
 
-  const fadeIn = useSpring({
-    from: { opacity: 0, transform: "translateY(40px)" },
-    to: { opacity: 1, transform: "translateY(0)" },
-    config: { duration: 800 },
-  });
+  /* =====================================================
+     CONTACT INFORMATION
+  ===================================================== */
 
-  const infoSections = [
+  const contactDetails = [
     {
-      title: "WE ARE HERE - YOU CAN KEEP IN TOUCH WITH US ANYTIME",
-      items: [
-        { icon: <Phone className="w-5 h-5 text-indigo-600" />, text: "Phone: +91 7363054510" },
-        { icon: <Mail className="w-5 h-5 text-indigo-600" />, text: "Email: pomwbweb@gmail.com" },
-        { icon: <MapPin className="w-5 h-5 text-indigo-600" />, text: "Address: Nilkuthidanga, puruli,West bengal,723101" },
-      ],
-      gradient: "from-indigo-100 to-purple-200",
+      icon: Mail,
+      label: "EMAIL",
+      value: "contactdarsh9@gmail.com",
+      href: "mailto:contactdarsh9@gmail.com",
     },
+
     {
-      title: "EXPLORE OUR PRODUCTS",
-      icon: <ShoppingBag className="w-6 h-6 text-green-600" />,
-      text: "We offer a wide range of products including clothing, electronics, home goods, and more. Our collection is curated to bring you the best in quality and style.",
-      gradient: "from-green-100 to-emerald-200",
+      icon: Phone,
+      label: "PHONE",
+      value: "+91 9907804710",
+      href: "tel:+919907804710",
     },
+
     {
-      title: "OUR LATEST COLLECTIONS",
-      icon: <Sparkles className="w-6 h-6 text-yellow-600" />,
-      text: "Our products are available in a variety of materials and styles, perfect for every sphere of your life. Whether you're looking for a comfortable outfit, a gadget, or elegant home decor, our collections are designed to meet your needs.",
-      gradient: "from-yellow-100 to-orange-200",
+      icon: MapPin,
+      label: "ADDRESS",
+      value: " 6VJG+23H, Ichlabad, Bardhaman, West Bengal 713103, Burdwan, India, 713103",
+      href: "https://share.google/pClPGHzUnS3mJENSA",
     },
   ];
 
-  const trail = useTrail(infoSections.length, {
-    from: { opacity: 0, transform: "translateY(20px)" },
-    to: { opacity: 1, transform: "translateY(0)" },
-    config: { tension: 220, friction: 25 },
-  });
+
+  /* =====================================================
+     FORM CHANGE
+  ===================================================== */
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+
+  /* =====================================================
+     FORM SUBMIT
+  ===================================================== */
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    /*
+      Replace this with your backend/API call later.
+      For now, the enquiry is captured locally.
+    */
+
+    console.log("Darsh enquiry:", formData);
+
+    setSubmitted(true);
+
+    setFormData({
+      name: "",
+      email: "",
+      message: "",
+    });
+
+    setTimeout(() => {
+      setSubmitted(false);
+    }, 4000);
+  };
+
 
   return (
-    <div className="bg-gradient-to-br from-gray-100 via-white to-gray-200 min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-      <div className="max-w-7xl w-full flex flex-col lg:flex-row bg-white/60 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-        <animated.div
-          style={fadeIn}
-          className="w-full lg:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-100"
-        >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 drop-shadow-md">
-              Help Center
-            </h1>
-            <p className="text-gray-600">If you have any questions or concerns, feel free to reach out to us.</p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Your name"
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Your email"
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
-              />
-            </div>
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                Message
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                rows="4"
-                value={formData.message}
-                onChange={handleInputChange}
-                placeholder="Your message..."
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-lg shadow-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-400 transition-all transform hover:scale-[1.02]"
-            >
-              <Send className="w-4 h-4" /> Send Message
-            </button>
-          </form>
-        </animated.div>
+    <main
+      className="
+        min-h-screen
+        bg-[#f8f4eb]
+        text-[#3f1616]
+        overflow-hidden
+      "
+    >
+      {/* =====================================================
+          TOP INTRO
+      ===================================================== */}
 
-        <div className="w-full lg:w-1/2 bg-gray-50 p-8 md:p-12 flex flex-col justify-center">
-          <div className="space-y-8">
-            {trail.map((style, i) => (
-              <animated.div
-                key={i}
-                style={style}
-                className={`p-6 rounded-xl shadow-md bg-gradient-to-br ${infoSections[i].gradient} hover:shadow-xl transform transition duration-300 hover:scale-[1.02]`}
+      <section
+        className="
+          relative
+          border-b
+          border-[#741522]/10
+          py-16
+          sm:py-20
+          lg:py-24
+        "
+      >
+        {/* Decorative circles */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -left-40
+            -top-40
+            w-[450px]
+            h-[450px]
+            rounded-full
+            border
+            border-[#d4ad54]/10
+          "
+        />
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-40
+            -bottom-40
+            w-[450px]
+            h-[450px]
+            rounded-full
+            border
+            border-[#741522]/5
+          "
+        />
+
+        <div
+          className="
+            relative
+            z-10
+            max-w-[1120px]
+            mx-auto
+            px-5
+            sm:px-8
+            lg:px-0
+          "
+        >
+          <div
+            className="
+              grid
+              grid-cols-1
+              lg:grid-cols-[1fr_1.05fr]
+              gap-12
+              lg:gap-20
+            "
+          >
+            {/* =================================================
+                LEFT CONTENT
+            ================================================= */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: -35,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                duration: 0.9,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="
+                flex
+                flex-col
+                justify-center
+              "
+            >
+              {/* Eyebrow */}
+
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  mb-6
+                "
               >
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  {infoSections[i].icon} {infoSections[i].title}
-                </h3>
-                {infoSections[i].items ? (
-                  <ul className="space-y-2">
-                    {infoSections[i].items.map((item, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-gray-700 font-medium">
-                        {item.icon} {item.text}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-700 font-medium">{infoSections[i].text}</p>
-                )}
-              </animated.div>
-            ))}
+                <span
+                  className="
+                    w-8
+                    h-px
+                    bg-[#d4ad54]
+                  "
+                />
+
+                <span
+                  className="
+                    text-[8px]
+                    sm:text-[9px]
+                    tracking-[0.42em]
+                    uppercase
+                    text-[#977e73]
+                  "
+                >
+                  SAY HELLO
+                </span>
+              </div>
+
+              {/* Heading */}
+
+              <h1
+                className="
+                  font-serif
+                  font-normal
+                  text-[#3f1616]
+                  text-[43px]
+                  sm:text-[53px]
+                  md:text-[62px]
+                  lg:text-[66px]
+                  leading-[1.02]
+                  tracking-[-0.03em]
+                "
+              >
+                Talk to the
+                <span
+                  className="
+                    block
+                    italic
+                    text-[#741522]
+                  "
+                >
+                  Darsh studio.
+                </span>
+              </h1>
+
+              {/* Divider */}
+
+              <div
+                className="
+                  w-14
+                  h-px
+                  bg-[#d4ad54]
+                  mt-7
+                  mb-7
+                "
+              />
+
+              {/* Description */}
+
+              <p
+                className="
+                  max-w-[530px]
+                  text-[11px]
+                  sm:text-[12px]
+                  md:text-[13px]
+                  leading-6
+                  text-[#806c63]
+                "
+              >
+                Have a question about a saree, fabric, availability, styling or
+                your order? Send us an enquiry and our team will get back to
+                you.
+              </p>
+
+              {/* =================================================
+                  CONTACT DETAILS
+              ================================================= */}
+
+              <div
+                className="
+                  mt-10
+                  border-t
+                  border-[#741522]/15
+                "
+              >
+                {contactDetails.map((item, index) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <motion.a
+                      key={item.label}
+                      href={item.href}
+                      target={item.label === "ADDRESS" ? "_blank" : undefined}
+                      rel={
+                        item.label === "ADDRESS"
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
+                      initial={{
+                        opacity: 0,
+                        y: 15,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      transition={{
+                        delay: 0.3 + index * 0.12,
+                        duration: 0.6,
+                      }}
+                      className="
+                          group
+                          flex
+                          items-center
+                          gap-5
+                          py-5
+                          border-b
+                          border-[#741522]/15
+                        "
+                    >
+                      {/* Icon */}
+
+                      <div
+                        className="
+                            w-10
+                            h-10
+                            shrink-0
+                            border
+                            border-[#d4ad54]/60
+                            flex
+                            items-center
+                            justify-center
+                            text-[#741522]
+                            transition-all
+                            duration-300
+                            group-hover:bg-[#741522]
+                            group-hover:text-[#d4ad54]
+                          "
+                      >
+                        <Icon size={16} strokeWidth={1.2} />
+                      </div>
+
+                      {/* Text */}
+
+                      <div className="min-w-0">
+                        <p
+                          className="
+                              text-[7px]
+                              tracking-[0.3em]
+                              uppercase
+                              text-[#977e73]
+                              mb-1
+                            "
+                        >
+                          {item.label}
+                        </p>
+
+                        <p
+                          className="
+                              text-[11px]
+                              sm:text-[12px]
+                              text-[#3f1616]
+                              break-words
+                              group-hover:text-[#741522]
+                              transition-colors
+                            "
+                        >
+                          {item.value}
+                        </p>
+                      </div>
+
+                      <ArrowRight
+                        size={13}
+                        strokeWidth={1}
+                        className="
+                            ml-auto
+                            shrink-0
+                            text-[#d4ad54]
+                            opacity-0
+                            -translate-x-2
+                            group-hover:opacity-100
+                            group-hover:translate-x-0
+                            transition-all
+                          "
+                      />
+                    </motion.a>
+                  );
+                })}
+              </div>
+
+              {/* =================================================
+                  SOCIAL
+              ================================================= */}
+
+              <div className="flex  mt-7 items-center gap-3">
+                <span
+                  className="
+      text-[7px]
+      tracking-[0.3em]
+      uppercase
+      text-[#977e73]
+      mr-1
+    "
+                >
+                  FOLLOW DARSH
+                </span>
+
+                {/* Facebook */}
+                <a
+                  href="https://www.facebook.com/Darshpage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Darsh Facebook"
+                  className="
+      w-9 h-9
+      border border-[#741522]/25
+      flex items-center justify-center
+      text-[#741522]
+      transition-all duration-300
+      hover:bg-[#741522]
+      hover:text-[#f8f4eb]
+    "
+                >
+                  <Facebook size={15} strokeWidth={1.2} />
+                </a>
+
+                {/* Instagram */}
+                <a
+                  href="https://www.instagram.com/darsh_bysathi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Darsh Instagram"
+                  className="
+      w-9 h-9
+      border border-[#741522]/25
+      flex items-center justify-center
+      text-[#741522]
+      transition-all duration-300
+      hover:bg-[#741522]
+      hover:text-[#f8f4eb]
+    "
+                >
+                  <Instagram size={15} strokeWidth={1.2} />
+                </a>
+
+                {/* YouTube */}
+                <a
+                  href="https://youtube.com/@darsh7901?si=6uplC1BKqxBEYZbt"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Darsh YouTube"
+                  className="
+      w-9 h-9
+      border border-[#741522]/25
+      flex items-center justify-center
+      text-[#741522]
+      transition-all duration-300
+      hover:bg-[#741522]
+      hover:text-[#f8f4eb]
+    "
+                >
+                  <Youtube size={15} strokeWidth={1.2} />
+                </a>
+              </div>
+            </motion.div>
+
+            {/* =================================================
+                FORM
+            ================================================= */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: 35,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                duration: 0.9,
+                delay: 0.1,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <div
+                className="
+                  relative
+                  bg-[#fbf8f2]
+                  border
+                  border-[#741522]/15
+                  p-6
+                  sm:p-8
+                  lg:p-10
+                "
+              >
+                {/* Gold corner */}
+
+                <div
+                  className="
+                    absolute
+                    top-0
+                    right-0
+                    w-20
+                    h-20
+                    border-t
+                    border-r
+                    border-[#d4ad54]
+                    pointer-events-none
+                  "
+                />
+
+                <div
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    w-20
+                    h-20
+                    border-b
+                    border-l
+                    border-[#d4ad54]/50
+                    pointer-events-none
+                  "
+                />
+
+                {/* Form header */}
+
+                <div className="mb-8">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-3
+                      mb-4
+                    "
+                  >
+                    <Sparkles
+                      size={15}
+                      strokeWidth={1}
+                      className="
+                        text-[#d4ad54]
+                      "
+                    />
+
+                    <span
+                      className="
+                        text-[7px]
+                        tracking-[0.32em]
+                        uppercase
+                        text-[#977e73]
+                      "
+                    >
+                      CONTACT DARSH
+                    </span>
+                  </div>
+
+                  <h2
+                    className="
+                      font-serif
+                      font-normal
+                      text-[29px]
+                      sm:text-[34px]
+                      text-[#3f1616]
+                    "
+                  >
+                    Send an enquiry
+                  </h2>
+
+                  <p
+                    className="
+                      text-[10px]
+                      sm:text-[11px]
+                      text-[#806c63]
+                      mt-3
+                      leading-5
+                    "
+                  >
+                    Tell us what you're looking for and we'll be happy to help.
+                  </p>
+                </div>
+
+                {/* =================================================
+                    FORM
+                ================================================= */}
+
+                <form
+                  onSubmit={handleSubmit}
+                  className="
+                    space-y-6
+                  "
+                >
+                  {/* Name */}
+
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="
+                        block
+                        text-[7px]
+                        tracking-[0.32em]
+                        uppercase
+                        text-[#806c63]
+                        mb-2
+                      "
+                    >
+                      NAME
+                    </label>
+
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Your name"
+                      required
+                      className="
+                        w-full
+                        h-12
+                        px-4
+                        bg-transparent
+                        border
+                        border-[#741522]/15
+                        outline-none
+                        text-[12px]
+                        text-[#3f1616]
+                        placeholder:text-[#a99a91]
+                        focus:border-[#741522]
+                        transition-colors
+                      "
+                    />
+                  </div>
+
+                  {/* Email */}
+
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="
+                        block
+                        text-[7px]
+                        tracking-[0.32em]
+                        uppercase
+                        text-[#806c63]
+                        mb-2
+                      "
+                    >
+                      EMAIL
+                    </label>
+
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="you@example.com"
+                      required
+                      className="
+                        w-full
+                        h-12
+                        px-4
+                        bg-transparent
+                        border
+                        border-[#741522]/15
+                        outline-none
+                        text-[12px]
+                        text-[#3f1616]
+                        placeholder:text-[#a99a91]
+                        focus:border-[#741522]
+                        transition-colors
+                      "
+                    />
+                  </div>
+
+                  {/* Message */}
+
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="
+                        block
+                        text-[7px]
+                        tracking-[0.32em]
+                        uppercase
+                        text-[#806c63]
+                        mb-2
+                      "
+                    >
+                      MESSAGE
+                    </label>
+
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      placeholder="Tell us how we can help..."
+                      required
+                      rows={6}
+                      className="
+                        w-full
+                        px-4
+                        py-3
+                        bg-transparent
+                        border
+                        border-[#741522]/15
+                        outline-none
+                        resize-none
+                        text-[12px]
+                        leading-5
+                        text-[#3f1616]
+                        placeholder:text-[#a99a91]
+                        focus:border-[#741522]
+                        transition-colors
+                      "
+                    />
+                  </div>
+
+                  {/* Submit */}
+
+                  <button
+                    type="submit"
+                    className="
+                      group
+                      w-full
+                      h-12
+                      flex
+                      items-center
+                      justify-center
+                      gap-3
+                      bg-[#741522]
+                      text-[#f8f4eb]
+                      text-[8px]
+                      tracking-[0.3em]
+                      uppercase
+                      transition-all
+                      duration-400
+                      hover:bg-[#d4ad54]
+                      hover:text-[#4b1519]
+                    "
+                  >
+                    {submitted ? "ENQUIRY RECEIVED" : "SEND ENQUIRY"}
+
+                    <Send
+                      size={14}
+                      strokeWidth={1.2}
+                      className="
+                        transition-transform
+                        duration-300
+                        group-hover:translate-x-1
+                      "
+                    />
+                  </button>
+
+                  {/* Success */}
+
+                  {submitted && (
+                    <motion.p
+                      initial={{
+                        opacity: 0,
+                        y: 5,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      className="
+                        text-center
+                        text-[9px]
+                        text-[#741522]
+                      "
+                    >
+                      Thank you. Your enquiry has been received.
+                    </motion.p>
+                  )}
+                </form>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* =====================================================
+          SERVICE STRIP
+      ===================================================== */}
+
+      <section
+        className="
+          bg-[#eee5d6]
+          border-y
+          border-[#741522]/10
+          py-12
+          sm:py-14
+        "
+      >
+        <div
+          className="
+            max-w-[1000px]
+            mx-auto
+            px-5
+            sm:px-8
+          "
+        >
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-3
+              divide-y
+              sm:divide-y-0
+              sm:divide-x
+              divide-[#741522]/15
+            "
+          >
+            <ContactFeature
+              number="01"
+              title="Need help choosing?"
+              text="Tell us what kind of saree or weave you're looking for."
+            />
+
+            <ContactFeature
+              number="02"
+              title="Have an order question?"
+              text="Send your enquiry with your order details and we'll help."
+            />
+
+            <ContactFeature
+              number="03"
+              title="Follow our collections"
+              text="Discover new arrivals and saree inspiration on Darsh."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ===================================================== */}
+
+      <section
+        className="
+          bg-[#741522]
+          text-center
+          py-16
+          sm:py-20
+        "
+      >
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+          }}
+          transition={{
+            duration: 0.7,
+          }}
+        >
+          <p
+            className="
+              text-[8px]
+              tracking-[0.4em]
+              uppercase
+              text-[#d9bd78]
+              mb-4
+            "
+          >
+            DARSH
+          </p>
+
+          <h2
+            className="
+              font-serif
+              italic
+              text-[#f8f4eb]
+              text-[32px]
+              sm:text-[43px]
+            "
+          >
+            Let's talk about your next saree.
+          </h2>
+
+          <a
+            href="tel:+919907804710"
+            className="
+              group
+              inline-flex
+              items-center
+              gap-3
+              mt-7
+              border
+              border-[#d4ad54]
+              text-[#d9bd78]
+              px-7
+              py-3.5
+              text-[8px]
+              tracking-[0.28em]
+              uppercase
+              transition-all
+              duration-300
+              hover:bg-[#d4ad54]
+              hover:text-[#741522]
+            "
+          >
+            Call Darsh
+            <Phone
+              size={14}
+              strokeWidth={1.2}
+              className="
+                transition-transform
+                group-hover:scale-110
+              "
+            />
+          </a>
+        </motion.div>
+      </section>
+
+      {/* =====================================================
+          REDUCED MOTION
+      ===================================================== */}
+
+      <style>
+        {`
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
+          }
+        `}
+      </style>
+    </main>
   );
 };
+
+
+/* =========================================================
+   FEATURE COMPONENT
+========================================================= */
+
+const ContactFeature = ({
+  number,
+  title,
+  text,
+}) => {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 20,
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+      }}
+      transition={{
+        duration: 0.6,
+      }}
+      className="
+        px-5
+        sm:px-8
+        py-6
+        sm:py-3
+        text-center
+      "
+    >
+
+      <span
+        className="
+          text-[7px]
+          tracking-[0.25em]
+          text-[#a18b80]
+        "
+      >
+        {number}
+      </span>
+
+      <h3
+        className="
+          font-serif
+          text-[18px]
+          sm:text-[19px]
+          text-[#3f1616]
+          mt-3
+        "
+      >
+        {title}
+      </h3>
+
+      <p
+        className="
+          max-w-[230px]
+          mx-auto
+          mt-2
+          text-[9px]
+          sm:text-[10px]
+          leading-5
+          text-[#806c63]
+        "
+      >
+        {text}
+      </p>
+
+    </motion.div>
+  );
+};
+
 
 export default ContactUs;

@@ -1,512 +1,2471 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { Link } from "react-router-dom";
-import Hero from "../components/Hero";
-import ProductCard from "../components/ProductCard";
+
 import {
   ArrowRight,
-  // Star,
-  Heart,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
-  Truck,
-  ShoppingBag,
   Flame,
-  Crown,
 } from "lucide-react";
+
+import SignatureWeaves from "../components/SignatureWeaves";
+import Hero from "../components/Hero";
+
 import { useAppContext } from "../context/AppContext.jsx";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay} from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-import { motion } from "framer-motion";
+
+import Reels from "./Reels.jsx";
 import FestiveBanner from "./FestiveBanner.jsx";
-import Reels from "./Reels.jsx"
 
-const Home = () => {
-  const { allProduct ,url } = useAppContext();
-  const [hotSales, setHotSales] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
+/* =========================================================
+   CATEGORY DATA
+========================================================= */
 
- useEffect(() => {
-    if (allProduct) {
-      const hot = allProduct.filter((p) => p.hotSell);
-      setHotSales(hot.slice(0, 8));
+const categories = [
+  {
+    id: "silk",
+    name: "Silk Sarees",
+    subtitle: "KANJIVARAM, TUSSAR & GAJI",
+    image: "/IMG/p4.jpg",
+    path: "/Categories/saree",
+  },
+  {
+    id: "cotton",
+    name: "Cotton Handloom",
+    subtitle: "KHADI & KOTA DORIA",
+    image: "/IMG/p3.jpg",
+    path: "/Categories/cotton",
+  },
+  {
+    id: "bandhani",
+    name: "Bandhani",
+    subtitle: "HAND-TIED KUTCHI DOTS",
+    image: "/IMG/p6.jpg",
+    path: "/Categories/bandhani",
+  },
+  {
+    id: "festive",
+    name: "Festive Edit",
+    subtitle: "IVORY, GOLD & OCCASION DRAPES",
+    image: "/IMG/about.jpeg",
+    path: "/Categories/festive",
+  },
+];
 
-      const sortedNew = [...allProduct].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-      setNewArrivals(sortedNew.slice(0, 8));
-    }
-  }, [allProduct]);
+/* =========================================================
+   FALLBACK PRODUCTS
+   Only used when API has no products.
+========================================================= */
 
-  const categories = [
-    { id: "1", name: "saree", image: "/IMG/saree.png" },
-    { id: "2", name: "blouse", image: "/IMG/blouse.png" },
-    { id: "3", name: "men", image: "/IMG/men.png" },
-    { id: "4", name: "kids", image: "/IMG/kids.png" },
-    { id: "5", name: "home decor", image: "/IMG/home.png" },
-    {
-      id: "6",
-      name: "others",
-      image:
-        "/IMG/all.png",
-    },
-  ];
+const fallbackProducts = [
+  {
+    id: "demo-1",
+    productName: "Emerald Kanjivaram",
+    category: "PURE MULBERRY SILK · KANCHIPURAM",
+    price: 18900,
+    image: "/IMG/saree.png",
+    badge: "BESTSELLER",
+  },
+  {
+    id: "demo-2",
+    productName: "Blush Chiffon Aari",
+    category: "SILK CHIFFON · LUCKNOW",
+    price: 7450,
+    image: "/IMG/saree.png",
+    badge: "NEW",
+  },
+  {
+    id: "demo-3",
+    productName: "Indigo Handloom",
+    category: "KHADI COTTON · BHUJ",
+    price: 4200,
+    image: "/IMG/home.png",
+    badge: "NEW",
+  },
+  {
+    id: "demo-4",
+    productName: "Mustard Tussar",
+    category: "TUSSAR SILK · BHAGALPUR",
+    price: 9800,
+    image: "/IMG/saree.png",
+  },
+  {
+    id: "demo-5",
+    productName: "Ivory Kota Doria",
+    category: "KOTA COTTON SILK · KOTA",
+    price: 5300,
+    image: "/IMG/saree.png",
+    badge: "FESTIVE",
+  },
+  {
+    id: "demo-6",
+    productName: "Plum Bandhani",
+    category: "GAJI SILK · JAMNAGAR",
+    price: 11200,
+    image: "/IMG/all.png",
+  },
+];
 
-  // const testimonials = [
-  //   {
-  //     name: "Debolina Chatterjee",
-  //     quote:
-  //       "একদম অসাধারণ কাজ! শাড়ির গুনগত মান দারুণ, পড়তে খুবই আরামদায়ক। আমি বারবার এখান থেকেই কিনব।",
-  //     image:
-  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS30SkjTndCVjYNtrDYfr7QgG7j7L9gdqIhug&s",
-  //   },
-  //   {
-  //     name: "Rituparna Das",
-  //     quote:
-  //       "The blouse designs are so stylish yet comfortable. Perfect match with my silk saree collection.",
-  //     image:
-  //       "https://t4.ftcdn.net/jpg/03/48/83/25/360_F_348832546_xzYPZhbHjzkQz3pMHO8376J5ADF2QhxE.jpg",
-  //   },
-  //   {
-  //     name: "Sohini Mukherjee",
-  //     quote:
-  //       "খুব সুন্দরভাবে ডেলিভারি হয়েছে। দাম অনুযায়ী মান খুব ভালো। পরিবারের সবার কাছেই প্রশংসা কুড়িয়েছি।",
-  //     image:
-  //       "https://previews.123rf.com/images/devjyoti/devjyoti2109/devjyoti210900013/177631545-a-simple-bengali-girl-wearing-a-traditional-red-sari-and-golden-ornaments-giving-poses-in-front-of.jpg",
-  //   },
-  //   {
-  //     name: "Ananya Roy",
-  //     quote:
-  //       "Bought a kurta set for my brother. The fitting and fabric are really good. Value for money.",
-  //     image:
-  //       "https://i.pinimg.com/736x/55/90/a4/5590a4448787f5af9c6c81b00e3def3e.jpg",
-  //   },
-  //   {
-  //     name: "Madhumita Pal",
-  //     quote:
-  //       "এখানকার শাড়িগুলো একদম ঐতিহ্যবাহী। মা ও দিদির জন্যও কিনেছি, সবাই খুব খুশি।",
-  //     image:
-  //       "https://media.istockphoto.com/id/484288034/photo/portrait-of-happy-woman-after-applying-vermilion-during-durga-puja.jpg?s=612x612&w=0&k=20&c=fRC7IbQmqN1U2vJD_hC8Id9JKfL9fB3aJZ1YEoTvGJ0=",
-  //   },
-  //   {
-  //     name: "Subhra Dey",
-  //     quote:
-  //       "Ordered kidswear for my daughter. The fabric is soft and comfortable, perfect for daily use.",
-  //     image:
-  //       "https://media.istockphoto.com/id/1179812556/photo/holi-and-durga-puja-festival-in-india-portrait-of-an-unidentified-bengali-woman-playing-with.jpg?s=612x612&w=0&k=20&c=4mtfKFEovKHV4-RmLxq1vw1WQVf4kZj1gVu9I7Dqd8k=",
-  //   },
-  //   {
-  //     name: "Piyali Saha",
-  //     quote:
-  //       "Pujor আগেই অর্ডার করেছিলাম। সময়মতো ডেলিভারি হয়েছে আর শাড়ি দেখে সবাই অবাক! Highly recommended.",
-  //     image:
-  //       "https://media.istockphoto.com/id/1284505478/photo/portrait-of-beautiful-smiling-indian-woman.jpg?s=612x612&w=0&k=20&c=PXO1i8gQJpv4CNSRTmJgJag2gOny7rWTnywehXg8hCw=",
-  //   },
-  // ];
+/* =========================================================
+   LUXURY PRODUCT CARD
+========================================================= */
+
+const LuxuryProductCard = ({
+  product,
+  url,
+  index = 0,
+}) => {
+  if (!product) return null;
+
+  const productId =
+    product?._id || product?.id;
+
+  const image =
+    product?.images?.[0]
+      ? `${url}/img/${product.images[0]}`
+      : product?.image ||
+        "/IMG/saree.png";
+
+  const name =
+    product?.productName ||
+    product?.name ||
+    "Handwoven Saree";
+
+  const category =
+    product?.fabric ||
+    product?.category ||
+    product?.subCategory ||
+    "HANDWOVEN · DARSH";
+
+  const price =
+    Number(product?.price) || 0;
+
+  const oldPrice =
+    product?.originalPrice ||
+    product?.oldprice ||
+    product?.oldPrice;
+
+ 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-pink-50 to-yellow-50 font-inter">
+    <Link
+      to={`/productDetails/${productId}`}
+      onClick={() =>
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "smooth",
+        })
+      }
+      className="
+        group
+        block
+        min-w-0
+        opacity-0
+        animate-[productReveal_700ms_ease-out_forwards]
+      "
+      style={{
+        animationDelay: `${index * 90}ms`,
+      }}
+    >
+      {/* =================================================
+          IMAGE
+      ================================================= */}
+
+      <div
+        className="
+          relative
+          aspect-[0.78]
+          overflow-hidden
+          bg-[#eee5d5]
+        "
+      >
+        <img
+          src={image}
+          alt={`${name} - Darsh Saree`}
+          loading={
+            index > 2
+              ? "lazy"
+              : "eager"
+          }
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-[1200ms]
+            ease-out
+            group-hover:scale-[1.045]
+          "
+        />
+
+        {/* Soft overlay */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-[#4c1117]/35
+            via-transparent
+            to-transparent
+            opacity-0
+            transition-opacity
+            duration-500
+            group-hover:opacity-100
+          "
+        />
+
+        {/* =================================================
+            BADGES
+        ================================================= */}
+
+        <div
+          className="
+            absolute
+            left-3
+            top-3
+            flex
+            flex-col
+            gap-2
+            sm:left-4
+            sm:top-4
+          "
+        >
+          {product?.badge && (
+            <span
+              className="
+                bg-[#d4ad54]
+                px-3
+                py-1.5
+                text-[7px]
+                font-medium
+                uppercase
+                tracking-[0.22em]
+                text-[#4a1815]
+                sm:text-[8px]
+              "
+            >
+              {product.badge}
+            </span>
+          )}
+
+        
+        </div>
+
+        {/* =================================================
+            DESKTOP VIEW BUTTON
+        ================================================= */}
+
+        <div
+          className="
+            absolute
+            bottom-4
+            left-1/2
+            -translate-x-1/2
+            translate-y-4
+            opacity-0
+            transition-all
+            duration-500
+            group-hover:translate-y-0
+            group-hover:opacity-100
+          "
+        >
+          <span
+            className="
+              flex
+              items-center
+              gap-2
+              whitespace-nowrap
+              bg-[#f8f4eb]/95
+              px-5
+              py-2.5
+              text-[8px]
+              uppercase
+              tracking-[0.2em]
+              text-[#741522]
+              shadow-lg
+              backdrop-blur-sm
+            "
+          >
+            View Saree
+
+            <ArrowRight
+              size={13}
+              strokeWidth={1.2}
+            />
+          </span>
+        </div>
+      </div>
+
+      {/* =================================================
+          PRODUCT INFORMATION
+      ================================================= */}
+
+      <div className="pt-4 sm:pt-5">
+        <div
+          className="
+            flex
+            items-start
+            justify-between
+            gap-3
+          "
+        >
+          <h3
+            className="
+              min-w-0
+              font-serif
+              text-[16px]
+              leading-[1.15]
+              text-[#3f1616]
+              transition-colors
+              duration-300
+              group-hover:text-[#741522]
+              sm:text-[19px]
+            "
+          >
+            {name}
+          </h3>
+
+          {/* Price */}
+
+          <div
+            className="
+              shrink-0
+              text-right
+            "
+          >
+            <p
+              className="
+                whitespace-nowrap
+                text-[11px]
+                text-[#3d1714]
+                sm:text-[12px]
+              "
+            >
+              ₹
+              {price.toLocaleString(
+                "en-IN"
+              )}
+            </p>
+
+            {oldPrice && (
+              <p
+                className="
+                  mt-0.5
+                  whitespace-nowrap
+                  text-[9px]
+                  text-[#8e7770]
+                  line-through
+                "
+              >
+                ₹
+                {Number(
+                  oldPrice
+                ).toLocaleString(
+                  "en-IN"
+                )}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Product meta */}
+
+        <p
+          className="
+            mt-2
+            truncate
+            text-[7px]
+            uppercase
+            tracking-[0.22em]
+            text-[#977e73]
+            sm:text-[8px]
+          "
+        >
+          {category}
+        </p>
+
+        {/* Mobile actions */}
+
+        <div
+          className="
+            mt-4
+            grid
+            grid-cols-2
+            gap-2
+            sm:hidden
+          "
+        >
+          
+
+          <span
+            className="
+              flex
+              min-h-[40px]
+              items-center
+              justify-center
+              bg-[#741522]
+              px-2
+              text-[7px]
+              uppercase
+              tracking-[0.15em]
+              text-[#f8f4eb]
+            "
+          >
+            Shop now
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+/* =========================================================
+   HOME COMPONENT
+========================================================= */
+
+const Home = () => {
+  const {
+    allProduct,
+    url,
+  } = useAppContext();
+
+  /* =================================================
+     NEW ARRIVAL STATE
+  ================================================= */
+
+  const [newIndex, setNewIndex] =
+    useState(0);
+
+  const [
+    isNewArrivalPaused,
+    setIsNewArrivalPaused,
+  ] = useState(false);
+
+  const mobileRailRef =
+    useRef(null);
+
+  const newAutoScrollRef =
+    useRef(null);
+
+  /* =================================================
+     HOT SALES STATE
+  ================================================= */
+
+  const [hotIndex, setHotIndex] =
+    useState(0);
+
+  const [
+    isHotSalesPaused,
+    setIsHotSalesPaused,
+  ] = useState(false);
+
+  const hotMobileRailRef =
+    useRef(null);
+
+  const hotAutoScrollRef =
+    useRef(null);
+
+  /* =================================================
+     PRODUCTS
+  ================================================= */
+
+  const products = useMemo(() => {
+    if (!allProduct?.length) {
+      return fallbackProducts;
+    }
+
+    return allProduct;
+  }, [allProduct]);
+
+  /* =================================================
+     NEW ARRIVALS
+  ================================================= */
+
+  const newArrivals = useMemo(() => {
+    let items = [];
+
+    if (!allProduct?.length) {
+      items =
+        fallbackProducts.slice(0, 8);
+    } else {
+      items = [...allProduct]
+        .sort(
+          (a, b) =>
+            new Date(
+              b?.createdAt || 0
+            ) -
+            new Date(
+              a?.createdAt || 0
+            )
+        )
+        .slice(0, 8);
+    }
+
+    return items.map(
+      (product, index) => ({
+        ...product,
+        badge:
+          product?.badge ||
+          (index < 3
+            ? "NEW"
+            : undefined),
+      })
+    );
+  }, [allProduct]);
+
+  /* =================================================
+     HOT SALES
+
+     API FIELD:
+     hotSell
+  ================================================= */
+
+  const hotSales = useMemo(() => {
+    if (!allProduct?.length) {
+      return [];
+    }
+
+    return allProduct
+      .filter(
+        (product) =>
+          product?.hotSell === true ||
+          product?.hotSell === "true" ||
+          product?.hotSell === 1
+      )
+      .slice(0, 8)
+      .map((product) => ({
+        ...product,
+        badge:
+          product?.badge || "HOT",
+      }));
+  }, [allProduct]);
+
+  /* =================================================
+     RESET INDICES
+  ================================================= */
+
+  useEffect(() => {
+    setNewIndex(0);
+  }, [newArrivals.length]);
+
+  useEffect(() => {
+    setHotIndex(0);
+  }, [hotSales.length]);
+
+  /* =================================================
+     NEW ARRIVALS DESKTOP AUTOPLAY
+  ================================================= */
+
+  useEffect(() => {
+    if (
+      newArrivals.length <= 3 ||
+      isNewArrivalPaused
+    ) {
+      return;
+    }
+
+    newAutoScrollRef.current =
+      setInterval(() => {
+        setNewIndex((prev) => {
+          const max =
+            Math.max(
+              newArrivals.length - 3,
+              0
+            );
+
+          return prev >= max
+            ? 0
+            : prev + 1;
+        });
+      }, 4500);
+
+    return () => {
+      clearInterval(
+        newAutoScrollRef.current
+      );
+    };
+  }, [
+    newArrivals.length,
+    isNewArrivalPaused,
+  ]);
+
+  /* =================================================
+     NEW ARRIVALS MOBILE AUTOPLAY
+  ================================================= */
+
+  useEffect(() => {
+    const rail =
+      mobileRailRef.current;
+
+    if (
+      !rail ||
+      newArrivals.length <= 1
+    ) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (isNewArrivalPaused) {
+        return;
+      }
+
+      const card =
+        rail.querySelector(
+          "[data-new-arrival-card]"
+        );
+
+      if (!card) {
+        return;
+      }
+
+      const cardWidth =
+        card.offsetWidth;
+
+      const gap = 16;
+
+      const maxScroll =
+        rail.scrollWidth -
+        rail.clientWidth;
+
+      if (
+        rail.scrollLeft +
+          cardWidth +
+          gap >=
+        maxScroll - 10
+      ) {
+        rail.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+      } else {
+        rail.scrollBy({
+          left:
+            cardWidth + gap,
+          behavior: "smooth",
+        });
+      }
+    }, 4200);
+
+    return () =>
+      clearInterval(timer);
+  }, [
+    newArrivals.length,
+    isNewArrivalPaused,
+  ]);
+
+  /* =================================================
+     NEW ARRIVAL NEXT
+  ================================================= */
+
+  const nextNew = () => {
+    setNewIndex((prev) => {
+      const max =
+        Math.max(
+          newArrivals.length - 3,
+          0
+        );
+
+      return prev >= max
+        ? 0
+        : prev + 1;
+    });
+  };
+
+  /* =================================================
+     NEW ARRIVAL PREVIOUS
+  ================================================= */
+
+  const previousNew = () => {
+    setNewIndex((prev) => {
+      const max =
+        Math.max(
+          newArrivals.length - 3,
+          0
+        );
+
+      return prev <= 0
+        ? max
+        : prev - 1;
+    });
+  };
+
+  /* =================================================
+     NEW ARRIVAL MOBILE NEXT
+  ================================================= */
+
+  const scrollMobileNext = () => {
+    const rail =
+      mobileRailRef.current;
+
+    if (!rail) return;
+
+    const card =
+      rail.querySelector(
+        "[data-new-arrival-card]"
+      );
+
+    if (!card) return;
+
+    rail.scrollBy({
+      left:
+        card.offsetWidth + 16,
+      behavior: "smooth",
+    });
+  };
+
+  /* =================================================
+     HOT SALES DESKTOP AUTOPLAY
+  ================================================= */
+
+  useEffect(() => {
+    if (
+      hotSales.length <= 3 ||
+      isHotSalesPaused
+    ) {
+      return;
+    }
+
+    hotAutoScrollRef.current =
+      setInterval(() => {
+        setHotIndex((prev) => {
+          const max =
+            Math.max(
+              hotSales.length - 3,
+              0
+            );
+
+          return prev >= max
+            ? 0
+            : prev + 1;
+        });
+      }, 4200);
+
+    return () => {
+      clearInterval(
+        hotAutoScrollRef.current
+      );
+    };
+  }, [
+    hotSales.length,
+    isHotSalesPaused,
+  ]);
+
+  /* =================================================
+     HOT SALES MOBILE AUTOPLAY
+  ================================================= */
+
+  useEffect(() => {
+    const rail =
+      hotMobileRailRef.current;
+
+    if (
+      !rail ||
+      hotSales.length <= 1
+    ) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (isHotSalesPaused) {
+        return;
+      }
+
+      const card =
+        rail.querySelector(
+          "[data-hot-sale-card]"
+        );
+
+      if (!card) {
+        return;
+      }
+
+      const cardWidth =
+        card.offsetWidth;
+
+      const gap = 16;
+
+      const maxScroll =
+        rail.scrollWidth -
+        rail.clientWidth;
+
+      if (
+        rail.scrollLeft +
+          cardWidth +
+          gap >=
+        maxScroll - 10
+      ) {
+        rail.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+      } else {
+        rail.scrollBy({
+          left:
+            cardWidth + gap,
+          behavior: "smooth",
+        });
+      }
+    }, 4000);
+
+    return () =>
+      clearInterval(timer);
+  }, [
+    hotSales.length,
+    isHotSalesPaused,
+  ]);
+
+  /* =================================================
+     HOT SALES NEXT
+  ================================================= */
+
+  const nextHot = () => {
+    setHotIndex((prev) => {
+      const max =
+        Math.max(
+          hotSales.length - 3,
+          0
+        );
+
+      return prev >= max
+        ? 0
+        : prev + 1;
+    });
+  };
+
+  /* =================================================
+     HOT SALES PREVIOUS
+  ================================================= */
+
+  const previousHot = () => {
+    setHotIndex((prev) => {
+      const max =
+        Math.max(
+          hotSales.length - 3,
+          0
+        );
+
+      return prev <= 0
+        ? max
+        : prev - 1;
+    });
+  };
+
+  /* =================================================
+     HOT SALES MOBILE NEXT
+  ================================================= */
+
+  const scrollHotMobileNext = () => {
+    const rail =
+      hotMobileRailRef.current;
+
+    if (!rail) return;
+
+    const card =
+      rail.querySelector(
+        "[data-hot-sale-card]"
+      );
+
+    if (!card) return;
+
+    rail.scrollBy({
+      left:
+        card.offsetWidth + 16,
+      behavior: "smooth",
+    });
+  };
+
+  /* =================================================
+     SCROLL TOP
+  ================================================= */
+
+  const scrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
+  /* =================================================
+     RENDER
+  ================================================= */
+
+  return (
+    <main
+      className="
+        min-h-screen
+        overflow-hidden
+        bg-[#f8f4eb]
+        text-[#3f1616]
+      "
+    >
+
+      {/* =================================================
+          HERO
+      ================================================= */}
+
       <Hero />
 
-      {/* Categories Section */}
-      <section className="py-8 bg-white/70 backdrop-blur-md shadow-inner rounded-b-3xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-tr from-pink-200/20 via-amber-100/10 to-transparent animate-pulse-slow" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl whitespace-nowrap sm:text-3xl lg:text-4xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
-              <span className="text-pink-500 animate-pulse">
-                <Sparkles className="inline-block mr-2 animate-spin-slow" />
-              </span>
-              Shop by Category
-            </h2>
-            <p className="text-gray-700 max-w-3xl mx-auto mb-8 text-sm sm:text-xl font-body animate-fade-in delay-200">
-              Discover our wide range of products across different categories.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((cat, idx) => (
-              <Link
-                key={idx}
-                to={`/Categories/${cat.name}`}
-                onClick={() =>
-                  window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
-                }
-                className="group relative block rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105"
+      {/* =================================================
+          SIGNATURE WEAVES
+      ================================================= */}
+
+      <SignatureWeaves />
+
+      {/* =================================================
+          FIND YOUR WEAVE
+      ================================================= */}
+
+      <section
+        className="
+          relative
+          border-b
+          border-[#741522]/10
+          py-16
+          sm:py-20
+          lg:py-24
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-[1120px]
+            px-5
+            sm:px-8
+            lg:px-0
+          "
+        >
+
+          {/* Header */}
+
+          <div
+            className="
+              mb-9
+              flex
+              flex-col
+              gap-7
+              sm:mb-11
+              sm:flex-row
+              sm:items-end
+              sm:justify-between
+            "
+          >
+            <div>
+
+              <p
+                className="
+                  mb-4
+                  text-[8px]
+                  uppercase
+                  tracking-[0.38em]
+                  text-[#977e73]
+                  sm:text-[9px]
+                "
               >
-                <div className="relative">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="w-full h-52 object-cover transform group-hover:scale-110 group-hover:rotate-1 transition-all duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-pink-700/50 group-hover:via-amber-500/20 transition-all duration-500"></div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="text-xl font-bold mb-1 drop-shadow-lg">
-                    {cat.name.toUpperCase()}
-                  </h3>
-                  <div className="flex justify-between items-center cursor-pointer">
-                    <span className="text-xs uppercase tracking-wider font-medium">
-                      Shop Now
-                    </span>
-                    <ArrowRight className=" h-5 w-5 ml-1  animate-[arrowMove_1.2s_ease-in-out_infinite]" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-      {/* Hot Sales */}
-      <section className="  my-8 mb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
-            <div className="flex items-center">
-              <div className="p-3 animate-pulse bg-red-100 rounded-full mr-4">
-                <Flame size={32} className=" text-red-500" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">Hot Sales</h2>
-                <p className="text-sm sm:text-lg text-gray-600">
-                  Limited time offers on our most popular items
-                </p>
-              </div>
+                SHOP BY CATEGORY
+              </p>
+
+              <h2
+                className="
+                  font-serif
+                  text-[35px]
+                  font-normal
+                  leading-none
+                  text-[#3f1616]
+                  sm:text-[48px]
+                  lg:text-[54px]
+                "
+              >
+                Find your weave
+              </h2>
+
             </div>
+
             <Link
-              to="/hotsales"
-              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 hover:from-pink-500 hover:via-red-500 hover:to-rose-500 shadow-lg hover:shadow-xl  transform hover:scale-105 active:scale-95  transition-all duration-300 ease-out "
+              to="/allproducts"
+              onClick={scrollTop}
+              className="
+                self-start
+                border
+                border-[#741522]/50
+                px-7
+                py-3.5
+                text-[8px]
+                uppercase
+                tracking-[0.25em]
+                text-[#741522]
+                transition-all
+                duration-300
+                hover:bg-[#741522]
+                hover:text-[#f8f4eb]
+                sm:self-auto
+              "
             >
-              <span>View All</span>
-              <ArrowRight className="ml-2 h-4 animate-arrowMove sm:h-5 w-4 sm:w-5" />
+              All Categories
             </Link>
           </div>
 
-          {/* Mobile Swipe */}
-          <Swiper
-            spaceBetween={16}
-            slidesPerView={1.5}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 4 },
-            }}
-            autoplay={{ delay: 3000 }}
-            modules={[Autoplay]}
-            className="mySwiper"
+          {/* Category grid */}
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-3
+              sm:grid-cols-2
+              lg:grid-cols-4
+              lg:grid-rows-[225px_225px]
+            "
           >
-            {hotSales.map((product) => (
-              <SwiperSlide key={product._id}>
-                <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-pink-200">
-                  <ProductCard
-                    product={{
-                      id: product._id,
-                      name: product.productName,
-                      image: product.images?.[0]
-                        ? `${url}/img/${product.images[0]}`
-                        : "https://placehold.co/400x400",
-                      price: product.price,
-                      oldprice: product.originalPrice,
-                    }}
-                    onAddToCart={() => {}}
-                    onToggleWishlist={() => {}}
-                    isCompactMobile={true}
-                  />
-                  <span className="absolute top-2 right-2 bg-pink-600 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                    Hot
-                  </span>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+
+            {/* Silk */}
+
+            <Link
+              to="/Categories/saree"
+              onClick={scrollTop}
+              className="
+                group
+                relative
+                min-h-[390px]
+                overflow-hidden
+                sm:col-span-2
+                lg:row-span-2
+                lg:min-h-0
+              "
+            >
+              <img
+                src={categories[0].image}
+                alt={categories[0].name}
+                className="
+                  absolute
+                  inset-0
+                  h-full
+                  w-full
+                  object-cover
+                  transition-transform
+                  duration-[1400ms]
+                  group-hover:scale-[1.06]
+                "
+              />
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-gradient-to-t
+                  from-[#65171b]/85
+                  via-[#65171b]/10
+                  to-transparent
+                "
+              />
+
+              <CategoryText
+                title={
+                  categories[0].name
+                }
+                subtitle={
+                  categories[0].subtitle
+                }
+              />
+            </Link>
+
+            {/* Cotton */}
+
+            <CategoryTile
+              category={categories[1]}
+              scrollTop={scrollTop}
+            />
+
+            {/* Bandhani */}
+
+            <CategoryTile
+              category={categories[2]}
+              scrollTop={scrollTop}
+            />
+
+            {/* Festive */}
+
+            <Link
+              to="/Categories/festive"
+              onClick={scrollTop}
+              className="
+                group
+                relative
+                min-h-[230px]
+                overflow-hidden
+                sm:col-span-2
+              "
+            >
+              <img
+                src={categories[3].image}
+                alt={categories[3].name}
+                className="
+                  absolute
+                  inset-0
+                  h-full
+                  w-full
+                  object-cover
+                  transition-transform
+                  duration-[1400ms]
+                  group-hover:scale-[1.06]
+                "
+              />
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-gradient-to-t
+                  from-[#7d2c24]/80
+                  via-[#7d2c24]/10
+                  to-transparent
+                "
+              />
+
+              <CategoryText
+                title={
+                  categories[3].name
+                }
+                subtitle={
+                  categories[3].subtitle
+                }
+              />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* New Arrivals */}
-      <section className=" my-8 mt-9">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
-            <div className="flex items-center">
-              <div className="p-3 animate-pulse bg-blue-100 rounded-full mr-4">
-                <Crown size={32} className="text-blue-500" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">
-                  New Arrivals
-                </h2>
-                <p className="text-sm sm:text-lg text-gray-600">
-                  Discover our latest additions
-                </p>
-              </div>
+      {/* =========================================================
+          NEW ARRIVALS
+      ========================================================= */}
+
+      <section
+        className="
+          relative
+          overflow-hidden
+          border-b
+          border-[#741522]/10
+          bg-[#f8f4eb]
+          py-16
+          sm:py-20
+          lg:py-24
+        "
+      >
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-[1240px]
+            px-4
+            sm:px-6
+            lg:px-8
+          "
+        >
+
+          {/* Header */}
+
+          <div
+            className="
+              mb-8
+              flex
+              flex-col
+              gap-6
+              sm:mb-10
+              sm:flex-row
+              sm:items-end
+              sm:justify-between
+              lg:mb-12
+            "
+          >
+            <div
+              className="
+                max-w-[620px]
+              "
+            >
+
+              <p
+                className="
+                  mb-3
+                  text-[8px]
+                  font-medium
+                  uppercase
+                  tracking-[0.35em]
+                  text-[#977e73]
+                  sm:text-[9px]
+                "
+              >
+                JUST OFF THE LOOM
+              </p>
+
+              <h2
+                className="
+                  font-serif
+                  text-[38px]
+                  font-normal
+                  leading-[0.95]
+                  tracking-[-0.02em]
+                  text-[#3f1616]
+                  sm:text-[48px]
+                  lg:text-[54px]
+                "
+              >
+                New arrivals
+              </h2>
+
+              <p
+                className="
+                  mt-5
+                  max-w-[500px]
+                  text-[12px]
+                  leading-6
+                  text-[#806c63]
+                  sm:text-[13px]
+                "
+              >
+                Fresh weaves added this week —
+                each one a single piece,
+                never repeated.
+              </p>
             </div>
+
+            {/* Desktop arrows */}
+
+            <div
+              className="
+                hidden
+                items-center
+                gap-2
+                sm:flex
+              "
+            >
+              <button
+                type="button"
+                onClick={previousNew}
+                onMouseEnter={() =>
+                  setIsNewArrivalPaused(true)
+                }
+                onMouseLeave={() =>
+                  setIsNewArrivalPaused(false)
+                }
+                aria-label="Previous new arrivals"
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  border
+                  border-[#741522]/20
+                  text-[#741522]
+                  transition-all
+                  duration-300
+                  hover:bg-[#741522]
+                  hover:text-[#f8f4eb]
+                "
+              >
+                <ChevronLeft
+                  size={17}
+                  strokeWidth={1.2}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={nextNew}
+                onMouseEnter={() =>
+                  setIsNewArrivalPaused(true)
+                }
+                onMouseLeave={() =>
+                  setIsNewArrivalPaused(false)
+                }
+                aria-label="Next new arrivals"
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  border
+                  border-[#741522]/20
+                  text-[#741522]
+                  transition-all
+                  duration-300
+                  hover:bg-[#741522]
+                  hover:text-[#f8f4eb]
+                "
+              >
+                <ChevronRight
+                  size={17}
+                  strokeWidth={1.2}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop */}
+
+          <div
+            className="hidden sm:block"
+            onMouseEnter={() =>
+              setIsNewArrivalPaused(true)
+            }
+            onMouseLeave={() =>
+              setIsNewArrivalPaused(false)
+            }
+          >
+            <div
+              className="
+                grid
+                grid-cols-2
+                gap-5
+                lg:grid-cols-3
+                lg:gap-6
+              "
+            >
+              {newArrivals
+                .slice(
+                  newIndex,
+                  newIndex + 3
+                )
+                .map(
+                  (
+                    product,
+                    index
+                  ) => (
+                    <LuxuryProductCard
+                      key={
+                        product?._id ||
+                        product?.id
+                      }
+                      product={product}
+                      url={url}
+                      index={index}
+                    />
+                  )
+                )}
+            </div>
+          </div>
+
+          {/* Mobile */}
+
+          <div
+            className="
+              -mx-4
+              block
+              sm:hidden
+              pl-4
+            "
+          >
+            <div
+              ref={mobileRailRef}
+              onTouchStart={() =>
+                setIsNewArrivalPaused(true)
+              }
+              onTouchEnd={() => {
+                setTimeout(() => {
+                  setIsNewArrivalPaused(
+                    false
+                  );
+                }, 1200);
+              }}
+              className="
+                new-arrivals-mobile
+                flex
+                snap-x
+                snap-mandatory
+                gap-4
+                overflow-x-auto
+                overscroll-x-contain
+                px-4
+                pb-4
+                touch-pan-x
+              "
+            >
+              {newArrivals.map(
+                (
+                  product,
+                  index
+                ) => (
+                  <div
+                    key={
+                      product?._id ||
+                      product?.id
+                    }
+                    data-new-arrival-card
+                    className="
+                      w-[82vw]
+                      max-w-[340px]
+                      flex-none
+                      snap-start
+                    "
+                  >
+                    <LuxuryProductCard
+                      product={product}
+                      url={url}
+                      index={index}
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Mobile helper */}
+
+          <div
+            className="
+              mt-5
+              flex
+              flex-col
+              items-center
+              gap-3
+              sm:hidden
+            "
+          >
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+              "
+            >
+              <span
+                className="
+                  h-px
+                  w-7
+                  bg-[#741522]/30
+                "
+              />
+
+              <span
+                className="
+                  text-[7px]
+                  uppercase
+                  tracking-[0.28em]
+                  text-[#977e73]
+                "
+              >
+                Swipe new arrivals
+              </span>
+
+              <ChevronRight
+                size={13}
+                strokeWidth={1.2}
+                className="text-[#741522]"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={scrollMobileNext}
+              aria-label="Next new arrival"
+              className="
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-[#741522]/20
+                text-[#741522]
+                transition-all
+                duration-300
+                active:scale-90
+              "
+            >
+              <ChevronRight
+                size={15}
+                strokeWidth={1.2}
+              />
+            </button>
+          </div>
+
+          {/* Desktop progress */}
+
+          <div
+            className="
+              mt-9
+              hidden
+              items-center
+              justify-center
+              gap-2
+              sm:flex
+            "
+          >
+            {Array.from({
+              length: Math.max(
+                newArrivals.length - 2,
+                1
+              ),
+            }).map(
+              (_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Go to new arrivals ${
+                    index + 1
+                  }`}
+                  onClick={() =>
+                    setNewIndex(index)
+                  }
+                  className="
+                    h-px
+                    transition-all
+                    duration-500
+                  "
+                  style={{
+                    width:
+                      index === newIndex
+                        ? "36px"
+                        : "16px",
+                    background:
+                      index === newIndex
+                        ? "#741522"
+                        : "rgba(116,21,34,0.20)",
+                  }}
+                />
+              )
+            )}
+          </div>
+
+          {/* =================================================
+              VIEW ALL NEW ARRIVALS
+          ================================================= */}
+
+          <div
+            className="
+              mt-10
+              flex
+              justify-center
+              sm:mt-12
+            "
+          >
             <Link
               to="/newarrivals"
-              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-500 hover:to-indigo-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+              onClick={scrollTop}
+              className="
+                group
+                inline-flex
+                items-center
+                gap-3
+                border
+                border-[#741522]/45
+                bg-transparent
+                px-7
+                py-3.5
+                text-[8px]
+                uppercase
+                tracking-[0.28em]
+                text-[#741522]
+                transition-all
+                duration-300
+                hover:bg-[#741522]
+                hover:text-[#f8f4eb]
+                hover:shadow-lg
+                active:scale-95
+                sm:px-9
+                sm:py-4
+              "
             >
-              View All
-              <ArrowRight className="ml-2 animate-arrowMove h-5 w-5" />
+              <Sparkles
+                size={14}
+                strokeWidth={1.3}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:rotate-12
+                "
+              />
+
+              <span>
+                View all new arrivals
+              </span>
+
+              <ArrowRight
+                size={14}
+                strokeWidth={1.2}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:translate-x-1
+                "
+              />
             </Link>
           </div>
+        </div>
 
-          {/* Mobile Swipe */}
-          <Swiper
-            spaceBetween={16}
-            slidesPerView={1.5}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 4 },
-            }}
-            autoplay={{ delay: 3000 }}
-            modules={[Autoplay]}
-            className="mySwiper"
+        {/* Decorative light */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-32
+            top-20
+            hidden
+            h-72
+            w-72
+            rounded-full
+            bg-[#d4ad54]/[0.035]
+            blur-3xl
+            lg:block
+          "
+        />
+      </section>
+
+      {/* =========================================================
+          HOT SALES
+      ========================================================= */}
+
+      {hotSales.length > 0 && (
+        <section
+          className="
+            relative
+            overflow-hidden
+            border-b
+            border-[#741522]/10
+            bg-[#f3eadb]
+            py-16
+            sm:py-20
+            lg:py-24
+          "
+        >
+          <div
+            className="
+              mx-auto
+              w-full
+              max-w-[1240px]
+              px-4
+              sm:px-6
+              lg:px-8
+            "
           >
-            {newArrivals.map((product) => (
-              <SwiperSlide key={product._id}>
-                <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-indigo-200">
-                  <ProductCard
-                    product={{
-                      id: product._id,
-                      name: product.productName,
-                      image: product.images?.[0]
-                        ? `${url}/img/${product.images[0]}`
-                        : "",
-                      price: product.price,
-                    }}
-                    onAddToCart={() => {}}
-                    onToggleWishlist={() => {}}
-                    isCompactMobile={true}
-                  />
-                  <span className="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full animate-bounce">
-                    New
-                  </span>
+
+            {/* Header */}
+
+            <div
+              className="
+                mb-8
+                flex
+                flex-col
+                gap-6
+                sm:mb-10
+                sm:flex-row
+                sm:items-end
+                sm:justify-between
+                lg:mb-12
+              "
+            >
+              <div
+                className="
+                  max-w-[620px]
+                "
+              >
+                <div
+                  className="
+                    mb-4
+                    flex
+                    items-center
+                    gap-3
+                  "
+                >
+                  <div
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      items-center
+                      justify-center
+                      border
+                      border-[#d4ad54]/50
+                      bg-[#f8f4eb]
+                    "
+                  >
+                    <Flame
+                      size={16}
+                      strokeWidth={1.3}
+                      className="
+                        animate-pulse
+                        text-[#741522]
+                      "
+                    />
+                  </div>
+
+                  <p
+                    className="
+                      text-[8px]
+                      font-medium
+                      uppercase
+                      tracking-[0.35em]
+                      text-[#977e73]
+                      sm:text-[9px]
+                    "
+                  >
+                    THE DARSH SALE EDIT
+                  </p>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+
+                <h2
+                  className="
+                    font-serif
+                    text-[38px]
+                    font-normal
+                    leading-[0.95]
+                    tracking-[-0.02em]
+                    text-[#3f1616]
+                    sm:text-[48px]
+                    lg:text-[54px]
+                  "
+                >
+                  Hot sales
+                </h2>
+
+                <p
+                  className="
+                    mt-5
+                    max-w-[500px]
+                    text-[12px]
+                    leading-6
+                    text-[#806c63]
+                    sm:text-[13px]
+                  "
+                >
+                  Handpicked favourites at
+                  special prices — discover
+                  the pieces everyone is
+                  reaching for.
+                </p>
+              </div>
+
+              {/* Desktop arrows */}
+
+              <div
+                className="
+                  hidden
+                  items-center
+                  gap-2
+                  sm:flex
+                "
+              >
+                <button
+                  type="button"
+                  onClick={previousHot}
+                  onMouseEnter={() =>
+                    setIsHotSalesPaused(true)
+                  }
+                  onMouseLeave={() =>
+                    setIsHotSalesPaused(false)
+                  }
+                  aria-label="Previous hot sales"
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    border
+                    border-[#741522]/20
+                    text-[#741522]
+                    transition-all
+                    duration-300
+                    hover:bg-[#741522]
+                    hover:text-[#f8f4eb]
+                  "
+                >
+                  <ChevronLeft
+                    size={17}
+                    strokeWidth={1.2}
+                  />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={nextHot}
+                  onMouseEnter={() =>
+                    setIsHotSalesPaused(true)
+                  }
+                  onMouseLeave={() =>
+                    setIsHotSalesPaused(false)
+                  }
+                  aria-label="Next hot sales"
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    border
+                    border-[#741522]/20
+                    text-[#741522]
+                    transition-all
+                    duration-300
+                    hover:bg-[#741522]
+                    hover:text-[#f8f4eb]
+                  "
+                >
+                  <ChevronRight
+                    size={17}
+                    strokeWidth={1.2}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop products */}
+
+            <div
+              className="hidden sm:block"
+              onMouseEnter={() =>
+                setIsHotSalesPaused(true)
+              }
+              onMouseLeave={() =>
+                setIsHotSalesPaused(false)
+              }
+            >
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  gap-5
+                  lg:grid-cols-3
+                  lg:gap-6
+                "
+              >
+                {hotSales
+                  .slice(
+                    hotIndex,
+                    hotIndex + 3
+                  )
+                  .map(
+                    (
+                      product,
+                      index
+                    ) => (
+                      <LuxuryProductCard
+                        key={
+                          product?._id ||
+                          product?.id
+                        }
+                        product={{
+                          ...product,
+                          badge:
+                            product?.badge ||
+                            "HOT",
+                        }}
+                        url={url}
+                        index={index}
+                      />
+                    )
+                  )}
+              </div>
+            </div>
+
+            {/* Mobile products */}
+
+            <div
+              className="
+                -mx-4
+                block
+                sm:hidden
+                pl-4
+              "
+            >
+              <div
+                ref={hotMobileRailRef}
+                onTouchStart={() =>
+                  setIsHotSalesPaused(true)
+                }
+                onTouchEnd={() => {
+                  setTimeout(() => {
+                    setIsHotSalesPaused(
+                      false
+                    );
+                  }, 1200);
+                }}
+                className="
+                  hot-sales-mobile
+                  flex
+                  snap-x
+                  snap-mandatory
+                  gap-4
+                  overflow-x-auto
+                  overscroll-x-contain
+                  px-4
+                  pb-4
+                  touch-pan-x
+                "
+              >
+                {hotSales.map(
+                  (
+                    product,
+                    index
+                  ) => (
+                    <div
+                      key={
+                        product?._id ||
+                        product?.id
+                      }
+                      data-hot-sale-card
+                      className="
+                        w-[82vw]
+                        max-w-[340px]
+                        flex-none
+                        snap-start
+                      "
+                    >
+                      <LuxuryProductCard
+                        product={{
+                          ...product,
+                          badge:
+                            product?.badge ||
+                            "HOT",
+                        }}
+                        url={url}
+                        index={index}
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Mobile helper */}
+
+            <div
+              className="
+                mt-5
+                flex
+                flex-col
+                items-center
+                gap-4
+                sm:hidden
+              "
+            >
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                "
+              >
+                <span
+                  className="
+                    h-px
+                    w-7
+                    bg-[#741522]/30
+                  "
+                />
+
+                <span
+                  className="
+                    text-[7px]
+                    uppercase
+                    tracking-[0.28em]
+                    text-[#977e73]
+                  "
+                >
+                  Swipe hot picks
+                </span>
+
+                <ChevronRight
+                  size={13}
+                  strokeWidth={1.2}
+                  className="text-[#741522]"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  scrollHotMobileNext
+                }
+                aria-label="Next hot sale"
+                className="
+                  flex
+                  h-9
+                  w-9
+                  items-center
+                  justify-center
+                  rounded-full
+                  border
+                  border-[#741522]/20
+                  text-[#741522]
+                  transition-all
+                  duration-300
+                  active:scale-90
+                "
+              >
+                <ChevronRight
+                  size={15}
+                  strokeWidth={1.2}
+                />
+              </button>
+            </div>
+
+            {/* Desktop progress */}
+
+            <div
+              className="
+                mt-9
+                hidden
+                items-center
+                justify-center
+                gap-2
+                sm:flex
+              "
+            >
+              {Array.from({
+                length: Math.max(
+                  hotSales.length - 2,
+                  1
+                ),
+              }).map(
+                (_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Go to hot sales ${
+                      index + 1
+                    }`}
+                    onClick={() =>
+                      setHotIndex(index)
+                    }
+                    className="
+                      h-px
+                      transition-all
+                      duration-500
+                    "
+                    style={{
+                      width:
+                        index === hotIndex
+                          ? "36px"
+                          : "16px",
+                      background:
+                        index === hotIndex
+                          ? "#741522"
+                          : "rgba(116,21,34,0.20)",
+                    }}
+                  />
+                )
+              )}
+            </div>
+
+            {/* =================================================
+                VIEW ALL HOT SALES
+            ================================================= */}
+
+            <div
+              className="
+                mt-10
+                flex
+                justify-center
+                sm:mt-12
+              "
+            >
+              <Link
+                to="/hotsales"
+                onClick={scrollTop}
+                className="
+                  group
+                  inline-flex
+                  items-center
+                  gap-3
+                  border
+                  border-[#741522]/45
+                  bg-transparent
+                  px-7
+                  py-3.5
+                  text-[8px]
+                  uppercase
+                  tracking-[0.28em]
+                  text-[#741522]
+                  transition-all
+                  duration-300
+                  hover:bg-[#741522]
+                  hover:text-[#f8f4eb]
+                  hover:shadow-lg
+                  active:scale-95
+                  sm:px-9
+                  sm:py-4
+                "
+              >
+                <Flame
+                  size={14}
+                  strokeWidth={1.3}
+                  className="
+                    transition-transform
+                    duration-300
+                    group-hover:scale-110
+                  "
+                />
+
+                <span>
+                  View all hot sales
+                </span>
+
+                <ArrowRight
+                  size={14}
+                  strokeWidth={1.2}
+                  className="
+                    transition-transform
+                    duration-300
+                    group-hover:translate-x-1
+                  "
+                />
+              </Link>
+            </div>
+          </div>
+
+          {/* Decorative gold light */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -left-32
+              bottom-10
+              hidden
+              h-72
+              w-72
+              rounded-full
+              bg-[#d4ad54]/[0.04]
+              blur-3xl
+              lg:block
+            "
+          />
+        </section>
+      )}
+
+      {/* =========================================================
+          SAREES IN THE SHOP
+      ========================================================= */}
+
+      <section
+        className="
+          border-b
+          border-[#741522]/10
+          py-16
+          sm:py-20
+          lg:py-24
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-[1120px]
+            px-5
+            sm:px-8
+            lg:px-0
+          "
+        >
+
+          {/* Heading */}
+
+          <div
+            className="
+              mb-10
+              text-center
+              sm:mb-12
+            "
+          >
+            <p
+              className="
+                mb-4
+                text-[8px]
+                uppercase
+                tracking-[0.4em]
+                text-[#977e73]
+              "
+            >
+              THE DARSH EDIT
+            </p>
+
+            <h2
+              className="
+                font-serif
+                text-[36px]
+                text-[#3f1616]
+                sm:text-[48px]
+              "
+            >
+              Sarees in the shop
+            </h2>
+          </div>
+
+          {/* Product grid */}
+
+          <div
+            className="
+              grid
+              grid-cols-2
+              gap-x-4
+              gap-y-12
+              sm:gap-x-6
+              sm:gap-y-16
+              md:grid-cols-3
+            "
+          >
+            {products
+              .slice(0, 6)
+              .map(
+                (
+                  product,
+                  index
+                ) => (
+                  <LuxuryProductCard
+                    key={
+                      product?._id ||
+                      product?.id
+                    }
+                    product={product}
+                    url={url}
+                    index={index}
+                  />
+                )
+              )}
+          </div>
+
+          {/* Shop all */}
+
+          <div
+            className="
+              mt-14
+              flex
+              justify-center
+              sm:mt-16
+            "
+          >
+            <Link
+              to="/allproducts"
+              onClick={scrollTop}
+              className="
+                group
+                inline-flex
+                items-center
+                gap-4
+                border
+                border-[#741522]/45
+                px-8
+                py-4
+                text-[8px]
+                uppercase
+                tracking-[0.28em]
+                text-[#741522]
+                transition-all
+                duration-300
+                hover:bg-[#741522]
+                hover:text-[#f8f4eb]
+              "
+            >
+              Shop all sarees
+
+              <ArrowRight
+                size={14}
+                strokeWidth={1.2}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover:translate-x-1
+                "
+              />
+            </Link>
+          </div>
         </div>
       </section>
-      <Reels />
 
-    
+      {/* =========================================================
+          REELS
+      ========================================================= */}
+
+      <section
+        className="
+          border-b
+          border-[#741522]/10
+        "
+      >
+        <Reels />
+      </section>
+
+      {/* =========================================================
+          FESTIVE BANNER
+      ========================================================= */}
 
       <FestiveBanner />
 
-      {/* All Products */}
-      <section className="my-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-12 gap-4">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <ShoppingBag size={36} className="text-teal-500 animate-pulse" />
-              All Products
-            </h2>
-            <Link
-              to="/allproducts"
-              className="flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3 w-auto rounded-full font-semibold text-white text-sm sm:text-base md:text-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-cyan-500 hover:to-teal-500 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              View All
-              <ArrowRight className="ml-2 animate-arrowMove h-5 w-5" />
-            </Link>
-          </div>
+      {/* =========================================================
+          ANIMATIONS
+      ========================================================= */}
 
-          {/* Mobile & Tablet Swipe (below 1024px) */}
-          <div className="lg:hidden">
-            <Swiper
-              spaceBetween={16}
-              slidesPerView={1.5}
-              breakpoints={{
-                640: { slidesPerView: 2 },
-                768: { slidesPerView: 2.5 },
-              }}
-              autoplay={{ delay: 3000 }}
-              modules={[Autoplay]}
-              className="mySwiper"
-            >
-              {allProduct?.slice(0, 8).map((product) => (
-                <SwiperSlide key={product._id}>
-                  <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl bg-white transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 border border-teal-200">
-                    <ProductCard
-                      product={{
-                        id: product._id,
-                        name: product.productName,
-                        image: product.images?.[0]
-                          ? `${url}/img/${product.images[0]}`
-                          : "https://placehold.co/400x400",
-                        price: product.price,
-                        description: product.description,
-                        stock: product.stock,
-                      }}
-                      isCompactMobile={true}
-                      onAddToCart={() => {}}
-                      onToggleWishlist={() => {}}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
+      <style>
+        {`
+          @keyframes productReveal {
+            0% {
+              opacity: 0;
+              transform: translateY(25px);
+            }
 
-          {/* Desktop Grid (1024px and above) */}
-          <div className="hidden lg:block">
-            <motion.div
-              className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {allProduct && allProduct.length > 0 ? (
-                allProduct.slice(0, 4).map((product, index) => (
-                  <motion.div
-                    key={product._id}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{
-                      y: -6,
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <ProductCard
-                      product={{
-                        id: product._id,
-                        name: product.productName,
-                        image: product.images?.[0]
-                          ? `${url}/img/${product.images[0]}`
-                          : "https://placehold.co/400x400",
-                        price: product.price,
-                        description: product.description,
-                        stock: product.stock,
-                      }}
-                      isCompactMobile={true}
-                      onAddToCart={() => {}}
-                      onToggleWishlist={() => {}}
-                    />
-                  </motion.div>
-                ))
-              ) : (
-                <motion.p
-                  className="text-gray-600 col-span-full text-center py-10 text-lg"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  No products found.
-                </motion.p>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </section>
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
 
-  {/* Why Choose Darsh (Enhanced Design) */}
-       <section className="py-20 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl whitespace-nowrap sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-6 font-serif animate-fade-in-up">
-            Why Choose POMWB
-          </h2>
-          <p className="text-gray-700 max-w-3xl mx-auto mb-16 text-sm sm:text-xl font-body animate-fade-in delay-200">
-            We combine traditional craftsmanship with modern convenience to bring you the best shopping experience.
-          </p>
+          .new-arrivals-mobile::-webkit-scrollbar,
+          .hot-sales-mobile::-webkit-scrollbar {
+            display: none;
+          }
 
-          <Swiper
-            spaceBetween={24}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 4 },
-            }}
-            autoplay={{ delay: 2500, disableOnInteraction: false }}
-            pagination={{ clickable: true }}
-            modules={[Pagination, Autoplay]}
-            className="mySwiper why-choose-swiper"
+          .new-arrivals-mobile,
+          .hot-sales-mobile {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}
+      </style>
+    </main>
+  );
+};
+
+/* =========================================================
+   CATEGORY TILE
+========================================================= */
+
+const CategoryTile = ({
+  category,
+  scrollTop,
+}) => {
+  return (
+    <Link
+      to={category.path}
+      onClick={scrollTop}
+      className="
+        group
+        relative
+        min-h-[220px]
+        overflow-hidden
+      "
+    >
+      <img
+        src={category.image}
+        alt={category.name}
+        className="
+          absolute
+          inset-0
+          h-full
+          w-full
+          object-cover
+          transition-transform
+          duration-[1400ms]
+          group-hover:scale-[1.07]
+        "
+      />
+
+      <div
+        className="
+          absolute
+          inset-0
+          bg-gradient-to-t
+          from-[#65171b]/85
+          via-[#65171b]/10
+          to-transparent
+        "
+      />
+
+      <CategoryText
+        title={category.name}
+        subtitle={category.subtitle}
+      />
+    </Link>
+  );
+};
+
+/* =========================================================
+   CATEGORY TEXT
+========================================================= */
+
+const CategoryText = ({
+  title,
+  subtitle,
+}) => {
+  return (
+    <div
+      className="
+        absolute
+        bottom-5
+        left-5
+        right-5
+        text-[#f8f4eb]
+      "
+    >
+      <div
+        className="
+          flex
+          items-end
+          justify-between
+          gap-3
+        "
+      >
+        <div>
+          <h3
+            className="
+              font-serif
+              text-[19px]
+              leading-none
+              sm:text-[21px]
+            "
           >
-            {[
-              {
-                icon: Heart,
-                color: "text-red-500",
-                title: "Artisanal Craftsmanship",
-                desc: "Each piece is lovingly handcrafted with attention to every detail.",
-              },
-              {
-                icon: Sparkles,
-                color: "text-pink-500",
-                title: "Sustainable Elegance",
-                desc: "Ethically sourced materials for timeless, eco-conscious fashion.",
-              },
-              {
-                icon: Truck,
-                color: "text-indigo-500",
-                title: "Swift Delivery",
-                desc: "Fast & secure shipping to your doorstep, anywhere.",
-              },
-              {
-                icon: ShoppingBag,
-                color: "text-teal-500",
-                title: "Guaranteed Quality",
-                desc: "We promise the finest quality with complete satisfaction.",
-              },
-            ].map((item, idx) => (
-              <SwiperSlide key={idx}>
-                <div className="relative bg-gradient-to-tr from-white via-amber-50 to-white rounded-3xl p-8 border border-amber-200 hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 hover:scale-105">
-                  <div className={`mb-6 text-center`}>
-                    <item.icon
-                      className={`h-16 w-16 mx-auto ${item.color} animate-bounce-slow`}
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold whitespace-nowrap text-gray-800 mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm font-light">
-                    {item.desc}
-                  </p>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      </section> 
-      {/* Testimonials - Redesigned & Animated */}
-      {/* <section className="py-7 bg-gradient-to-r from-yellow-50 via-amber-100 to-yellow-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-maroon-900 mb-4 font-serif animate-fade-in-up">
-            Our Community
-          </h2>
-          <p className="text-gray-700 max-w-3xl mx-auto mb-8 text-sm sm:text-xl font-body animate-fade-in delay-200">
-            Stories from our happy customers who are part of the ShopHub family.
-          </p>
+            {title}
+          </h3>
 
-          <Swiper
-            spaceBetween={24}
-            slidesPerView={1}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            autoplay={{ delay: 4000, disableOnInteraction: false }}
-            pagination={{ clickable: true }}
-            modules={[Pagination, Autoplay]}
-            className="mySwiper testimonial-swiper"
+          <p
+            className="
+              mt-2
+              text-[7px]
+              tracking-[0.2em]
+              text-[#e6d2ae]
+            "
           >
-            {testimonials.map((t, idx) => (
-              <SwiperSlide key={idx}>
-                <div className="bg-white p-8 rounded-2xl border border-amber-200 transform hover:scale-105 transition-all duration-500 animate-fade-in-up">
-                  <img
-                    src={t.image}
-                    alt={t.name}
-                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-maroon-800 animate-bounce-slow"
-                  />
-                  <p className="text-gray-700 italic mb-4 text-sm sm:text-base">
-                    "{t.quote}"
-                  </p>
-                  <div className="flex items-center justify-center text-yellow-400 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-current" />
-                    ))}
-                  </div>
-                  <span className="font-semibold text-gray-900">{t.name}</span>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+            {subtitle}
+          </p>
         </div>
-      </section> */}
+
+        <ArrowRight
+          size={18}
+          strokeWidth={1}
+          className="
+            text-[#d5af55]
+            transition-transform
+            duration-300
+            group-hover:translate-x-1
+          "
+        />
+      </div>
     </div>
   );
 };

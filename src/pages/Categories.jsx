@@ -1,13 +1,14 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { useAppContext } from "../context/AppContext.jsx";
 import ProductCard from "../components/ProductCard";
+
 import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Search,
   Filter,
   X,
-  ArrowLeft,
   ChevronDown,
   RotateCcw,
   CheckCircle,
@@ -15,508 +16,2035 @@ import {
   PackageX,
   Sparkles,
   Blocks,
+  SlidersHorizontal,
+  Gem,
 } from "lucide-react";
+
 
 const Categories = () => {
   const { name } = useParams();
-  const navigate = useNavigate();
+
   const { allProduct, url } = useAppContext();
-  console.log(url);
+
+
+  /* ============================================================
+     STATE
+  ============================================================ */
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
-  const [priceRange, setPriceRange] = useState([0, 3000]);
-  const [stockStatus, setStockStatus] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSubCategory, setSelectedSubCategory] = useState("all");
-  const [availableSubcategories, setAvailableSubcategories] = useState([]);
 
-  const [openSection, setOpenSection] = useState("price");
+  const [priceRange, setPriceRange] = useState([
+    0,
+    3000,
+  ]);
 
-  // This should be your static category data if you have it
+  const [stockStatus, setStockStatus] =
+    useState("all");
+
+  const [showFilters, setShowFilters] =
+    useState(false);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [selectedSubCategory, setSelectedSubCategory] =
+    useState("all");
+
+  const [availableSubcategories, setAvailableSubcategories] =
+    useState([]);
+
+  const [openSection, setOpenSection] =
+    useState("price");
+   
+
+  /* ============================================================
+     CATEGORY DATA
+  ============================================================ */
+
   const categories = [
-    { id: "1", name: "saree", image: "/IMG/saree.png" },
-    { id: "2", name: "blouse", image: "/IMG/blouse.png" },
-    { id: "3", name: "men", image: "/IMG/men.png" },
-    { id: "4", name: "kids", image: "/IMG/kids.png" },
-    { id: "5", name: "home decor", image: "/IMG/home.png" },
     {
-      id: "6",
-      name: "others",
-      image:
-        "/IMG/all.png",
+      id: "1",
+      name: "saree",
+      image: "/IMG/p4.jpg",
     },
+    {
+      id: "2",
+      name: "blouse",
+      image: "/IMG/p3.jpg",
+    },
+    {
+      id: "3",
+      name: "men",
+      image: "/IMG/p6.jpg",
+    },
+    {
+      id: "4",
+      name: "kids",
+      image: "/IMG/about.jpeg",
+    },
+    
   ];
 
+
+  /* ============================================================
+     CATEGORY IMAGE
+  ============================================================ */
+
+  const currentCategory = categories.find(
+    (category) =>
+      category.name.toLowerCase() ===
+      name?.toLowerCase()
+  );
+
+
+  /* ============================================================
+     LOADING + SUBCATEGORY
+  ============================================================ */
+
   useEffect(() => {
-    if (allProduct) {
-      setIsLoading(false);
-      // Dynamically extract unique subcategories for the current category
-      const subCats = new Set();
-      allProduct.forEach(p => {
-        if (p.category === name && p.subCategory) {
-          subCats.add(p.subCategory.toLowerCase());
-        }
-      });
-      setAvailableSubcategories(Array.from(subCats));
-    }
+    if (!allProduct) return;
+
+    setIsLoading(false);
+
+    const subCats = new Set();
+
+    allProduct.forEach((product) => {
+      if (
+        product.category?.toLowerCase() ===
+          name?.toLowerCase() &&
+        product.subCategory
+      ) {
+        subCats.add(
+          product.subCategory.toLowerCase()
+        );
+      }
+    });
+
+    setAvailableSubcategories(
+      Array.from(subCats)
+    );
+
   }, [allProduct, name]);
 
-  const filteredProducts = useMemo(() => {
-    let products = allProduct?.filter((product) => product.category === name) || [];
 
-    // Filter by subcategory
+  /* ============================================================
+     FILTER PRODUCTS
+  ============================================================ */
+
+  const filteredProducts = useMemo(() => {
+    let products =
+      allProduct?.filter(
+        (product) =>
+          product.category?.toLowerCase() ===
+          name?.toLowerCase()
+      ) || [];
+
+
+    /* Subcategory */
+
     if (selectedSubCategory !== "all") {
       products = products.filter(
         (product) =>
-          product.subCategory?.toLowerCase() === selectedSubCategory.toLowerCase()
+          product.subCategory
+            ?.toLowerCase() ===
+          selectedSubCategory.toLowerCase()
       );
     }
 
-    // Existing filters
-    if (searchQuery) {
-      products = products.filter((p) =>
-        p.productName.toLowerCase().includes(searchQuery.toLowerCase())
+
+    /* Search */
+
+    if (searchQuery.trim()) {
+      products = products.filter((product) =>
+        product.productName
+          ?.toLowerCase()
+          .includes(
+            searchQuery.toLowerCase()
+          )
       );
     }
+
+
+    /* Price */
 
     products = products.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+      (product) =>
+        product.price >= priceRange[0] &&
+        product.price <= priceRange[1]
     );
 
+
+    /* Stock */
+
     if (stockStatus === "inStock") {
-      products = products.filter((p) => p.stock > 0);
-    } else if (stockStatus === "outOfStock") {
-      products = products.filter((p) => !p.stock || p.stock === 0);
+      products = products.filter(
+        (product) => product.stock > 0
+      );
     }
 
+    if (stockStatus === "outOfStock") {
+      products = products.filter(
+        (product) =>
+          !product.stock ||
+          product.stock === 0
+      );
+    }
+
+
+    /* Sorting */
+
     if (sortBy === "priceLowHigh") {
-      products.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "priceHighLow") {
-      products.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "newest") {
-      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      products.sort(
+        (a, b) => a.price - b.price
+      );
+    }
+
+    if (sortBy === "priceHighLow") {
+      products.sort(
+        (a, b) => b.price - a.price
+      );
+    }
+
+    if (sortBy === "newest") {
+      products.sort(
+        (a, b) =>
+          new Date(b.createdAt) -
+          new Date(a.createdAt)
+      );
     }
 
     return products;
-  }, [allProduct, name, selectedSubCategory, searchQuery, priceRange, sortBy, stockStatus]);
+
+  }, [
+    allProduct,
+    name,
+    selectedSubCategory,
+    searchQuery,
+    priceRange,
+    sortBy,
+    stockStatus,
+  ]);
+
+
+  /* ============================================================
+     RESET
+  ============================================================ */
 
   const handleResetFilters = () => {
     setPriceRange([0, 3000]);
     setSortBy("default");
     setStockStatus("all");
-    setShowFilters(false);
     setSelectedSubCategory("all");
+    setSearchQuery("");
+    setShowFilters(false);
   };
+
 
   const handleApplyFilters = () => {
     setShowFilters(false);
   };
 
-  const FilterSection = ({ id, title, children }) => (
-    <div className="border-b pb-3 mb-3">
+
+  /* ============================================================
+     FILTER SECTION
+  ============================================================ */
+
+  const FilterSection = ({
+    id,
+    title,
+    icon,
+    children,
+  }) => (
+    <div className="border-b border-[#d4ad54]/15 pb-5 mb-5">
+
       <button
-        className="flex justify-between items-center w-full text-left font-medium text-gray-700"
-        onClick={() => setOpenSection(openSection === id ? "" : id)}
+        type="button"
+        onClick={() =>
+          setOpenSection(
+            openSection === id ? "" : id
+          )
+        }
+        className="
+          flex
+          w-full
+          items-center
+          justify-between
+          text-left
+          group
+        "
       >
-        {title}
+
+        <span
+          className="
+            flex
+            items-center
+            gap-2.5
+            text-sm
+            font-bold
+            text-[#4a1815]
+          "
+        >
+          {icon}
+
+          {title}
+        </span>
+
         <ChevronDown
-          className={`w-5 h-5 transition-transform ${
-            openSection === id ? "rotate-180" : ""
-          }`}
+          className={`
+            h-4
+            w-4
+            text-[#a99082]
+            transition-transform
+            duration-300
+            ${
+              openSection === id
+                ? "rotate-180 text-[#741522]"
+                : ""
+            }
+          `}
         />
+
       </button>
-      <AnimatePresence>
+
+
+      <AnimatePresence initial={false}>
+
         {openSection === id && (
+
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mt-3 text-sm text-gray-600 space-y-2"
+            initial={{
+              height: 0,
+              opacity: 0,
+            }}
+            animate={{
+              height: "auto",
+              opacity: 1,
+            }}
+            exit={{
+              height: 0,
+              opacity: 0,
+            }}
+            transition={{
+              duration: 0.25,
+            }}
+            className="
+              overflow-hidden
+              pt-4
+            "
           >
             {children}
           </motion.div>
+
         )}
+
       </AnimatePresence>
+
     </div>
   );
 
+
+  /* ============================================================
+     LOADING
+  ============================================================ */
+
   if (isLoading) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-gray-700 animate-pulse">Loading products...</p>
+      <div
+        className="
+          flex
+          min-h-screen
+          items-center
+          justify-center
+          bg-[#fffdf8]
+        "
+      >
+
+        <div className="text-center">
+
+          <motion.div
+            animate={{
+              rotate: 360,
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            className="
+              mx-auto
+              flex
+              h-14
+              w-14
+              items-center
+              justify-center
+              rounded-full
+              border-2
+              border-[#d4ad54]/20
+              border-t-[#741522]
+            "
+          >
+            <Gem
+              className="
+                h-5
+                w-5
+                text-[#b88732]
+              "
+            />
+          </motion.div>
+
+          <p
+            className="
+              mt-4
+              font-serif
+              text-lg
+              font-semibold
+              text-[#741522]
+            "
+          >
+            Curating your collection...
+          </p>
+
+          <p
+            className="
+              mt-1
+              text-xs
+              text-[#a99082]
+            "
+          >
+            Please wait
+          </p>
+
+        </div>
+
       </div>
     );
   }
 
+
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative h-60 md:h-80 rounded-b-3xl mb-10 overflow-hidden">
-        <img
-          src={categories.find((c) => c.name === name)?.image}
-          alt={name}
-          className="w-full h-full object-cover scale-105 hover:scale-110 transition-transform duration-700"
+    <div
+      className="
+        min-h-screen
+        overflow-hidden
+        bg-[#fffdf8]
+      "
+    >
+
+      {/* ========================================================
+          HERO
+      ======================================================== */}
+
+      <section
+        className="
+          relative
+          h-[270px]
+          overflow-hidden
+          sm:h-[320px]
+          lg:h-[390px]
+        "
+      >
+
+        {currentCategory?.image ? (
+          <motion.img
+            initial={{
+              scale: 1.08,
+              opacity: 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+            }}
+            transition={{
+              duration: 1,
+            }}
+            src={currentCategory.image}
+            alt={name}
+            className="
+              absolute
+              inset-0
+              h-full
+              w-full
+              object-cover
+            "
+          />
+        ) : (
+          <div
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-br
+              from-[#741522]
+              via-[#861d29]
+              to-[#4a1815]
+            "
+          />
+        )}
+
+
+        {/* Overlay */}
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-b
+            from-[#2b0d10]/40
+            via-[#4a1815]/55
+            to-[#2b0d10]/80
+          "
         />
-        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center text-white px-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 bg-white/20 hover:bg-white/40 backdrop-blur-md p-2 rounded-full transition"
+
+
+        {/* Decorative glow */}
+
+        <div
+          className="
+            absolute
+            -right-20
+            -top-20
+            h-64
+            w-64
+            rounded-full
+            bg-[#d4ad54]/15
+            blur-3xl
+          "
+        />
+
+
+
+
+        {/* Hero content */}
+
+        <div
+          className="
+            relative
+            z-10
+            flex
+            h-full
+            flex-col
+            items-center
+            justify-center
+            px-4
+            text-center
+            text-white
+          "
+        >
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 25,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.6,
+            }}
           >
-            <ArrowLeft className="w-6 h-6 text-white" />
-          </button>
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 capitalize flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-            {name}
-          </h1>
-          <p className="text-lg">{filteredProducts.length} products available</p>
-        </div>
-      </div>
 
-      <div className="flex flex-col md:flex-row gap-6 px-4 md:px-10">
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              className="fixed inset-0 bg-black/40 z-30 md:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowFilters(false)}
-            />
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              className="fixed left-0 top-0 h-full w-full max-w-sm z-40 bg-white p-6 overflow-y-auto rounded-r-2xl md:hidden"
-              initial={{ x: -300 }}
-              animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: "spring", stiffness: 120 }}
+            <div
+              className="
+                mb-4
+                flex
+                items-center
+                justify-center
+                gap-2
+              "
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-700">Filters</h3>
-                <X
-                  className="w-6 h-6 cursor-pointer"
-                  onClick={() => setShowFilters(false)}
-                />
-              </div>
 
-              <FilterSection id="price" title="Price Range">
-                <div>
-                  <div className="flex items-center gap-3">
+              <Sparkles
+                className="
+                  h-4
+                  w-4
+                  text-[#f5d98a]
+                "
+              />
+
+              <span
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.35em]
+                  text-[#f5d98a]
+                "
+              >
+                Darsh Collection
+              </span>
+
+              <Sparkles
+                className="
+                  h-4
+                  w-4
+                  text-[#f5d98a]
+                "
+              />
+
+            </div>
+
+
+            <h1
+              className="
+                font-serif
+                text-4xl
+                font-bold
+                capitalize
+                sm:text-5xl
+                lg:text-6xl
+              "
+            >
+              {name}
+            </h1>
+
+
+            <div
+              className="
+                mx-auto
+                mt-4
+                h-0.5
+                w-16
+                bg-gradient-to-r
+                from-transparent
+                via-[#d4ad54]
+                to-transparent
+              "
+            />
+
+
+            <p
+              className="
+                mt-4
+                text-xs
+                text-white/75
+                sm:text-sm
+              "
+            >
+              {filteredProducts.length}{" "}
+              {filteredProducts.length === 1
+                ? "piece"
+                : "pieces"}{" "}
+              available
+            </p>
+
+          </motion.div>
+
+        </div>
+
+      </section>
+
+
+      {/* ========================================================
+          MAIN
+      ======================================================== */}
+
+      <div
+        className="
+          mx-auto
+          max-w-[1500px]
+          px-4
+          py-7
+          sm:px-6
+          lg:px-8
+          lg:py-10
+        "
+      >
+
+        {/* ======================================================
+            MOBILE FILTER OVERLAY
+        ====================================================== */}
+
+        <AnimatePresence>
+
+          {showFilters && (
+
+            <>
+              <motion.div
+                initial={{
+                  opacity: 0,
+                }}
+                animate={{
+                  opacity: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                }}
+                onClick={() =>
+                  setShowFilters(false)
+                }
+                className="
+                  fixed
+                  inset-0
+                  z-40
+                  bg-[#2b0d10]/60
+                  backdrop-blur-sm
+                  md:hidden
+                "
+              />
+
+
+              <motion.aside
+                initial={{
+                  x: "-100%",
+                }}
+                animate={{
+                  x: 0,
+                }}
+                exit={{
+                  x: "-100%",
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 280,
+                  damping: 30,
+                }}
+                className="
+                  fixed
+                  left-0
+                  top-0
+                  z-50
+                  h-full
+                  w-[88%]
+                  max-w-sm
+                  overflow-y-auto
+                  bg-[#fffdf8]
+                  p-5
+                  shadow-2xl
+                  md:hidden
+                "
+              >
+
+                <div
+                  className="
+                    mb-7
+                    flex
+                    items-center
+                    justify-between
+                  "
+                >
+
+                  <div>
+
+                    <p
+                      className="
+                        text-[9px]
+                        font-bold
+                        uppercase
+                        tracking-[0.25em]
+                        text-[#b88732]
+                      "
+                    >
+                      Refine
+                    </p>
+
+                    <h3
+                      className="
+                        mt-1
+                        font-serif
+                        text-2xl
+                        font-bold
+                        text-[#4a1815]
+                      "
+                    >
+                      Filters
+                    </h3>
+
+                  </div>
+
+
+                  <button
+                    onClick={() =>
+                      setShowFilters(false)
+                    }
+                    className="
+                      flex
+                      h-9
+                      w-9
+                      items-center
+                      justify-center
+                      rounded-full
+                      bg-[#f3e8d2]
+                      text-[#741522]
+                    "
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
+                </div>
+
+
+                {/* Price */}
+
+                <FilterSection
+                  id="price"
+                  title="Price Range"
+                  icon={
+                    <span className="text-[#b88732]">
+                      ₹
+                    </span>
+                  }
+                >
+
+                  <div className="space-y-4">
+
+                    <div
+                      className="
+                        flex
+                        items-center
+                        gap-2
+                      "
+                    >
+
+                      <input
+                        type="number"
+                        min="0"
+                        max="3000"
+                        step="100"
+                        value={priceRange[0]}
+                        onChange={(e) =>
+                          setPriceRange([
+                            Number(
+                              e.target.value
+                            ),
+                            priceRange[1],
+                          ])
+                        }
+                        className="
+                          w-full
+                          rounded-xl
+                          border
+                          border-[#d8cabe]
+                          bg-white
+                          px-3
+                          py-2
+                          text-sm
+                          outline-none
+                          focus:border-[#741522]
+                          focus:ring-2
+                          focus:ring-[#741522]/10
+                        "
+                      />
+
+                      <span className="text-[#a99082]">
+                        —
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        max="3000"
+                        step="100"
+                        value={priceRange[1]}
+                        onChange={(e) =>
+                          setPriceRange([
+                            priceRange[0],
+                            Number(
+                              e.target.value
+                            ),
+                          ])
+                        }
+                        className="
+                          w-full
+                          rounded-xl
+                          border
+                          border-[#d8cabe]
+                          bg-white
+                          px-3
+                          py-2
+                          text-sm
+                          outline-none
+                          focus:border-[#741522]
+                          focus:ring-2
+                          focus:ring-[#741522]/10
+                        "
+                      />
+
+                    </div>
+
+
                     <input
-                      type="number"
-                      min="0"
-                      max="3000"
-                      step="100"
-                      value={priceRange[0]}
-                      onChange={(e) =>
-                        setPriceRange([Number(e.target.value), priceRange[1]])
-                      }
-                      className="w-20 border rounded-lg px-2 py-1 text-sm"
-                    />
-                    <span className="text-gray-500">-</span>
-                    <input
-                      type="number"
+                      type="range"
                       min="0"
                       max="3000"
                       step="100"
                       value={priceRange[1]}
                       onChange={(e) =>
-                        setPriceRange([priceRange[0], Number(e.target.value)])
+                        setPriceRange([
+                          priceRange[0],
+                          Number(
+                            e.target.value
+                          ),
+                        ])
                       }
-                      className="w-20 border rounded-lg px-2 py-1 text-sm"
+                      className="
+                        w-full
+                        accent-[#741522]
+                      "
                     />
+
+
+                    <div
+                      className="
+                        flex
+                        justify-between
+                        text-xs
+                        font-semibold
+                        text-[#806c63]
+                      "
+                    >
+                      <span>
+                        ₹{priceRange[0]}
+                      </span>
+
+                      <span>
+                        ₹{priceRange[1]}
+                      </span>
+                    </div>
+
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="3000"
-                    step="100"
-                    value={priceRange[1]}
+
+                </FilterSection>
+
+
+                {/* Availability */}
+
+                <FilterSection
+                  id="stock"
+                  title="Availability"
+                  icon={
+                    <PackageCheck className="h-4 w-4 text-[#b88732]" />
+                  }
+                >
+
+                  <div className="space-y-3">
+
+                    {[
+                      {
+                        value: "all",
+                        label: "All Products",
+                      },
+                      {
+                        value: "inStock",
+                        label: "In Stock",
+                        icon: (
+                          <PackageCheck className="h-4 w-4 text-green-600" />
+                        ),
+                      },
+                      {
+                        value: "outOfStock",
+                        label: "Out of Stock",
+                        icon: (
+                          <PackageX className="h-4 w-4 text-red-500" />
+                        ),
+                      },
+                    ].map((item) => (
+
+                      <label
+                        key={item.value}
+                        className="
+                          flex
+                          cursor-pointer
+                          items-center
+                          gap-3
+                          rounded-xl
+                          p-2
+                          transition
+                          hover:bg-[#faf3e5]
+                        "
+                      >
+
+                        <input
+                          type="radio"
+                          name="mobileStock"
+                          value={item.value}
+                          checked={
+                            stockStatus ===
+                            item.value
+                          }
+                          onChange={() =>
+                            setStockStatus(
+                              item.value
+                            )
+                          }
+                          className="accent-[#741522]"
+                        />
+
+                        {item.icon}
+
+                        <span
+                          className="
+                            text-sm
+                            text-[#5f4b44]
+                          "
+                        >
+                          {item.label}
+                        </span>
+
+                      </label>
+
+                    ))}
+
+                  </div>
+
+                </FilterSection>
+
+
+                {/* Sort */}
+
+                <FilterSection
+                  id="sort"
+                  title="Sort By"
+                  icon={
+                    <SlidersHorizontal className="h-4 w-4 text-[#b88732]" />
+                  }
+                >
+
+                  <select
+                    value={sortBy}
                     onChange={(e) =>
-                      setPriceRange([priceRange[0], Number(e.target.value)])
+                      setSortBy(e.target.value)
                     }
-                    className="w-full mt-3"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    ₹{priceRange[0]} - ₹{priceRange[1]}
-                  </p>
+                    className="
+                      w-full
+                      rounded-xl
+                      border
+                      border-[#d8cabe]
+                      bg-white
+                      px-3
+                      py-3
+                      text-sm
+                      text-[#4a1815]
+                      outline-none
+                      focus:border-[#741522]
+                      focus:ring-2
+                      focus:ring-[#741522]/10
+                    "
+                  >
+
+                    <option value="default">
+                      Recommended
+                    </option>
+
+                    <option value="priceLowHigh">
+                      Price: Low to High
+                    </option>
+
+                    <option value="priceHighLow">
+                      Price: High to Low
+                    </option>
+
+                    <option value="newest">
+                      Newest First
+                    </option>
+
+                  </select>
+
+                </FilterSection>
+
+
+                <div className="flex gap-3">
+
+                  <button
+                    onClick={handleResetFilters}
+                    className="
+                      flex
+                      flex-1
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      border
+                      border-[#d4ad54]/30
+                      bg-white
+                      px-4
+                      py-3
+                      text-sm
+                      font-bold
+                      text-[#741522]
+                      transition
+                      hover:bg-[#faf3e5]
+                    "
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reset
+                  </button>
+
+
+                  <button
+                    onClick={handleApplyFilters}
+                    className="
+                      flex
+                      flex-1
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      bg-[#741522]
+                      px-4
+                      py-3
+                      text-sm
+                      font-bold
+                      text-white
+                      shadow-lg
+                    "
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Apply
+                  </button>
+
                 </div>
-              </FilterSection>
 
-              <FilterSection id="stock" title="Availability">
-                <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="all"
-                    checked={stockStatus === "all"}
-                    onChange={() => setStockStatus("all")}
-                  />
-                  <span className="text-sm text-gray-600">All</span>
-                </label>
-                <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="inStock"
-                    checked={stockStatus === "inStock"}
-                    onChange={() => setStockStatus("inStock")}
-                  />
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <PackageCheck className="w-4 h-4 text-green-500" /> In Stock
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="stock"
-                    value="outOfStock"
-                    checked={stockStatus === "outOfStock"}
-                    onChange={() => setStockStatus("outOfStock")}
-                  />
-                  <span className="text-sm text-gray-600 flex items-center gap-1">
-                    <PackageX className="w-4 h-4 text-red-500" /> Out of Stock
-                  </span>
-                </label>
-              </FilterSection>
+              </motion.aside>
+            </>
 
-              <FilterSection id="sort" title="Sort By">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="default">Default</option>
-                  <option value="priceLowHigh">Price: Low → High</option>
-                  <option value="priceHighLow">Price: High → Low</option>
-                  <option value="newest">Newest</option>
-                </select>
-              </FilterSection>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleResetFilters}
-                  className="flex-1 px-4 py-2 flex items-center justify-center gap-2 border rounded-xl text-gray-600 hover:bg-gray-100"
-                >
-                  <RotateCcw className="w-4 h-4" /> Reset
-                </button>
-                <button
-                  onClick={handleApplyFilters}
-                  className="flex-1 px-4 py-2 flex items-center justify-center gap-2 bg-indigo-500 text-white rounded-xl shadow hover:bg-indigo-600"
-                >
-                  <CheckCircle className="w-4 h-4" /> Apply
-                </button>
-              </div>
-            </motion.div>
           )}
+
         </AnimatePresence>
 
-        <motion.div
-          className="hidden md:block md:w-1/4 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 h-fit sticky top-4"
-          initial={{ x: -40, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
+
+        {/* ======================================================
+            CONTENT GRID
+        ====================================================== */}
+
+        <div
+          className="
+            grid
+            gap-7
+            lg:grid-cols-[260px_1fr]
+            xl:grid-cols-[280px_1fr]
+          "
         >
-          <h3 className="text-lg font-semibold text-indigo-600 mb-4">Filters</h3>
-          <FilterSection id="price" title="Price Range">
-            <input
-              type="range"
-              min="0"
-              max="3000"
-              step="100"
-              value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([priceRange[0], Number(e.target.value)])
+
+          {/* ====================================================
+              DESKTOP FILTER
+          ==================================================== */}
+
+          <motion.aside
+            initial={{
+              opacity: 0,
+              x: -25,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            className="
+              hidden
+              h-fit
+              rounded-[1.5rem]
+              border
+              border-[#d4ad54]/20
+              bg-white
+              p-5
+              shadow-[0_10px_40px_rgba(74,24,21,0.07)]
+              lg:block
+              lg:sticky
+              lg:top-24
+            "
+          >
+
+            <div className="mb-6">
+
+              <p
+                className="
+                  text-[9px]
+                  font-bold
+                  uppercase
+                  tracking-[0.25em]
+                  text-[#b88732]
+                "
+              >
+                Refine Collection
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  font-serif
+                  text-2xl
+                  font-bold
+                  text-[#4a1815]
+                "
+              >
+                Filters
+              </h3>
+
+              <div
+                className="
+                  mt-3
+                  h-0.5
+                  w-12
+                  bg-gradient-to-r
+                  from-[#741522]
+                  to-[#d4ad54]
+                "
+              />
+
+            </div>
+
+
+            {/* Price */}
+
+            <FilterSection
+              id="price"
+              title="Price Range"
+              icon={
+                <span className="font-bold text-[#b88732]">
+                  ₹
+                </span>
               }
-              className="w-full accent-indigo-500"
-            />
-            <p>
-              ₹{priceRange[0]} - ₹{priceRange[1]}
-            </p>
-          </FilterSection>
-          <FilterSection id="stock" title="Availability">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="all"
-                checked={stockStatus === "all"}
-                onChange={() => setStockStatus("all")}
-              />
-              All
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="inStock"
-                checked={stockStatus === "inStock"}
-                onChange={() => setStockStatus("inStock")}
-              />
-              <PackageCheck className="w-4 h-4 text-green-500" /> In Stock
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="stockDesktop"
-                value="outOfStock"
-                checked={stockStatus === "outOfStock"}
-                onChange={() => setStockStatus("outOfStock")}
-              />
-              <PackageX className="w-4 h-4 text-red-500" /> Out of Stock
-            </label>
-          </FilterSection>
-          <FilterSection id="sort" title="Sort By">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full border rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="default">Default</option>
-              <option value="priceLowHigh">Price: Low → High</option>
-              <option value="priceHighLow">Price: High → Low</option>
-              <option value="newest">Newest</option>
-            </select>
-          </FilterSection>
-          <div className="flex gap-3 mt-6">
+
+              <input
+                type="range"
+                min="0"
+                max="3000"
+                step="100"
+                value={priceRange[1]}
+                onChange={(e) =>
+                  setPriceRange([
+                    priceRange[0],
+                    Number(e.target.value),
+                  ])
+                }
+                className="
+                  w-full
+                  accent-[#741522]
+                "
+              />
+
+              <div
+                className="
+                  mt-2
+                  flex
+                  justify-between
+                  text-xs
+                  font-semibold
+                  text-[#806c63]
+                "
+              >
+                <span>
+                  ₹{priceRange[0]}
+                </span>
+
+                <span>
+                  ₹{priceRange[1]}
+                </span>
+              </div>
+
+            </FilterSection>
+
+
+            {/* Stock */}
+
+            <FilterSection
+              id="stock"
+              title="Availability"
+              icon={
+                <PackageCheck className="h-4 w-4 text-[#b88732]" />
+              }
+            >
+
+              <div className="space-y-3">
+
+                <label
+                  className="
+                    flex
+                    cursor-pointer
+                    items-center
+                    gap-2
+                    text-sm
+                    text-[#5f4b44]
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="desktopStock"
+                    value="all"
+                    checked={
+                      stockStatus === "all"
+                    }
+                    onChange={() =>
+                      setStockStatus("all")
+                    }
+                    className="accent-[#741522]"
+                  />
+
+                  All Products
+                </label>
+
+
+                <label
+                  className="
+                    flex
+                    cursor-pointer
+                    items-center
+                    gap-2
+                    text-sm
+                    text-[#5f4b44]
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="desktopStock"
+                    value="inStock"
+                    checked={
+                      stockStatus ===
+                      "inStock"
+                    }
+                    onChange={() =>
+                      setStockStatus(
+                        "inStock"
+                      )
+                    }
+                    className="accent-[#741522]"
+                  />
+
+                  <PackageCheck className="h-4 w-4 text-green-600" />
+
+                  In Stock
+                </label>
+
+
+                <label
+                  className="
+                    flex
+                    cursor-pointer
+                    items-center
+                    gap-2
+                    text-sm
+                    text-[#5f4b44]
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="desktopStock"
+                    value="outOfStock"
+                    checked={
+                      stockStatus ===
+                      "outOfStock"
+                    }
+                    onChange={() =>
+                      setStockStatus(
+                        "outOfStock"
+                      )
+                    }
+                    className="accent-[#741522]"
+                  />
+
+                  <PackageX className="h-4 w-4 text-red-500" />
+
+                  Out of Stock
+                </label>
+
+              </div>
+
+            </FilterSection>
+
+
+            {/* Sort */}
+
+            <FilterSection
+              id="sort"
+              title="Sort By"
+              icon={
+                <SlidersHorizontal className="h-4 w-4 text-[#b88732]" />
+              }
+            >
+
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value)
+                }
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-[#d8cabe]
+                  bg-white
+                  px-3
+                  py-2.5
+                  text-sm
+                  text-[#4a1815]
+                  outline-none
+                  focus:border-[#741522]
+                  focus:ring-2
+                  focus:ring-[#741522]/10
+                "
+              >
+
+                <option value="default">
+                  Recommended
+                </option>
+
+                <option value="priceLowHigh">
+                  Price: Low to High
+                </option>
+
+                <option value="priceHighLow">
+                  Price: High to Low
+                </option>
+
+                <option value="newest">
+                  Newest First
+                </option>
+
+              </select>
+
+            </FilterSection>
+
+
             <button
               onClick={handleResetFilters}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow hover:shadow-lg transition"
+              className="
+                flex
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                border
+                border-[#d4ad54]/30
+                bg-[#faf3e5]
+                px-4
+                py-3
+                text-sm
+                font-bold
+                text-[#741522]
+                transition-all
+                duration-300
+                hover:bg-[#f3e8d2]
+                hover:shadow-md
+              "
             >
-              <RotateCcw className="inline w-4 h-4 mr-1" /> Reset
-            </button>
-          </div>
-        </motion.div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <button
-              className="flex md:hidden items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow"
-              onClick={() => setShowFilters(true)}
-            >
-              <Filter className="w-5 h-5" /> Filters
-            </button>
-          </div>
+              <RotateCcw className="h-4 w-4" />
 
-          {/* Subcategory Tabs Section */}
-          {availableSubcategories.length > 0 && (
-            <motion.div
-              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar mb-8 justify-start"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true, amount: 0.2 }}
+              Reset Filters
+
+            </button>
+
+          </motion.aside>
+
+
+          {/* ====================================================
+              PRODUCTS AREA
+          ==================================================== */}
+
+          <main className="min-w-0">
+
+            {/* Search + Mobile Filter */}
+
+            <div
+              className="
+                mb-6
+                flex
+                flex-col
+                gap-3
+                sm:flex-row
+              "
             >
-              <motion.button
-                onClick={() => setSelectedSubCategory("all")}
-                className={`
-                  flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap
-                  transition-all duration-300 shadow-md
-                  ${selectedSubCategory === "all"
-                    ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white transform scale-105"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                  }
-                `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+
+              <div
+                className="
+                  group
+                  relative
+                  flex-1
+                "
               >
-                All
-              </motion.button>
-              {availableSubcategories.map((subCat) => (
+
+                <Search
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    h-4
+                    w-4
+                    -translate-y-1/2
+                    text-[#a99082]
+                    transition
+                    group-focus-within:text-[#741522]
+                  "
+                />
+
+                <input
+                  type="text"
+                  placeholder={`Search ${name}...`}
+                  value={searchQuery}
+                  onChange={(e) =>
+                    setSearchQuery(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    h-12
+                    w-full
+                    rounded-xl
+                    border
+                    border-[#d8cabe]
+                    bg-white
+                    pl-11
+                    pr-4
+                    text-sm
+                    text-[#4a1815]
+                    shadow-sm
+                    outline-none
+                    transition-all
+                    duration-300
+                    placeholder:text-[#a99082]
+                    focus:border-[#741522]
+                    focus:ring-4
+                    focus:ring-[#741522]/10
+                  "
+                />
+
+              </div>
+
+
+              <button
+                onClick={() =>
+                  setShowFilters(true)
+                }
+                className="
+                  flex
+                  h-12
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[#741522]
+                  px-5
+                  text-sm
+                  font-bold
+                  text-white
+                  shadow-lg
+                  transition
+                  hover:bg-[#5f111b]
+                  lg:hidden
+                "
+              >
+
+                <Filter className="h-4 w-4" />
+
+                Filters
+
+              </button>
+
+            </div>
+
+
+            {/* ==================================================
+                SUBCATEGORY TABS
+            ================================================== */}
+
+            {availableSubcategories.length >
+              0 && (
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  mb-7
+                  flex
+                  gap-2
+                  overflow-x-auto
+                  pb-2
+                  [scrollbar-width:none]
+                  [&::-webkit-scrollbar]:hidden
+                "
+              >
+
+                {/* ALL */}
+
                 <motion.button
-                  key={subCat}
-                  onClick={() => setSelectedSubCategory(subCat)}
+                  whileTap={{
+                    scale: 0.95,
+                  }}
+                  onClick={() =>
+                    setSelectedSubCategory(
+                      "all"
+                    )
+                  }
                   className={`
-                    flex-shrink-0 px-6 py-2 rounded-full font-medium text-sm capitalize whitespace-nowrap
-                    transition-all duration-300 shadow-md
-                    ${selectedSubCategory === subCat
-                      ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white transform scale-105"
-                      : "bg-white text-gray-700 hover:bg-gray-100"
+                    flex-shrink-0
+                    rounded-full
+                    border
+                    px-5
+                    py-2.5
+                    text-xs
+                    font-bold
+                    capitalize
+                    transition-all
+                    duration-300
+                    ${
+                      selectedSubCategory ===
+                      "all"
+                        ? "border-[#741522] bg-[#741522] text-white shadow-md"
+                        : "border-[#d4ad54]/25 bg-white text-[#5f4b44] hover:border-[#741522]/40 hover:bg-[#faf3e5]"
                     }
                   `}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                 >
-                  {subCat}
+                  All
                 </motion.button>
-              ))}
-            </motion.div>
-          )}
 
-          {/* Product Count */}
-          <motion.p
-            className="text-gray-600 mb-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Showing <b>{filteredProducts.length}</b> products
-          </motion.p>
 
-          {/* Product Grid */}
-          <motion.div
-            className="grid grid-cols-2 mb-7 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product._id}
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -6, boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
-                >
-                  <ProductCard
-                    product={{
-                      id: product._id,
-                      name: product.productName,
-                      image: product.images?.[0]
-                        ? `${url}/img/${product.images[0]}`
-                        : "",
-                      price: product.price,
-                      stock: product.stock,
-                    }}
-                    isCompactMobile={true}
-                    onAddToCart={() => {}}
-                    onToggleWishlist={() => {}}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                className="col-span-full text-center py-10 flex flex-col items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <Blocks className="w-16 h-16 text-gray-400 mb-4" />
-                <p className="text-gray-600 text-lg">No products found for this subcategory.</p>
-                <button
-                  onClick={handleResetFilters}
-                  className="mt-4 text-sm text-indigo-500 hover:text-indigo-600 flex items-center gap-1 transition"
-                >
-                  <RotateCcw className="w-4 h-4" /> Reset Filters
-                </button>
+                {availableSubcategories.map(
+                  (subCat) => (
+
+                    <motion.button
+                      key={subCat}
+                      whileTap={{
+                        scale: 0.95,
+                      }}
+                      onClick={() =>
+                        setSelectedSubCategory(
+                          subCat
+                        )
+                      }
+                      className={`
+                        flex-shrink-0
+                        rounded-full
+                        border
+                        px-5
+                        py-2.5
+                        text-xs
+                        font-bold
+                        capitalize
+                        transition-all
+                        duration-300
+                        ${
+                          selectedSubCategory ===
+                          subCat
+                            ? "border-[#741522] bg-[#741522] text-white shadow-md"
+                            : "border-[#d4ad54]/25 bg-white text-[#5f4b44] hover:border-[#741522]/40 hover:bg-[#faf3e5]"
+                        }
+                      `}
+                    >
+                      {subCat}
+                    </motion.button>
+
+                  )
+                )}
+
               </motion.div>
+
             )}
-          </motion.div>
+
+
+            {/* ==================================================
+                RESULT HEADER
+            ================================================== */}
+
+            <div
+              className="
+                mb-5
+                flex
+                items-center
+                justify-between
+              "
+            >
+
+              <div>
+
+                <p
+                  className="
+                    text-[9px]
+                    font-bold
+                    uppercase
+                    tracking-[0.22em]
+                    text-[#b88732]
+                  "
+                >
+                  Curated For You
+                </p>
+
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    text-[#806c63]
+                  "
+                >
+                  Showing{" "}
+                  <span
+                    className="
+                      font-bold
+                      text-[#741522]
+                    "
+                  >
+                    {filteredProducts.length}
+                  </span>{" "}
+                  products
+                </p>
+
+              </div>
+
+
+              {selectedSubCategory !==
+                "all" && (
+
+                <button
+                  onClick={() =>
+                    setSelectedSubCategory(
+                      "all"
+                    )
+                  }
+                  className="
+                    hidden
+                    items-center
+                    gap-1
+                    text-xs
+                    font-semibold
+                    text-[#741522]
+                    sm:flex
+                  "
+                >
+                  Clear category
+                  <X className="h-3.5 w-3.5" />
+                </button>
+
+              )}
+
+            </div>
+
+
+            {/* ==================================================
+                PRODUCT GRID
+            ================================================== */}
+
+            <motion.div
+              layout
+              className="
+                grid
+                grid-cols-2
+                gap-3
+                sm:gap-5
+                md:grid-cols-3
+                xl:grid-cols-4
+              "
+            >
+
+              <AnimatePresence mode="popLayout">
+
+                {filteredProducts.length >
+                0 ? (
+
+                  filteredProducts.map(
+                    (product, index) => (
+
+                      <motion.div
+                        layout
+                        key={product._id}
+                        initial={{
+                          opacity: 0,
+                          y: 25,
+                          scale: 0.96,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          scale: 1,
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.9,
+                        }}
+                        transition={{
+                          duration: 0.35,
+                          delay:
+                            index * 0.035,
+                        }}
+                        whileHover={{
+                          y: -5,
+                        }}
+                      >
+
+                        <ProductCard
+                          product={{
+                            id: product._id,
+                            name:
+                              product.productName,
+                            image:
+                              product.images?.[0]
+                                ? `${url}/img/${product.images[0]}`
+                                : "",
+                            price:
+                              product.price,
+                            oldPrice:
+                              product.oldprice,
+                            stock:
+                              product.stock,
+                            isNew:
+                              index < 3,
+                          }}
+                          isCompactMobile={
+                            true
+                          }
+                          onAddToCart={() => {}}
+                          onToggleWishlist={() => {}}
+                        />
+
+                      </motion.div>
+
+                    )
+                  )
+
+                ) : (
+
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: 20,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    className="
+                      col-span-full
+                      rounded-[2rem]
+                      border
+                      border-[#d4ad54]/20
+                      bg-white
+                      px-6
+                      py-16
+                      text-center
+                      shadow-sm
+                    "
+                  >
+
+                    <motion.div
+                      animate={{
+                        y: [0, -7, 0],
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                      }}
+                      className="
+                        mx-auto
+                        flex
+                        h-20
+                        w-20
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[#faf3e5]
+                        text-[#741522]
+                      "
+                    >
+                      <Blocks className="h-9 w-9" />
+                    </motion.div>
+
+
+                    <h3
+                      className="
+                        mt-5
+                        font-serif
+                        text-2xl
+                        font-bold
+                        text-[#4a1815]
+                      "
+                    >
+                      Nothing Found
+                    </h3>
+
+
+                    <p
+                      className="
+                        mx-auto
+                        mt-2
+                        max-w-md
+                        text-sm
+                        leading-6
+                        text-[#806c63]
+                      "
+                    >
+                      We couldn't find any
+                      products matching your
+                      current filters.
+                    </p>
+
+
+                    <button
+                      onClick={handleResetFilters}
+                      className="
+                        mt-6
+                        inline-flex
+                        items-center
+                        gap-2
+                        rounded-full
+                        bg-[#741522]
+                        px-6
+                        py-3
+                        text-xs
+                        font-bold
+                        text-white
+                        shadow-lg
+                        transition
+                        hover:bg-[#5f111b]
+                      "
+                    >
+
+                      <RotateCcw className="h-4 w-4" />
+
+                      Reset Filters
+
+                    </button>
+
+                  </motion.div>
+
+                )}
+
+              </AnimatePresence>
+
+            </motion.div>
+
+
+            {/* ==================================================
+                BOTTOM BRAND BANNER
+            ================================================== */}
+
+            {filteredProducts.length > 0 && (
+
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 25,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                className="
+                  mt-12
+                  overflow-hidden
+                  rounded-[1.5rem]
+                  border
+                  border-[#d4ad54]/20
+                  bg-gradient-to-r
+                  from-[#741522]
+                  via-[#861d29]
+                  to-[#5f111b]
+                  p-6
+                  text-center
+                  shadow-xl
+                  sm:p-8
+                "
+              >
+
+                <div
+                  className="
+                    mx-auto
+                    flex
+                    max-w-2xl
+                    flex-col
+                    items-center
+                  "
+                >
+
+                  <Sparkles
+                    className="
+                      h-5
+                      w-5
+                      text-[#f5d98a]
+                    "
+                  />
+
+
+                  <h3
+                    className="
+                      mt-3
+                      font-serif
+                      text-xl
+                      font-bold
+                      text-white
+                      sm:text-2xl
+                    "
+                  >
+                    Discover the Darsh Difference
+                  </h3>
+
+
+                  <p
+                    className="
+                      mt-2
+                      text-xs
+                      leading-5
+                      text-white/65
+                      sm:text-sm
+                    "
+                  >
+                    Handpicked collections,
+                    timeless craftsmanship and
+                    beautiful Indian traditions,
+                    curated specially for you.
+                  </p>
+
+
+                  <div
+                    className="
+                      mt-5
+                      flex
+                      items-center
+                      gap-3
+                    "
+                  >
+
+                    <div
+                      className="
+                        h-px
+                        w-10
+                        bg-[#d4ad54]/50
+                      "
+                    />
+
+                    <span
+                      className="
+                        text-[9px]
+                        font-bold
+                        uppercase
+                        tracking-[0.3em]
+                        text-[#f5d98a]
+                      "
+                    >
+                      Darsh
+                    </span>
+
+                    <div
+                      className="
+                        h-px
+                        w-10
+                        bg-[#d4ad54]/50
+                      "
+                    />
+
+                  </div>
+
+                </div>
+
+              </motion.div>
+
+            )}
+
+          </main>
+
         </div>
+
       </div>
+
     </div>
   );
 };
