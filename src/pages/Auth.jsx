@@ -11,14 +11,13 @@ import {
   Sparkles,
   ShieldCheck,
   Crown,
-  ShoppingBag,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
 } from "lucide-react";
 
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import AuthSuccess from "./SuccessMessage";
 import { useAppContext } from "../context/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +42,8 @@ const Auth = () => {
   const [message, setMessage] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [userName, setUserName] = useState("");
+    const logoSrc = "/IMG/Logo.jpg";
+
 
 
   /* ============================================================
@@ -605,13 +606,102 @@ const Auth = () => {
                 "
               >
 
-                <ShoppingBag
+                {/* Circle Logo */}
+
+                <Link
+                  to="/"
+                  onClick={() => {
+                    // setMobileMenu(false);
+
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                  }}
                   className="
-                    h-16
-                    w-16
-                    text-[#f5d98a]
+                    group
+                    flex
+                    items-center
                   "
-                />
+                >
+                  <div
+                    className="
+                      relative
+                      flex
+                      h-[61px]
+                      w-[61px]
+                      items-center
+                      justify-center
+                      rounded-full
+                    "
+                  >
+                    {/* Outer */}
+
+                    <div
+                      className="
+                        absolute
+                        inset-0
+                        rounded-full
+                        border
+                        border-[#C9A24A]
+                        bg-[#FFFDF8]
+                        shadow-[0_6px_20px_rgba(116,21,34,0.12)]
+                      "
+                    />
+
+                    {/* Inner */}
+
+                    <div
+                      className="
+                        absolute
+                        inset-[5px]
+                        rounded-full
+                        border
+                        border-[#C9A24A]/40
+                      "
+                    />
+
+                    {/* Logo */}
+
+                    <img
+                      src={logoSrc}
+                      alt="Darsh"
+                      className="
+                        relative
+                        z-10
+                        h-[76%]
+                        w-[76%]
+                        rounded-full
+                        object-contain
+                        p-1
+                        mix-blend-multiply
+                        transition-transform
+                        duration-500
+                        group-hover:scale-105
+                      "
+                      onError={(e) => {
+                        e.currentTarget.style.display =
+                          "none";
+                      }}
+                    />
+
+                    {/* Sparkle */}
+
+                    <Sparkles
+                      size={11}
+                      strokeWidth={1.5}
+                      className="
+                        absolute
+                        -right-1
+                        -top-1
+                        z-20
+                        text-[#C9A24A]
+                      "
+                    />
+                  </div>
+
+                  
+                </Link>
 
               </motion.div>
 

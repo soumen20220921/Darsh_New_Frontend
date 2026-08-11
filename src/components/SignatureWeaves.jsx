@@ -3,27 +3,27 @@ import { Link } from "react-router-dom";
 const weaveCategories = [
   {
     id: 1,
-    name: "Kanjivaram",
-    subtitle: "Temple borders, pure zari",
-    slug: "kanjivaram",
+    name: "Pujo Special",
+    subtitle: "Durga Puja Collection",
+    slug: "Pujo Special",
   },
   {
     id: 2,
     name: "Banarasi",
-    subtitle: "Brocade in Mughal motifs",
+    subtitle: "Luxurious drapes for special occasions",
     slug: "banarasi",
   },
   {
     id: 3,
-    name: "Bandhani",
-    subtitle: "Hand-tied Kutchi dots",
-    slug: "bandhani",
+    name: "Kanthastitch",
+    subtitle: " Intricate embroidery for timeless elegance",
+    slug: "Kanthastitch",
   },
   {
     id: 4,
-    name: "Handloom Cotton",
-    subtitle: "Everyday breathable drapes",
-    slug: "handloom-cotton",
+    name: "Kanjivaram",
+    subtitle: " Rich heritage woven in vibrant colors",
+    slug: "Kanjivaram",
   },
 ];
 
@@ -81,7 +81,7 @@ export default function SignatureWeaves() {
           {weaveCategories.map((item, index) => (
             <Link
               key={item.id}
-              to={`/category/${item.slug}`}
+              to={`/Categories/${item.slug}`}
               onClick={() => window.scrollTo(0, 0)}
               className="
                 group

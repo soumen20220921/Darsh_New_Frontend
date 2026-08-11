@@ -31,30 +31,30 @@ const categories = [
   {
     id: "silk",
     name: "Silk Sarees",
-    subtitle: "KANJIVARAM, TUSSAR & GAJI",
-    image: "/IMG/p4.jpg",
-    path: "/Categories/saree",
+    subtitle: " PURE Silk Collections",
+    image: "/IMG/p7.jpg",
+    path: "/Categories/Silk Saree",
   },
   {
     id: "cotton",
     name: "Cotton Handloom",
-    subtitle: "KHADI & KOTA DORIA",
-    image: "/IMG/p3.jpg",
-    path: "/Categories/cotton",
+    subtitle: " Everyday breathable drapes",
+    image: "/IMG/p8.jpg",
+    path: "/Categories/Cotton Handloom",
   },
   {
     id: "bandhani",
     name: "Bandhani",
-    subtitle: "HAND-TIED KUTCHI DOTS",
-    image: "/IMG/p6.jpg",
-    path: "/Categories/bandhani",
+    subtitle: " Traditional tie-dye artistry",
+    image: "/IMG/p9.jpg",
+    path: "/Categories/Bandhani",
   },
   {
     id: "festive",
     name: "Festive Edit",
-    subtitle: "IVORY, GOLD & OCCASION DRAPES",
-    image: "/IMG/about.jpeg",
-    path: "/Categories/festive",
+    subtitle: " Celebrate in style with our curated collection",
+    image: "/IMG/p10.jpg",
+    path: "/Categories/Festive Edit",
   },
 ];
 
@@ -1032,7 +1032,7 @@ const Home = () => {
             {/* Silk */}
 
             <Link
-              to="/Categories/saree"
+              to="/Categories/Silk Saree"
               onClick={scrollTop}
               className="
                 group
@@ -1097,7 +1097,7 @@ const Home = () => {
             {/* Festive */}
 
             <Link
-              to="/Categories/festive"
+              to="/Categories/Festive Edit"
               onClick={scrollTop}
               className="
                 group

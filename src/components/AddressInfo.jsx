@@ -89,6 +89,34 @@ const AddressInfo = () => {
   }, [address]);
 
   /* =========================================================
+     MODAL UX
+  ========================================================= */
+
+  useEffect(() => {
+    if (!showPopup) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+
+    // Prevent background page movement while the address dialog is open.
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setShowPopup(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showPopup]);
+
+  /* =========================================================
      INPUT CHANGE
   ========================================================= */
 
@@ -1420,266 +1448,970 @@ const AddressInfo = () => {
 
 
       {/* =====================================================
-          ADDRESS MODAL
-      ===================================================== */}
+    PREMIUM ADDRESS MODAL
+===================================================== */}
 
-      <AnimatePresence>
+<AnimatePresence>
+  {showPopup && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="
+        fixed
+        inset-0
+        z-[9999]
+        flex
+        items-end
+        justify-center
+        bg-[#2b0d10]/70
+        p-0
+        backdrop-blur-md
+        sm:items-center
+        sm:p-4
+        lg:p-6
+      "
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="address-modal-title"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          setShowPopup(false);
+        }
+      }}
+    >
+      {/* =================================================
+          BACKGROUND DECORATION
+      ================================================== */}
 
-        {showPopup && (
+      <motion.div
+        animate={{
+          scale: [1, 1.08, 1],
+          opacity: [0.15, 0.22, 0.15],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="
+          pointer-events-none
+          absolute
+          -left-24
+          top-1/4
+          h-72
+          w-72
+          rounded-full
+          bg-[#d4ad54]/20
+          blur-3xl
+        "
+      />
 
-          <motion.div
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
+      <motion.div
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.12, 0.2, 0.12],
+        }}
+        transition={{
+          duration: 5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="
+          pointer-events-none
+          absolute
+          -right-24
+          bottom-1/4
+          h-80
+          w-80
+          rounded-full
+          bg-[#741522]/30
+          blur-3xl
+        "
+      />
+
+      {/* =================================================
+          MODAL
+      ================================================== */}
+
+      <motion.div
+        initial={{
+          opacity: 0,
+          scale: 0.88,
+          y: 35,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
+        exit={{
+          opacity: 0,
+          scale: 0.9,
+          y: 25,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 220,
+          damping: 22,
+          mass: 0.8,
+        }}
+        onMouseDown={(event) => event.stopPropagation()}
+        className="
+          relative
+          z-10
+          flex
+          h-[94dvh]
+          w-full
+          flex-col
+          overflow-hidden
+          rounded-t-[30px]
+          border
+          border-[#d4ad54]/35
+          bg-[#fffdf8]
+          shadow-[0_30px_100px_rgba(40,10,15,0.35)]
+          sm:h-auto
+          sm:max-h-[92dvh]
+          sm:max-w-xl
+          sm:rounded-[30px]
+          lg:max-w-2xl
+        "
+      >
+
+        {/* =================================================
+            TOP GOLD ACCENT
+        ================================================== */}
+
+        <div
+          className="
+            absolute
+            left-0
+            right-0
+            top-0
+            z-30
+            h-1.5
+            bg-gradient-to-r
+            from-[#5f111b]
+            via-[#d4ad54]
+            to-[#5f111b]
+          "
+        />
+
+        {/* =================================================
+            MOBILE HANDLE
+        ================================================== */}
+
+        <div className="flex shrink-0 justify-center pt-3 sm:hidden">
+          <span
             className="
-              fixed
-              inset-0
-              z-[90]
+              h-1
+              w-12
+              rounded-full
+              bg-[#d4c2a7]
+            "
+          />
+        </div>
+
+        {/* =================================================
+            PREMIUM HEADER
+        ================================================== */}
+
+        <div
+          className="
+            relative
+            shrink-0
+            overflow-hidden
+            bg-gradient-to-br
+            from-[#741522]
+            via-[#861d29]
+            to-[#5f111b]
+            px-5
+            pb-6
+            pt-5
+            sm:px-7
+            sm:pb-7
+            sm:pt-6
+          "
+        >
+
+          {/* Header glow */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -right-16
+              -top-16
+              h-48
+              w-48
+              rounded-full
+              bg-[#d4ad54]/15
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -bottom-20
+              left-1/3
+              h-40
+              w-40
+              rounded-full
+              bg-white/5
+              blur-3xl
+            "
+          />
+
+          {/* Close */}
+
+          <button
+            type="button"
+            onClick={() => setShowPopup(false)}
+            aria-label="Close address dialog"
+            className="
+              absolute
+              right-4
+              top-5
+              z-20
               flex
+              h-9
+              w-9
               items-center
               justify-center
-              bg-[#291014]/70
-              p-3
+              rounded-full
+              border
+              border-white/15
+              bg-white/10
+              text-white/80
               backdrop-blur-sm
-              sm:p-5
+              transition-all
+              duration-300
+              hover:rotate-90
+              hover:bg-white/20
+              hover:text-white
+              active:scale-90
+              sm:right-6
+              sm:top-6
             "
           >
+            <X className="h-4 w-4" />
+          </button>
 
-            {/* Backdrop */}
+          <div className="relative z-10 flex flex-col items-center text-center">
 
-            <div
+            {/* Darsh branding */}
+
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
               className="
-                absolute
-                inset-0
+                mb-4
+                flex
+                items-center
+                justify-center
+                gap-2
               "
-              onClick={() =>
-                setShowPopup(false)
-              }
-            />
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[#f5d98a]" />
 
+              <span
+                className="
+                  font-serif
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.32em]
+                  text-[#f5d98a]
+                "
+              >
+                Darsh
+              </span>
 
-            {/* Modal */}
+              <Sparkles className="h-3.5 w-3.5 text-[#f5d98a]" />
+            </motion.div>
+
+            {/* Animated address icon */}
 
             <motion.div
               initial={{
                 opacity: 0,
-                scale: 0.92,
-                y: 25,
+                scale: 0.65,
+                rotate: -8,
               }}
               animate={{
                 opacity: 1,
                 scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.95,
-                y: 15,
+                rotate: 0,
               }}
               transition={{
                 type: "spring",
-                stiffness: 180,
-                damping: 20,
+                stiffness: 220,
+                damping: 15,
+                delay: 0.12,
               }}
-              className="
-                relative
-                z-10
-                max-h-[94vh]
-                w-full
-                max-w-2xl
-                overflow-hidden
-                rounded-3xl
-                border
-                border-[#d4ad54]/30
-                bg-[#fffdf8]
-                shadow-2xl
-              "
+              className="relative mb-5"
             >
 
-              {/* Modal Header */}
+              {/* Pulse ring */}
+
+              <motion.div
+                animate={{
+                  scale: [1, 1.15, 1],
+                  opacity: [0.35, 0.08, 0.35],
+                }}
+                transition={{
+                  duration: 2.4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="
+                  absolute
+                  -inset-4
+                  rounded-full
+                  border
+                  border-[#d4ad54]
+                "
+              />
+
+              {/* Icon */}
 
               <div
                 className="
-                  relative
-                  overflow-hidden
-                  bg-gradient-to-r
-                  from-[#741522]
-                  via-[#851c28]
+                  flex
+                  h-20
+                  w-20
+                  items-center
+                  justify-center
+                  rounded-full
+                  border
+                  border-[#d4ad54]/50
+                  bg-gradient-to-br
+                  from-[#8a202c]
+                  via-[#741522]
                   to-[#5f111b]
-                  px-5
-                  py-5
-                  sm:px-7
+                  shadow-[0_12px_35px_rgba(0,0,0,0.25)]
+                  sm:h-24
+                  sm:w-24
                 "
               >
+                <MapPin
+                  className="
+                    h-9
+                    w-9
+                    text-[#f5d98a]
+                    sm:h-10
+                    sm:w-10
+                  "
+                />
+              </div>
+
+              {/* Gold dot */}
+
+              <motion.span
+                animate={{
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                }}
+                className="
+                  absolute
+                  -right-1
+                  top-1
+                  h-3
+                  w-3
+                  rounded-full
+                  bg-[#d4ad54]
+                  shadow-lg
+                "
+              />
+
+            </motion.div>
+
+            {/* Title */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 8,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: 0.18,
+              }}
+            >
+
+              <h3
+                id="address-modal-title"
+                className="
+                  font-serif
+                  text-2xl
+                  font-bold
+                  text-white
+                  sm:text-3xl
+                "
+              >
+                {address ? "Edit Your Address" : "Add Your Address"}
+              </h3>
+
+              <div
+                className="
+                  mx-auto
+                  mt-3
+                  h-0.5
+                  w-14
+                  rounded-full
+                  bg-gradient-to-r
+                  from-[#741522]
+                  via-[#d4ad54]
+                  to-[#741522]
+                "
+              />
+
+              <p
+                className="
+                  mx-auto
+                  mt-3
+                  max-w-md
+                  text-[11px]
+                  leading-5
+                  text-white/65
+                  sm:text-xs
+                "
+              >
+                Enter your delivery details carefully
+                for a smooth Darsh shopping experience.
+              </p>
+
+            </motion.div>
+
+          </div>
+        </div>
+
+        {/* =================================================
+            SCROLLABLE CONTENT
+        ================================================== */}
+
+        <div
+          className="
+            min-h-0
+            flex-1
+            overflow-y-auto
+            overscroll-contain
+            bg-[#fffdf8]
+            px-4
+            py-5
+            [scrollbar-color:#c7ad87_transparent]
+            [scrollbar-width:thin]
+            sm:px-7
+            sm:py-6
+          "
+        >
+
+          <form
+            id="address-form"
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
+
+            {/* =================================================
+                SECURITY / INFO CARD
+            ================================================== */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 8,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{ delay: 0.18 }}
+              className="
+                flex
+                items-start
+                gap-3
+                rounded-2xl
+                border
+                border-[#d4ad54]/20
+                bg-gradient-to-r
+                from-[#faf3e5]
+                to-[#fffdf8]
+                p-4
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[#741522]
+                  text-[#f5d98a]
+                  shadow-sm
+                "
+              >
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+
+              <div>
+                <p
+                  className="
+                    text-xs
+                    font-bold
+                    text-[#4a1815]
+                  "
+                >
+                  Your information is protected
+                </p>
+
+                <p
+                  className="
+                    mt-1
+                    text-[10px]
+                    leading-5
+                    text-[#806c63]
+                  "
+                >
+                  We use your address only to process
+                  and deliver your Darsh orders.
+                </p>
+              </div>
+
+            </motion.div>
+
+            {/* =================================================
+                SECTION 1
+            ================================================== */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{ delay: 0.22 }}
+              className="
+                rounded-2xl
+                border
+                border-[#d4ad54]/15
+                bg-white
+                p-4
+                shadow-[0_8px_30px_rgba(63,22,22,0.04)]
+                sm:p-5
+              "
+            >
+
+              {/* Section title */}
+
+              <div className="mb-4 flex items-center gap-3">
 
                 <div
                   className="
-                    pointer-events-none
-                    absolute
-                    -right-8
-                    -top-8
-                    h-28
-                    w-28
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
                     rounded-full
-                    bg-[#e7c875]/10
-                    blur-2xl
+                    bg-[#741522]
+                    text-xs
+                    font-bold
+                    text-white
+                    shadow-sm
                   "
-                />
+                >
+                  1
+                </div>
 
-                <div className="relative z-10 flex items-center justify-between">
-
-                  <div className="flex items-center gap-3">
-
-                    <div
-                      className="
-                        flex
-                        h-11
-                        w-11
-                        items-center
-                        justify-center
-                        rounded-xl
-                        border
-                        border-[#e7c875]/40
-                        bg-white/10
-                        text-[#f5d98a]
-                      "
-                    >
-                      <MapPin className="h-5 w-5" />
-                    </div>
-
-                    <div>
-
-                      <span
-                        className="
-                          text-[8px]
-                          font-bold
-                          uppercase
-                          tracking-[0.25em]
-                          text-[#f5d98a]
-                        "
-                      >
-                        Delivery Address
-                      </span>
-
-                      <h3
-                        className="
-                          mt-1
-                          font-serif
-                          text-lg
-                          font-bold
-                          text-white
-                          sm:text-xl
-                        "
-                      >
-                        {address
-                          ? "Edit Address"
-                          : "Add New Address"}
-                      </h3>
-
-                    </div>
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPopup(false)
-                    }
+                <div>
+                  <p
                     className="
-                      flex
-                      h-9
-                      w-9
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-white/10
-                      text-white/80
-                      transition-all
-                      hover:bg-white/20
-                      hover:text-white
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.18em]
+                      text-[#b88732]
                     "
-                    aria-label="Close"
                   >
-                    <X className="h-5 w-5" />
-                  </button>
+                    Personal details
+                  </p>
 
+                  <h4
+                    className="
+                      mt-0.5
+                      text-sm
+                      font-bold
+                      text-[#4a1815]
+                    "
+                  >
+                    Who should receive the order?
+                  </h4>
                 </div>
 
               </div>
 
-
-              {/* Modal Form */}
-
               <div
                 className="
-                  max-h-[calc(94vh-90px)]
-                  overflow-y-auto
-                  p-4
-                  sm:p-6
-                  lg:p-7
+                  grid
+                  grid-cols-1
+                  gap-4
+                  sm:grid-cols-2
                 "
               >
 
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-4"
+                {fields
+                  .filter((field) =>
+                    ["FullName", "Phone"].includes(field.name)
+                  )
+                  .map((field) => {
+                    const Icon = field.icon;
+
+                    const hasError = Boolean(
+                      validationErrors[field.name]
+                    );
+
+                    return (
+                      <motion.div
+                        key={field.name}
+                        layout
+                        initial={{
+                          opacity: 0,
+                          y: 8,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                      >
+
+                        <label
+                          className="
+                            mb-1.5
+                            block
+                            text-[9px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[#806c63]
+                          "
+                        >
+                          {field.label}
+                        </label>
+
+                        <div className="relative">
+
+                          <Icon
+                            className={`
+                              absolute
+                              left-3
+                              top-1/2
+                              z-10
+                              h-4
+                              w-4
+                              -translate-y-1/2
+                              ${
+                                hasError
+                                  ? "text-red-500"
+                                  : "text-[#a48455]"
+                              }
+                            `}
+                          />
+
+                          <input
+                            type={
+                              field.name === "Phone"
+                                ? "tel"
+                                : "text"
+                            }
+                            inputMode={
+                              field.name === "Phone"
+                                ? "numeric"
+                                : "text"
+                            }
+                            autoComplete={
+                              field.name === "FullName"
+                                ? "name"
+                                : "tel"
+                            }
+                            name={field.name}
+                            placeholder={field.placeholder}
+                            value={formData[field.name]}
+                            onChange={handleChange}
+                            className={`
+                              w-full
+                              rounded-xl
+                              border
+                              bg-[#faf6ee]
+                              py-3
+                              pl-10
+                              pr-4
+                              text-sm
+                              text-[#4a1815]
+                              outline-none
+                              transition-all
+                              duration-300
+                              placeholder:text-[#b5a59b]
+                              focus:bg-white
+                              ${
+                                hasError
+                                  ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                                  : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
+                              }
+                            `}
+                          />
+
+                        </div>
+
+                        {hasError && (
+                          <motion.p
+                            initial={{
+                              opacity: 0,
+                              y: -3,
+                            }}
+                            animate={{
+                              opacity: 1,
+                              y: 0,
+                            }}
+                            className="
+                              mt-1
+                              text-[10px]
+                              font-medium
+                              text-red-500
+                            "
+                          >
+                            {validationErrors[field.name]}
+                          </motion.p>
+                        )}
+
+                      </motion.div>
+                    );
+                  })}
+
+              </div>
+            </motion.div>
+
+            {/* =================================================
+                SECTION 2
+            ================================================== */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{ delay: 0.26 }}
+              className="
+                rounded-2xl
+                border
+                border-[#d4ad54]/15
+                bg-white
+                p-4
+                shadow-[0_8px_30px_rgba(63,22,22,0.04)]
+                sm:p-5
+              "
+            >
+
+              <div className="mb-4 flex items-center gap-3">
+
+                <div
+                  className="
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[#741522]
+                    text-xs
+                    font-bold
+                    text-white
+                    shadow-sm
+                  "
                 >
+                  2
+                </div>
 
-                  {/* Fields */}
-
-                  <div
+                <div>
+                  <p
                     className="
-                      grid
-                      grid-cols-1
-                      gap-4
-                      sm:grid-cols-2
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.18em]
+                      text-[#b88732]
                     "
                   >
+                    Delivery location
+                  </p>
 
-                    {fields.map((field) => {
+                  <h4
+                    className="
+                      mt-0.5
+                      text-sm
+                      font-bold
+                      text-[#4a1815]
+                    "
+                  >
+                    Where should we deliver?
+                  </h4>
+                </div>
 
+              </div>
+
+              <div className="space-y-4">
+
+                {/* Street address */}
+
+                {fields
+                  .filter((field) => field.name === "Add")
+                  .map((field) => {
+                    const Icon = field.icon;
+
+                    const hasError = Boolean(
+                      validationErrors[field.name]
+                    );
+
+                    return (
+                      <div key={field.name}>
+
+                        <label
+                          className="
+                            mb-1.5
+                            block
+                            text-[9px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[#806c63]
+                          "
+                        >
+                          {field.label}
+                        </label>
+
+                        <div className="relative">
+
+                          <Icon
+                            className={`
+                              absolute
+                              left-3
+                              top-4
+                              h-4
+                              w-4
+                              ${
+                                hasError
+                                  ? "text-red-500"
+                                  : "text-[#a48455]"
+                              }
+                            `}
+                          />
+
+                          <textarea
+                            name={field.name}
+                            rows={3}
+                            autoComplete="street-address"
+                            placeholder={field.placeholder}
+                            value={formData[field.name]}
+                            onChange={handleChange}
+                            className={`
+                              w-full
+                              resize-none
+                              rounded-xl
+                              border
+                              bg-[#faf6ee]
+                              py-3
+                              pl-10
+                              pr-4
+                              text-sm
+                              leading-5
+                              text-[#4a1815]
+                              outline-none
+                              transition-all
+                              duration-300
+                              placeholder:text-[#b5a59b]
+                              focus:bg-white
+                              ${
+                                hasError
+                                  ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                                  : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
+                              }
+                            `}
+                          />
+
+                        </div>
+
+                        {hasError && (
+                          <p
+                            className="
+                              mt-1
+                              text-[10px]
+                              font-medium
+                              text-red-500
+                            "
+                          >
+                            {validationErrors[field.name]}
+                          </p>
+                        )}
+
+                      </div>
+                    );
+                  })}
+
+                {/* City / District */}
+
+                <div
+                  className="
+                    grid
+                    grid-cols-1
+                    gap-4
+                    sm:grid-cols-2
+                  "
+                >
+
+                  {fields
+                    .filter((field) =>
+                      ["VillorCity", "Dist"].includes(field.name)
+                    )
+                    .map((field) => {
                       const Icon = field.icon;
 
-                      const hasError =
-                        Boolean(
-                          validationErrors[
-                            field.name
-                          ]
-                        );
+                      const hasError = Boolean(
+                        validationErrors[field.name]
+                      );
 
                       return (
-                        <motion.div
-                          key={field.name}
-                          initial={{
-                            opacity: 0,
-                            y: 8,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                          }}
-                          className={
-                            field.name === "Add"
-                              ? "sm:col-span-2"
-                              : ""
-                          }
-                        >
+                        <div key={field.name}>
 
                           <label
                             className="
                               mb-1.5
                               block
-                              text-[10px]
+                              text-[9px]
                               font-bold
                               uppercase
-                              tracking-wider
+                              tracking-[0.12em]
                               text-[#806c63]
                             "
                           >
@@ -1693,9 +2425,9 @@ const AddressInfo = () => {
                                 absolute
                                 left-3
                                 top-1/2
-                                -translate-y-1/2
                                 h-4
                                 w-4
+                                -translate-y-1/2
                                 ${
                                   hasError
                                     ? "text-red-500"
@@ -1707,12 +2439,9 @@ const AddressInfo = () => {
                             <input
                               type="text"
                               name={field.name}
-                              placeholder={
-                                field.placeholder
-                              }
-                              value={
-                                formData[field.name]
-                              }
+                              autoComplete="address-level2"
+                              placeholder={field.placeholder}
+                              value={formData[field.name]}
                               onChange={handleChange}
                               className={`
                                 w-full
@@ -1728,10 +2457,11 @@ const AddressInfo = () => {
                                 transition-all
                                 duration-300
                                 placeholder:text-[#b5a59b]
+                                focus:bg-white
                                 ${
                                   hasError
                                     ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                                    : "border-[#d4ad54]/20 focus:border-[#741522] focus:bg-[#fffdf8] focus:ring-2 focus:ring-[#d4ad54]/15"
+                                    : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
                                 }
                               `}
                             />
@@ -1739,15 +2469,7 @@ const AddressInfo = () => {
                           </div>
 
                           {hasError && (
-                            <motion.p
-                              initial={{
-                                opacity: 0,
-                                y: -3,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                y: 0,
-                              }}
+                            <p
                               className="
                                 mt-1
                                 text-[10px]
@@ -1755,353 +2477,581 @@ const AddressInfo = () => {
                                 text-red-500
                               "
                             >
-                              {
-                                validationErrors[
-                                  field.name
-                                ]
-                              }
-                            </motion.p>
-                          )}
-
-                        </motion.div>
-                      );
-                    })}
-
-                  </div>
-
-
-                  {/* State */}
-
-                  <div>
-
-                    <label
-                      className="
-                        mb-1.5
-                        block
-                        text-[10px]
-                        font-bold
-                        uppercase
-                        tracking-wider
-                        text-[#806c63]
-                      "
-                    >
-                      State
-                    </label>
-
-                    <div className="relative">
-
-                      <Globe
-                        className={`
-                          absolute
-                          left-3
-                          top-1/2
-                          z-10
-                          -translate-y-1/2
-                          h-4
-                          w-4
-                          ${
-                            validationErrors.State
-                              ? "text-red-500"
-                              : "text-[#a48455]"
-                          }
-                        `}
-                      />
-
-                      <select
-                        name="State"
-                        value={formData.State}
-                        onChange={(e) => {
-
-                          setFormData((prev) => ({
-                            ...prev,
-                            State: e.target.value,
-                            customState:
-                              e.target.value ===
-                              "Other"
-                                ? prev.customState
-                                : "",
-                          }));
-
-                          if (
-                            validationErrors.State
-                          ) {
-                            setValidationErrors(
-                              (prev) => ({
-                                ...prev,
-                                State: "",
-                              })
-                            );
-                          }
-                        }}
-                        className={`
-                          w-full
-                          appearance-none
-                          rounded-xl
-                          border
-                          bg-[#faf6ee]
-                          py-3
-                          pl-10
-                          pr-4
-                          text-sm
-                          text-[#4a1815]
-                          outline-none
-                          transition-all
-                          duration-300
-                          ${
-                            validationErrors.State
-                              ? "border-red-400"
-                              : "border-[#d4ad54]/20 focus:border-[#741522] focus:bg-[#fffdf8] focus:ring-2 focus:ring-[#d4ad54]/15"
-                          }
-                        `}
-                      >
-
-                        <option
-                          value="Select State"
-                          disabled
-                        >
-                          Select State
-                        </option>
-
-                        {predefinedStates.map(
-                          (state) => (
-                            <option
-                              key={state}
-                              value={state}
-                            >
-                              {state}
-                            </option>
-                          )
-                        )}
-
-                        <option value="Other">
-                          Other State
-                        </option>
-
-                      </select>
-
-                    </div>
-
-                    {validationErrors.State && (
-                      <p className="mt-1 text-[10px] text-red-500">
-                        {validationErrors.State}
-                      </p>
-                    )}
-
-
-                    {/* Other State */}
-
-                    <AnimatePresence>
-
-                      {formData.State ===
-                        "Other" && (
-
-                        <motion.div
-                          initial={{
-                            opacity: 0,
-                            height: 0,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            height: "auto",
-                          }}
-                          exit={{
-                            opacity: 0,
-                            height: 0,
-                          }}
-                          className="mt-3"
-                        >
-
-                          <div className="relative">
-
-                            <Globe
-                              className="
-                                absolute
-                                left-3
-                                top-1/2
-                                -translate-y-1/2
-                                h-4
-                                w-4
-                                text-[#a48455]
-                              "
-                            />
-
-                            <input
-                              type="text"
-                              name="customState"
-                              placeholder="Enter your state"
-                              value={
-                                formData.customState
-                              }
-                              onChange={handleChange}
-                              className={`
-                                w-full
-                                rounded-xl
-                                border
-                                bg-[#faf6ee]
-                                py-3
-                                pl-10
-                                pr-4
-                                text-sm
-                                text-[#4a1815]
-                                outline-none
-                                transition-all
-                                ${
-                                  validationErrors.customState
-                                    ? "border-red-400"
-                                    : "border-[#d4ad54]/20 focus:border-[#741522] focus:bg-[#fffdf8] focus:ring-2 focus:ring-[#d4ad54]/15"
-                                }
-                              `}
-                            />
-
-                          </div>
-
-                          {validationErrors.customState && (
-                            <p className="mt-1 text-[10px] text-red-500">
-                              {
-                                validationErrors.customState
-                              }
+                              {validationErrors[field.name]}
                             </p>
                           )}
 
-                        </motion.div>
+                        </div>
+                      );
+                    })}
 
-                      )}
+                </div>
 
-                    </AnimatePresence>
+                {/* PIN */}
 
-                  </div>
+                {fields
+                  .filter((field) => field.name === "Pin")
+                  .map((field) => {
+                    const Icon = field.icon;
 
+                    const hasError = Boolean(
+                      validationErrors[field.name]
+                    );
 
-                  {/* Error */}
+                    return (
+                      <div key={field.name}>
 
-                  {error && (
-                    <motion.div
-                      initial={{
-                        opacity: 0,
-                        y: 5,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                      }}
-                      className="
-                        rounded-xl
-                        border
-                        border-red-200
-                        bg-red-50
-                        p-3
-                        text-xs
-                        font-medium
-                        text-red-700
-                      "
-                    >
-                      {error}
-                    </motion.div>
-                  )}
+                        <label
+                          className="
+                            mb-1.5
+                            block
+                            text-[9px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[#806c63]
+                          "
+                        >
+                          {field.label}
+                        </label>
 
+                        <div className="relative">
 
-                  {/* Buttons */}
+                          <Icon
+                            className={`
+                              absolute
+                              left-3
+                              top-1/2
+                              h-4
+                              w-4
+                              -translate-y-1/2
+                              ${
+                                hasError
+                                  ? "text-red-500"
+                                  : "text-[#a48455]"
+                              }
+                            `}
+                          />
 
-                  <div
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="postal-code"
+                            name="Pin"
+                            maxLength={6}
+                            placeholder={field.placeholder}
+                            value={formData.Pin}
+                            onChange={(event) => {
+                              const value =
+                                event.target.value.replace(
+                                  /\D/g,
+                                  ""
+                                );
+
+                              setFormData((prev) => ({
+                                ...prev,
+                                Pin: value,
+                              }));
+
+                              if (validationErrors.Pin) {
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  Pin: "",
+                                }));
+                              }
+                            }}
+                            className={`
+                              w-full
+                              rounded-xl
+                              border
+                              bg-[#faf6ee]
+                              py-3
+                              pl-10
+                              pr-4
+                              text-sm
+                              tracking-wider
+                              text-[#4a1815]
+                              outline-none
+                              transition-all
+                              duration-300
+                              placeholder:text-[#b5a59b]
+                              focus:bg-white
+                              ${
+                                hasError
+                                  ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                                  : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
+                              }
+                            `}
+                          />
+
+                        </div>
+
+                        {hasError && (
+                          <p
+                            className="
+                              mt-1
+                              text-[10px]
+                              font-medium
+                              text-red-500
+                            "
+                          >
+                            {validationErrors.Pin}
+                          </p>
+                        )}
+
+                      </div>
+                    );
+                  })}
+
+                {/* State */}
+
+                <div>
+
+                  <label
                     className="
-                      flex
-                      flex-col-reverse
-                      gap-3
-                      border-t
-                      border-[#741522]/10
-                      pt-5
-                      sm:flex-row
+                      mb-1.5
+                      block
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.12em]
+                      text-[#806c63]
                     "
                   >
+                    State
+                  </label>
 
-                    <motion.button
-                      whileHover={{
-                        scale: 1.01,
+                  <div className="relative">
+
+                    <Globe
+                      className={`
+                        absolute
+                        left-3
+                        top-1/2
+                        z-10
+                        h-4
+                        w-4
+                        -translate-y-1/2
+                        ${
+                          validationErrors.State
+                            ? "text-red-500"
+                            : "text-[#a48455]"
+                        }
+                      `}
+                    />
+
+                    <select
+                      name="State"
+                      value={formData.State}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          State: e.target.value,
+                          customState:
+                            e.target.value === "Other"
+                              ? prev.customState
+                              : "",
+                        }));
+
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          State: "",
+                          customState: "",
+                        }));
                       }}
-                      whileTap={{
-                        scale: 0.97,
-                      }}
-                      type="button"
-                      onClick={() =>
-                        setShowPopup(false)
-                      }
-                      className="
-                        flex
-                        flex-1
-                        items-center
-                        justify-center
-                        gap-2
+                      className={`
+                        w-full
+                        appearance-none
                         rounded-xl
                         border
-                        border-[#d4ad54]/25
                         bg-[#faf6ee]
                         py-3
+                        pl-10
+                        pr-10
                         text-sm
-                        font-semibold
-                        text-[#806c63]
+                        text-[#4a1815]
+                        outline-none
                         transition-all
                         duration-300
-                        hover:bg-[#f3e8d2]
-                        hover:text-[#741522]
-                      "
+                        focus:bg-white
+                        ${
+                          validationErrors.State
+                            ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                            : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
+                        }
+                      `}
                     >
-                      <X className="h-4 w-4" />
-                      Cancel
-                    </motion.button>
+                      <option
+                        value="Select State"
+                        disabled
+                      >
+                        Select State
+                      </option>
 
+                      {predefinedStates.map((state) => (
+                        <option
+                          key={state}
+                          value={state}
+                        >
+                          {state}
+                        </option>
+                      ))}
 
-                    <motion.button
-                      whileHover={{
-                        scale: 1.01,
-                      }}
-                      whileTap={{
-                        scale: 0.97,
-                      }}
-                      type="submit"
-                      disabled={loading}
+                      <option value="Other">
+                        Other State
+                      </option>
+                    </select>
+
+                    <span
                       className="
-                        flex
-                        flex-1
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        bg-[#741522]
-                        py-3
-                        text-sm
-                        font-bold
-                        text-[#fffdf8]
-                        shadow-lg
-                        transition-all
-                        duration-300
-                        hover:bg-[#5f111b]
-                        hover:shadow-xl
-                        disabled:cursor-not-allowed
-                        disabled:opacity-60
+                        pointer-events-none
+                        absolute
+                        right-3
+                        top-1/2
+                        -translate-y-1/2
+                        text-[#8e6c48]
                       "
                     >
-
-                      <Save className="h-4 w-4" />
-
-                      {loading
-                        ? "Saving..."
-                        : "Save Address"}
-
-                    </motion.button>
+                      ▾
+                    </span>
 
                   </div>
 
-                </form>
+                  {validationErrors.State && (
+                    <p
+                      className="
+                        mt-1
+                        text-[10px]
+                        font-medium
+                        text-red-500
+                      "
+                    >
+                      {validationErrors.State}
+                    </p>
+                  )}
+
+                  <AnimatePresence>
+                    {formData.State === "Other" && (
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          height: 0,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          height: "auto",
+                        }}
+                        exit={{
+                          opacity: 0,
+                          height: 0,
+                        }}
+                        className="mt-3 overflow-hidden"
+                      >
+
+                        <div className="relative">
+
+                          <Globe
+                            className={`
+                              absolute
+                              left-3
+                              top-1/2
+                              h-4
+                              w-4
+                              -translate-y-1/2
+                              ${
+                                validationErrors.customState
+                                  ? "text-red-500"
+                                  : "text-[#a48455]"
+                              }
+                            `}
+                          />
+
+                          <input
+                            type="text"
+                            name="customState"
+                            autoComplete="address-level1"
+                            placeholder="Enter your state"
+                            value={formData.customState}
+                            onChange={handleChange}
+                            className={`
+                              w-full
+                              rounded-xl
+                              border
+                              bg-[#faf6ee]
+                              py-3
+                              pl-10
+                              pr-4
+                              text-sm
+                              text-[#4a1815]
+                              outline-none
+                              transition-all
+                              duration-300
+                              placeholder:text-[#b5a59b]
+                              focus:bg-white
+                              ${
+                                validationErrors.customState
+                                  ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                                  : "border-[#d4ad54]/20 focus:border-[#741522] focus:ring-2 focus:ring-[#d4ad54]/15"
+                              }
+                            `}
+                          />
+
+                        </div>
+
+                        {validationErrors.customState && (
+                          <p
+                            className="
+                              mt-1
+                              text-[10px]
+                              font-medium
+                              text-red-500
+                            "
+                          >
+                            {validationErrors.customState}
+                          </p>
+                        )}
+
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                </div>
 
               </div>
 
             </motion.div>
 
-          </motion.div>
+            {/* =================================================
+                API ERROR
+            ================================================== */}
 
-        )}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: 5,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -5,
+                  }}
+                  className="
+                    flex
+                    items-start
+                    gap-2
+                    rounded-xl
+                    border
+                    border-red-200
+                    bg-red-50
+                    p-3
+                    text-xs
+                    font-medium
+                    leading-5
+                    text-red-700
+                  "
+                >
+                  <span className="font-bold">!</span>
 
-      </AnimatePresence>
+                  <span>
+                    {error}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="h-1 sm:hidden" />
+
+          </form>
+        </div>
+
+        {/* =================================================
+            STICKY FOOTER
+        ================================================== */}
+
+        <div
+          className="
+            shrink-0
+            border-t
+            border-[#d4ad54]/20
+            bg-[#fffdf8]/95
+            px-4
+            py-3
+            shadow-[0_-8px_25px_rgba(63,22,22,0.06)]
+            backdrop-blur-md
+            sm:px-7
+            sm:py-4
+          "
+        >
+
+          {/* Security */}
+
+          <div
+            className="
+              mb-3
+              flex
+              items-center
+              justify-center
+              gap-2
+              text-[9px]
+              text-[#8b786d]
+              sm:justify-start
+            "
+          >
+            <ShieldCheck
+              className="
+                h-3.5
+                w-3.5
+                text-[#b88732]
+              "
+            />
+
+            <span>
+              Your delivery information is securely protected.
+            </span>
+          </div>
+
+          {/* Buttons */}
+
+          <div
+            className="
+              grid
+              grid-cols-2
+              gap-3
+            "
+          >
+
+            {/* Cancel */}
+
+            <motion.button
+              whileHover={{
+                scale: 1.02,
+                y: -1,
+              }}
+              whileTap={{
+                scale: 0.97,
+              }}
+              type="button"
+              onClick={() => setShowPopup(false)}
+              className="
+                flex
+                min-h-[48px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                border
+                border-[#d4ad54]/30
+                bg-white
+                px-4
+                text-xs
+                font-bold
+                text-[#741522]
+                shadow-sm
+                transition-all
+                duration-300
+                hover:bg-[#faf3e5]
+                hover:shadow-md
+              "
+            >
+              <X className="h-4 w-4" />
+
+              Cancel
+            </motion.button>
+
+            {/* Save */}
+
+            <motion.button
+              whileHover={{
+                scale: 1.02,
+                y: -1,
+              }}
+              whileTap={{
+                scale: 0.97,
+              }}
+              type="submit"
+              form="address-form"
+              disabled={loading}
+              className="
+                group
+                flex
+                min-h-[48px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-gradient-to-r
+                from-[#741522]
+                to-[#5f111b]
+                px-4
+                text-xs
+                font-bold
+                text-white
+                shadow-lg
+                shadow-[#741522]/20
+                transition-all
+                duration-300
+                hover:shadow-xl
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+              "
+            >
+
+              {loading ? (
+                <>
+                  <motion.span
+                    animate={{
+                      rotate: 360,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="
+                      h-4
+                      w-4
+                      rounded-full
+                      border-2
+                      border-white/30
+                      border-t-white
+                    "
+                  />
+
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save
+                    className="
+                      h-4
+                      w-4
+                      transition-transform
+                      duration-300
+                      group-hover:scale-110
+                    "
+                  />
+
+                  {address
+                    ? "Update Address"
+                    : "Save Address"}
+                </>
+              )}
+
+            </motion.button>
+
+          </div>
+
+        </div>
+
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
     </div>
   );

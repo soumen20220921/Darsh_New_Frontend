@@ -42,7 +42,7 @@ const TermsAndConditions = () => {
           Rule 3 (1) of the Information Technology (Intermediaries guidelines)
           Rules, 2011 that require publishing the rules and regulations,
           privacy policy and Terms of Use for access or usage of domain name{" "}
-          <strong>www.pomwb.com</strong> (“Website”), including the related
+          <strong>contactdarsh9@gmail.com</strong> (“Website”), including the related
           mobile site and mobile application (hereinafter referred to as
           “Platform”).
         </>
@@ -53,7 +53,7 @@ const TermsAndConditions = () => {
       icon: <Scale />,
       text: (
         <>
-          The Platform is owned by <strong>POMWB</strong>, a company
+          The Platform is owned by <strong>DARSH</strong>, a company
           incorporated under the Companies Act, 1956 with its registered
           office at{" "}
           <strong>

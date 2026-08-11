@@ -65,23 +65,23 @@ const Categories = () => {
   const categories = [
     {
       id: "1",
-      name: "saree",
-      image: "/IMG/p4.jpg",
+      name: "Silk Saree",
+      image: "/IMG/p7.jpg",
     },
     {
       id: "2",
-      name: "blouse",
-      image: "/IMG/p3.jpg",
+      name: "Cotton Handloom",
+      image: "/IMG/p8.jpg",
     },
     {
       id: "3",
-      name: "men",
-      image: "/IMG/p6.jpg",
+      name: "Bandhani",
+      image: "/IMG/p9.jpg",
     },
     {
       id: "4",
-      name: "kids",
-      image: "/IMG/about.jpeg",
+      name: "Festive Edit",
+      image: "/IMG/p10.jpg",
     },
     
   ];

@@ -60,6 +60,19 @@ const ProductDetails = () => {
   }, [allProduct, product]);
 
   /* =========================================================
+     SAME CATEGORY / COLOR VARIANTS
+     Includes the current product so the selected color stays visible.
+  ========================================================= */
+
+  const sameCategoryProducts = useMemo(() => {
+    if (!allProduct || !product) return [];
+
+    return allProduct.filter(
+      (item) => item.category === product.category,
+    );
+  }, [allProduct, product]);
+
+  /* =========================================================
      PRODUCT OPTIONS
   ========================================================= */
 
@@ -205,34 +218,53 @@ const ProductDetails = () => {
     }, 3000);
   };
 
-  /* =========================================================
-     LOW STOCK TIMER
-  ========================================================= */
+/* =========================================================
+   LOW STOCK TIMER - 24 HOURS
+   Persists per product + stock level in localStorage
+========================================================= */
 
-  useEffect(() => {
-    let timer;
+useEffect(() => {
+  let timer;
 
-    if (isLowStock) {
-      setCountdown(120);
+  if (!isLowStock || !product?._id) {
+    setCountdown(0);
+    return undefined;
+  }
 
-      showNotification("Only a few pieces are left in stock.", "warning");
+  const TIMER_DURATION = 24 * 60 * 60 * 1000;
+  const storageKey = `darsh_low_stock_timer_${product._id}_${stock}`;
 
-      timer = setInterval(() => {
-        setCountdown((previous) => {
-          if (previous <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
+  let savedEndTime = Number(localStorage.getItem(storageKey));
 
-          return previous - 1;
-        });
-      }, 1000);
+  // Create timer only once for this product + stock level.
+  if (!savedEndTime || savedEndTime <= Date.now()) {
+    savedEndTime = Date.now() + TIMER_DURATION;
+    localStorage.setItem(storageKey, String(savedEndTime));
+  }
+
+  const updateCountdown = () => {
+    const remaining = Math.max(
+      0,
+      Math.floor((savedEndTime - Date.now()) / 1000)
+    );
+
+    setCountdown(remaining);
+
+    if (remaining <= 0 && timer) {
+      clearInterval(timer);
     }
+  };
 
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isLowStock]);
+  updateCountdown();
+
+  timer = setInterval(updateCountdown, 1000);
+
+  return () => {
+    if (timer) {
+      clearInterval(timer);
+    }
+  };
+}, [isLowStock, product?._id, stock]);
 
   /* =========================================================
      ZOOM
@@ -586,6 +618,23 @@ const ProductDetails = () => {
             100,
         )
       : null;
+
+  /* =========================================================
+     SMALL LOW STOCK TIMER DISPLAY
+  ========================================================= */
+
+  const lowStockHours =
+    countdown !== null ? Math.floor(countdown / 3600) : 0;
+
+  const lowStockMinutes =
+    countdown !== null ? Math.floor((countdown % 3600) / 60) : 0;
+
+  const lowStockSeconds = countdown !== null ? countdown % 60 : 0;
+
+  const lowStockTime =
+    `${String(lowStockHours).padStart(2, "0")}:` +
+    `${String(lowStockMinutes).padStart(2, "0")}:` +
+    `${String(lowStockSeconds).padStart(2, "0")}`;
 
   /* =========================================================
      RENDER
@@ -1112,7 +1161,7 @@ const ProductDetails = () => {
             </motion.p>
 
             {/* blouse Avaliable */}
-<div className="mt-6">
+            <div className="mt-6">
               <label
                 className="
                 block
@@ -1140,43 +1189,227 @@ const ProductDetails = () => {
                   text-[#958176]
                 "
                 >
-                 {product.blouseAvaliable ? "Blouse piece available" : "No blouse piece"}
+                  {product.blouseAvaliable
+                    ? "Blouse piece available"
+                    : "No blouse piece"}
                 </span>
               </div>
             </div>
-            {/*color */}
-<div className="mt-6">
-              <label
-                className="
-                block
-                text-[9px]
-                uppercase
-                tracking-[0.2em]
-                text-[#6f594e]
-                mb-3
-              "
+            {/* =================================================
+                AVAILABLE COLORS / SAME CATEGORY
+            ================================================= */}
+            {sameCategoryProducts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="mt-7"
               >
-                Color
-              </label>
+                <div className="flex items-end justify-between gap-3 mb-3">
+                  <div>
+                    <label
+                      className="
+                        block
+                        text-[9px]
+                        uppercase
+                        tracking-[0.2em]
+                        text-[#6f594e]
+                        mb-1
+                      "
+                    >
+                      Available Colors
+                    </label>
 
-              <div
-                className="
-                flex
-                items-center
-                justify-between
-                gap-4
-              "
-              >
-                <span
-                  className="
-                  text-[10px]
-                  text-[#958176]
-                "
-                >
-                  {product.color || "N/A"}
-                </span>
-              </div>
-            </div>
+                    <p className="text-[10px] text-[#958176]">
+                      Explore other shades from this collection
+                    </p>
+                  </div>
+
+                  <span
+                    className="
+                      shrink-0
+                      text-[8px]
+                      uppercase
+                      tracking-[0.12em]
+                      text-[#a27d5f]
+                    "
+                  >
+                    {sameCategoryProducts.length} options
+                  </span>
+                </div>
+
+                <div className="relative -mx-1">
+                  <div
+                    className="
+                      flex
+                      gap-2.5
+                      overflow-x-auto
+                      overflow-y-hidden
+                      px-1
+                      pb-2
+                      snap-x
+                      snap-mandatory
+                      scrollbar-hide
+                    "
+                    style={{
+                      WebkitOverflowScrolling: "touch",
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                    }}
+                  >
+                    {sameCategoryProducts.map((colorProduct, index) => {
+                      const isCurrentProduct = colorProduct._id === product._id;
+
+                      const image = colorProduct.images?.[0]
+                        ? `${url}/img/${colorProduct.images[0]}`
+                        : "https://placehold.co/160x200";
+
+                      return (
+                        <motion.button
+                          key={colorProduct._id}
+                          type="button"
+                          whileHover={{ y: -3 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => {
+                            if (isCurrentProduct) return;
+
+                            navigate(`/productDetails/${colorProduct._id}`);
+
+                            window.scrollTo({
+                              top: 0,
+                              left: 0,
+                              behavior: "smooth",
+                            });
+                          }}
+                          className="
+                            group
+                            relative
+                            shrink-0
+                            w-[72px]
+                            sm:w-[82px]
+                            snap-start
+                            text-left
+                            outline-none
+                          "
+                          title={
+                            colorProduct.color ||
+                            colorProduct.productName ||
+                            `Option ${index + 1}`
+                          }
+                        >
+                          <div
+                            className={`
+                              relative
+                              w-full
+                              aspect-[4/5]
+                              overflow-hidden
+                              bg-[#eee4d3]
+                              border
+                              transition-all
+                              duration-300
+                              ${
+                                isCurrentProduct
+                                  ? "border-[#76131d] ring-2 ring-[#76131d]/10 shadow-[0_5px_18px_rgba(118,19,29,0.12)]"
+                                  : "border-[#dfd2c0] group-hover:border-[#76131d]/60"
+                              }
+                            `}
+                          >
+                            <img
+                              src={image}
+                              alt={
+                                colorProduct.color ||
+                                colorProduct.productName ||
+                                `Option ${index + 1}`
+                              }
+                              loading="lazy"
+                              draggable="false"
+                              className="
+                                w-full
+                                h-full
+                                object-cover
+                                transition-transform
+                                duration-500
+                                group-hover:scale-105
+                              "
+                            />
+
+                            <div
+                              className="
+                                absolute
+                                inset-x-0
+                                bottom-0
+                                h-10
+                                bg-gradient-to-t
+                                from-black/45
+                                to-transparent
+                                pointer-events-none
+                              "
+                            />
+
+                            {isCurrentProduct && (
+                              <div
+                                className="
+                                  absolute
+                                  top-1.5
+                                  right-1.5
+                                  h-5
+                                  w-5
+                                  rounded-full
+                                  bg-[#76131d]
+                                  text-white
+                                  flex
+                                  items-center
+                                  justify-center
+                                  shadow-sm
+                                "
+                              >
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </div>
+
+                           
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    className="
+                      pointer-events-none
+                      absolute
+                      top-0
+                      right-0
+                      bottom-2
+                      w-8
+                      bg-gradient-to-l
+                      from-[#f8f4ec]
+                      to-transparent
+                    "
+                  />
+                </div>
+
+                {sameCategoryProducts.length > 4 && (
+                  <div
+                    className="
+                      mt-1
+                      flex
+                      items-center
+                      justify-end
+                      gap-1.5
+                      text-[7px]
+                      uppercase
+                      tracking-[0.12em]
+                      text-[#a28d80]
+                    "
+                  >
+                    <span>Swipe to explore</span>
+                    <span className="text-[#76131d]">→</span>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Size */}
 
             {sizes.length > 0 && (
@@ -1234,77 +1467,169 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Stock */}
+            {/* =================================================
+                STOCK STATUS
+            ================================================= */}
 
             <div className="mt-5">
               {isOutOfStock ? (
                 <div
                   className="
-                  flex
-                  items-center
-                  gap-2
-                  text-xs
-                  text-[#a33d3d]
-                "
+                    inline-flex
+                    items-center
+                    gap-2
+                    text-xs
+                    text-[#a33d3d]
+                  "
                 >
                   <CircleOff className="h-4 w-4" />
                   Out of stock
                 </div>
               ) : isLowStock ? (
-                <div
-                  className="
-                  flex
-                  items-center
-                  gap-2
-                  text-xs
-                  text-[#a16e25]
-                "
-                >
-                  <Hourglass className="h-4 w-4" />
-                  Only {stock} pieces remaining
+                <div className="space-y-2">
+                  {/* Stock message */}
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      text-xs
+                      text-[#a16e25]
+                    "
+                  >
+                    <Hourglass className="h-4 w-4" />
+
+                    <span>
+                      Only{" "}
+                      <strong className="font-semibold text-[#76131d]">
+                        {stock}
+                      </strong>{" "}
+                      {stock === 1 ? "piece" : "pieces"} left
+                    </span>
+                  </div>
+
+                  {/* Small 24-hour urgency timer */}
+                  <AnimatePresence mode="wait">
+                    {countdown !== null && countdown > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -8, scale: 0.96 }}
+                        transition={{ duration: 0.3 }}
+                        className="
+                          inline-flex
+                          max-w-full
+                          items-center
+                          gap-2
+                          rounded-full
+                          border
+                          border-[#e2c9a2]
+                          bg-[#fffaf2]
+                          px-3
+                          py-1.5
+                          shadow-[0_3px_12px_rgba(118,19,29,0.06)]
+                        "
+                      >
+                        {/* Pulsing status dot */}
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <motion.span
+                            animate={{
+                              scale: [1, 1.8, 1],
+                              opacity: [0.7, 0, 0.7],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeOut",
+                            }}
+                            className="
+                              absolute
+                              inset-0
+                              rounded-full
+                              bg-[#c44949]
+                            "
+                          />
+                          <span
+                            className="
+                              relative
+                              h-2
+                              w-2
+                              rounded-full
+                              bg-[#a92d2d]
+                            "
+                          />
+                        </span>
+
+                        <span
+                          className="
+                            text-[8px]
+                            font-semibold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[#76131d]
+                          "
+                        >
+                          Limited stock
+                        </span>
+
+                        <span className="h-3 w-px shrink-0 bg-[#dfcdb5]" />
+
+                        <Clock className="h-3 w-3 shrink-0 text-[#a16e25]" />
+
+                        <motion.span
+                          key={lowStockTime}
+                          initial={{ opacity: 0.4, y: 2 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="
+                            min-w-[58px]
+                            font-mono
+                            text-[10px]
+                            font-semibold
+                            tracking-[0.08em]
+                            text-[#42151a]
+                          "
+                        >
+                          {lowStockTime}
+                        </motion.span>
+
+                        <motion.span
+                          animate={{ opacity: [0.45, 1, 0.45] }}
+                          transition={{
+                            duration: 1.8,
+                            repeat: Infinity,
+                          }}
+                          className="
+                            hidden
+                            sm:inline
+                            text-[7px]
+                            font-semibold
+                            uppercase
+                            tracking-[0.1em]
+                            text-[#a16e25]
+                          "
+                        >
+                          Selling fast
+                        </motion.span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <div
                   className="
-                  flex
-                  items-center
-                  gap-2
-                  text-xs
-                  text-[#58734c]
-                "
+                    flex
+                    items-center
+                    gap-2
+                    text-xs
+                    text-[#58734c]
+                  "
                 >
                   <Check className="h-4 w-4" />
                   In stock · Ready to dispatch
                 </div>
               )}
             </div>
-
-            {/* Countdown */}
-
-            {isLowStock && countdown !== null && (
-              <div
-                className="
-                  mt-3
-                  px-3
-                  py-2
-                  bg-[#f4ead5]
-                  border
-                  border-[#dfceb0]
-                  flex
-                  items-center
-                  gap-2
-                  text-xs
-                  text-[#765526]
-                "
-              >
-                <Clock className="h-4 w-4" />
-
-                <span>
-                  Limited stock · {Math.floor(countdown / 60)}:
-                  {String(countdown % 60).padStart(2, "0")}
-                </span>
-              </div>
-            )}
 
             {/* Quantity */}
 
@@ -1387,14 +1712,18 @@ const ProductDetails = () => {
                   </button>
                 </div>
 
-                <span
-                  className="
-                  text-[10px]
-                  text-[#958176]
-                "
+                {/* <span
+                  className={`
+                    text-[10px]
+                    ${
+                      isLowStock
+                        ? "font-medium text-[#a16e25]"
+                        : "text-[#958176]"
+                    }
+                  `}
                 >
-                  {stock} available
-                </span>
+                  {isLowStock ? `${stock} left` : `${stock} available`}
+                </span> */}
               </div>
             </div>
 
@@ -1893,13 +2222,70 @@ const ProductDetails = () => {
                     text-[#927d70]
                   "
                   >
-                    Stock
+                    Bouse piece
                   </span>
 
                   <span className="text-[#5c473e] text-right">
-                    {stock} available
+                   {product.blouseAvaliable ? "Available" : "Not available"}
                   </span>
+                  
                 </div>
+                {/* Hot Sell */}
+<div
+  className="
+    flex
+    items-center
+    justify-between
+    gap-6
+    py-4
+    text-sm
+  "
+>
+  <span
+    className="
+      text-[9px]
+      uppercase
+      tracking-[0.18em]
+      text-[#927d70]
+    "
+  >
+    Hot Sell
+  </span>
+
+  <span
+    className={`
+      inline-flex
+      items-center
+      gap-2
+      px-3
+      py-1.5
+      text-[9px]
+      uppercase
+      tracking-[0.12em]
+      font-medium
+      ${
+        product.hotSell
+          ? "bg-[#f8e5e3] text-[#9d3030] border border-[#e5b9b5]"
+          : "bg-[#f3eee7] text-[#88776c] border border-[#ddd1c4]"
+      }
+    `}
+  >
+    <span
+      className={`
+        h-1.5
+        w-1.5
+        rounded-full
+        ${
+          product.hotSell
+            ? "bg-[#b52f2f] animate-pulse"
+            : "bg-[#9c8e84]"
+        }
+      `}
+    />
+
+    {product.hotSell ? "Hot" : "Not Hot"}
+  </span>
+</div>
 
                 <div
                   className="
@@ -2419,6 +2805,13 @@ const ProductDetails = () => {
               p-4
             "
             onClick={toggleZoomMode}
+
+             onClick={(event) => {
+        // Only close when clicking the backdrop
+        if (event.target === event.currentTarget) {
+          toggleZoomMode();
+        }
+      }}
           >
             <button
               onClick={toggleZoomMode}
