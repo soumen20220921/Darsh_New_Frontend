@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 const carouselImages = [
   {
     id: 1,
-    src: "/IMG/P4.jpg",
+    src: "/IMG/about.jpeg",
     eyebrow: "HANDWOVEN · DIRECT",
     title: "From the weaver's",
     title2: "hands",
@@ -22,7 +22,7 @@ const carouselImages = [
   },
   {
     id: 2,
-    src: "/IMG/P3.jpg",
+    src: "/IMG/P22.jpg",
     eyebrow: "DARSH · NEW COLLECTION",
     title: "Woven with",
     title2: "tradition",
@@ -32,7 +32,7 @@ const carouselImages = [
   },
   {
     id: 3,
-    src: "/IMG/P6.jpg",
+    src: "/IMG/P31.jpeg",
     eyebrow: "THE DARSH EDIT",
     title: "Timeless",
     title2: "Indian",
@@ -40,6 +40,16 @@ const carouselImages = [
     description:
       "A carefully selected collection of textures, colours and stories from India's weaving traditions.",
   },
+  {
+    id: 4,
+    src: "/IMG/P34.jpeg",
+    eyebrow: "DARSH · NEW COLLECTION",
+    title: "Woven with",
+    title2: "tradition",
+    highlight: "made for today.",
+    description:
+      "Elegant sarees created for women who appreciate heritage, craftsmanship and effortless beauty.",
+  }
 ];
 
 export default function Hero() {
