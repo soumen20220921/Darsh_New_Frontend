@@ -22,7 +22,7 @@ const carouselImages = [
   },
   {
     id: 2,
-    src: "/IMG/P22.jpg",
+    src: "/IMG/p22.jpg",
     eyebrow: "DARSH · NEW COLLECTION",
     title: "Woven with",
     title2: "tradition",
@@ -32,7 +32,7 @@ const carouselImages = [
   },
   {
     id: 3,
-    src: "/IMG/P31.jpeg",
+    src: "/IMG/p31.jpeg",
     eyebrow: "THE DARSH EDIT",
     title: "Timeless",
     title2: "Indian",
@@ -42,7 +42,7 @@ const carouselImages = [
   },
   {
     id: 4,
-    src: "/IMG/P34.jpeg",
+    src: "/IMG/p34.jpeg",
     eyebrow: "DARSH · NEW COLLECTION",
     title: "Woven with",
     title2: "tradition",
