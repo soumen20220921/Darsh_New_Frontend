@@ -52,6 +52,7 @@ const carouselImages = [
   }
 ];
 
+
 export default function Hero() {
   const navigate = useNavigate();
 
