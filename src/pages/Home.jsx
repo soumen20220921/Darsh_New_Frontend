@@ -30,10 +30,10 @@ import FestiveBanner from "./FestiveBanner.jsx";
 const categories = [
   {
     id: "silk",
-    name: "Silk Sarees",
+    name: "Pure Silk",
     subtitle: " PURE Silk Collections",
     image: "/IMG/p7.jpg",
-    path: "/Categories/Silk Saree",
+    path: "/Categories/Pure Silk",
   },
   {
     id: "cotton",
@@ -71,6 +71,7 @@ const fallbackProducts = [
     price: 18900,
     image: "/IMG/saree.png",
     badge: "BESTSELLER",
+    color: "red",
   },
   {
     id: "demo-2",
@@ -79,6 +80,7 @@ const fallbackProducts = [
     price: 7450,
     image: "/IMG/saree.png",
     badge: "NEW",
+    color: "white",
   },
   {
     id: "demo-3",
@@ -87,6 +89,7 @@ const fallbackProducts = [
     price: 4200,
     image: "/IMG/home.png",
     badge: "NEW",
+    color: "blue",
   },
   {
     id: "demo-4",
@@ -94,6 +97,7 @@ const fallbackProducts = [
     category: "TUSSAR SILK · BHAGALPUR",
     price: 9800,
     image: "/IMG/saree.png",
+    color: "yellow",
   },
   {
     id: "demo-5",
@@ -102,6 +106,7 @@ const fallbackProducts = [
     price: 5300,
     image: "/IMG/saree.png",
     badge: "FESTIVE",
+    color: "white",
   },
   {
     id: "demo-6",
@@ -109,6 +114,7 @@ const fallbackProducts = [
     category: "GAJI SILK · JAMNAGAR",
     price: 11200,
     image: "/IMG/all.png",
+    color: "red",
   },
 ];
 
@@ -427,6 +433,262 @@ const LuxuryProductCard = ({
         </div>
       </div>
     </Link>
+  );
+};
+
+/* =========================================================
+   COLOR STORIES
+   Only the four main storefront colors are shown.
+========================================================= */
+
+const COLOR_STORIES = [
+  {
+    key: "red",
+    label: "RED",
+    subtitle: "Bold & timeless",
+    swatches: ["#8f1725", "#c83b45", "#5f0d17"],
+  },
+  {
+    key: "white",
+    label: "WHITE",
+    subtitle: "Pure & elegant",
+    swatches: ["#fffaf0", "#e9e2d4", "#cfc7b8"],
+  },
+  {
+    key: "yellow",
+    label: "YELLOW",
+    subtitle: "Warm & radiant",
+    swatches: ["#d4a72c", "#f0c94b", "#b98217"],
+  },
+  {
+    key: "blue",
+    label: "BLUE",
+    subtitle: "Calm & graceful",
+    swatches: ["#173b67", "#356a9f", "#0d2744"],
+  },
+];
+
+const getProductColorText = (product) => {
+  const values = [
+    product?.color,
+    product?.colour,
+    product?.productColor,
+    product?.colors,
+    product?.colours,
+    product?.shade,
+    product?.variant?.color,
+    product?.variants?.[0]?.color,
+  ];
+
+  return values
+    .flatMap((value) =>
+      Array.isArray(value) ? value : value ? [value] : []
+    )
+    .join(" ")
+    .toLowerCase()
+    .trim();
+};
+
+const matchesColor = (product, colorKey) => {
+  const colorText = getProductColorText(product);
+
+  if (!colorText) return false;
+
+  const colorAliases = {
+    red: [
+      "red",
+      "maroon",
+      "crimson",
+      "scarlet",
+      "wine",
+      "burgundy",
+      "rani",
+      "vermilion",
+    ],
+    white: [
+      "white",
+      "ivory",
+      "cream",
+      "off white",
+      "off-white",
+      "pearl",
+      "beige",
+      "ekru",
+      "ecru",
+    ],
+    yellow: [
+      "yellow",
+      "mustard",
+      "golden yellow",
+      "lemon",
+      "haldi",
+      "turmeric",
+      "ochre",
+      "ochre yellow",
+    ],
+    blue: [
+      "blue",
+      "navy",
+      "royal blue",
+      "sky blue",
+      "powder blue",
+      "indigo",
+      "cobalt",
+      "teal blue",
+      "denim",
+      "midnight blue",
+    ],
+  };
+
+  return colorAliases[colorKey]?.some((alias) =>
+    colorText.includes(alias)
+  );
+};
+
+const ColorStories = ({ products, url }) => {
+  const previewColors = COLOR_STORIES.map((color) => ({
+    ...color,
+    count: products.filter((product) => matchesColor(product, color.key)).length,
+    product:
+      products.find((product) => matchesColor(product, color.key)) || null,
+  }));
+
+  return (
+    <section
+      className="
+        relative
+        overflow-hidden
+        border-b
+        border-[#741522]/10
+        bg-[#f3eadb]
+        py-12
+        sm:py-16
+        lg:py-20
+      "
+    >
+      <div className="mx-auto w-full max-w-[1120px] px-5 sm:px-8 lg:px-0">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-3 text-[8px] font-medium uppercase tracking-[0.35em] text-[#977e73] sm:text-[9px]">
+              THE DARSH COLOR EDIT
+            </p>
+
+            <h2 className="font-serif text-[32px] font-normal leading-none text-[#3f1616] sm:text-[42px]">
+              Sarees by color
+            </h2>
+
+            <p className="mt-3 max-w-[480px] text-[11px] leading-5 text-[#806c63] sm:text-[12px]">
+              Find your favourite shade from our four signature color edits.
+            </p>
+          </div>
+
+          <Link
+            to="/sarees-by-color"
+            className="
+              group
+              inline-flex
+              w-fit
+              items-center
+              gap-2
+              border
+              border-[#741522]/40
+              px-5
+              py-2.5
+              text-[7px]
+              uppercase
+              tracking-[0.24em]
+              text-[#741522]
+              transition-all
+              duration-300
+              hover:bg-[#741522]
+              hover:text-[#f8f4eb]
+              sm:px-6
+              sm:py-3
+            "
+          >
+            View all colors
+            <ArrowRight
+              size={13}
+              strokeWidth={1.2}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            />
+          </Link>
+        </div>
+
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-9 sm:grid-cols-4 sm:gap-4">
+          {previewColors.map((color) => (
+            <Link
+              key={color.key}
+              to={`/sarees-by-color?color=${color.key}`}
+              className="
+                group
+                relative
+                overflow-hidden
+                border
+                border-[#741522]/10
+                bg-[#f8f4eb]
+                p-3
+                transition-all
+                duration-500
+                hover:-translate-y-1
+                hover:border-[#741522]/30
+                hover:shadow-xl
+                sm:p-4
+              "
+            >
+              <div className="relative aspect-[1.15] overflow-hidden bg-[#eee5d5]">
+                {color.product ? (
+                  <img
+                    src={
+                      color.product?.images?.[0]
+                        ? `${url}/img/${color.product.images[0]}`
+                        : color.product?.image || "/IMG/saree.png"
+                    }
+                    alt={`${color.label} sarees`}
+                    loading="lazy"
+                    className="
+                      absolute inset-0 h-full w-full object-cover
+                      transition-transform duration-700
+                      group-hover:scale-105
+                    "
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#e8dece]">
+                    <div
+                      className="h-20 w-20 rounded-full shadow-inner sm:h-24 sm:w-24"
+                      style={{
+                        background: `linear-gradient(135deg, ${color.swatches[0]}, ${color.swatches[1]})`,
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#3f1616]/80 to-transparent px-3 pb-3 pt-8">
+                  <span className="text-[7px] uppercase tracking-[0.25em] text-[#f8f4eb]">
+                    {color.count > 0 ? `${color.count} pieces` : "Explore edit"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-3">
+                <div>
+                  <h3 className="font-serif text-[20px] leading-none text-[#3f1616] sm:text-[23px]">
+                    {color.label}
+                  </h3>
+                  <p className="mt-1.5 text-[7px] uppercase tracking-[0.16em] text-[#977e73]">
+                    {color.subtitle}
+                  </p>
+                </div>
+
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#741522]/15 text-[#741522] transition-all duration-300 group-hover:bg-[#741522] group-hover:text-[#f8f4eb]">
+                  <ArrowRight size={13} strokeWidth={1.2} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -1032,7 +1294,7 @@ const Home = () => {
             {/* Silk */}
 
             <Link
-              to="/Categories/Silk Saree"
+              to="/Categories/Pure Silk"
               onClick={scrollTop}
               className="
                 group
@@ -1145,6 +1407,16 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* =========================================================
+          COLOR STORIES
+          Placed between Find Your Weave and New Arrivals.
+      ========================================================= */}
+
+      <ColorStories
+        products={products}
+        url={url}
+      />
 
       {/* =========================================================
           NEW ARRIVALS
@@ -2319,6 +2591,16 @@ const Home = () => {
             100% {
               opacity: 1;
               transform: translateY(0);
+            }
+          }
+
+          @media (max-width: 639px) {
+            .color-stories-mobile {
+              scroll-snap-type: x mandatory;
+            }
+
+            .color-stories-mobile > * {
+              scroll-snap-align: start;
             }
           }
 
