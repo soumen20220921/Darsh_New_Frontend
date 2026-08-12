@@ -65,7 +65,7 @@ const Categories = () => {
   const categories = [
     {
       id: "1",
-      name: "Silk Saree",
+      name: "Pure Silk",
       image: "/IMG/p7.jpg",
     },
     {

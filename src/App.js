@@ -26,6 +26,7 @@ import AllProducts from './pages/AllProducts';
 import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
 import WhatsAppChat from "./components/WhatsAppChat";
 import ScrollToTop from "./components/ScrollToTop";
+import SareesByColor from "./pages/SareesByColor";
 
 
 
@@ -68,6 +69,7 @@ const App = () => {
             <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/failure" element={<PaymentFailed />} />
+            <Route path="/sarees-by-color" element={<SareesByColor />} />
 \            <Route
               path="/account"
               element={context.login ? <Account /> : <Auth />}

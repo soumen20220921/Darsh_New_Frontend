@@ -60,17 +60,32 @@ const ProductDetails = () => {
   }, [allProduct, product]);
 
   /* =========================================================
-     SAME CATEGORY / COLOR VARIANTS
-     Includes the current product so the selected color stays visible.
+     SAME PRODUCT / COLOR VARIANTS
+     Color options appear only when BOTH category and product name match.
   ========================================================= */
 
-  const sameCategoryProducts = useMemo(() => {
+  const normalizeValue = useCallback(
+    (value) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase(),
+    [],
+  );
+
+  const sameProductColorVariants = useMemo(() => {
     if (!allProduct || !product) return [];
 
-    return allProduct.filter(
-      (item) => item.category === product.category,
-    );
-  }, [allProduct, product]);
+    const categoryKey = normalizeValue(product.category);
+    const productNameKey = normalizeValue(product.productName);
+
+    if (!categoryKey || !productNameKey) return [];
+
+    return allProduct.filter((item) => {
+      if (!item?._id) return false;
+
+      return (
+        normalizeValue(item.category) === categoryKey &&
+        normalizeValue(item.productName) === productNameKey
+      );
+    });
+  }, [allProduct, product, normalizeValue]);
 
   /* =========================================================
      PRODUCT OPTIONS
@@ -1054,6 +1069,8 @@ useEffect(() => {
               >
                 Darsh Handlooms · Crafted with care
               </p>
+
+             
             </motion.div>
 
             {/* Price */}
@@ -1196,9 +1213,9 @@ useEffect(() => {
               </div>
             </div>
             {/* =================================================
-                AVAILABLE COLORS / SAME CATEGORY
+                AVAILABLE COLORS / SAME PRODUCT + CATEGORY
             ================================================= */}
-            {sameCategoryProducts.length > 0 && (
+            {sameProductColorVariants.length > 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1221,7 +1238,7 @@ useEffect(() => {
                     </label>
 
                     <p className="text-[10px] text-[#958176]">
-                      Explore other shades from this collection
+                      Choose another color of the same saree
                     </p>
                   </div>
 
@@ -1234,7 +1251,7 @@ useEffect(() => {
                       text-[#a27d5f]
                     "
                   >
-                    {sameCategoryProducts.length} options
+                    {sameProductColorVariants.length} colors
                   </span>
                 </div>
 
@@ -1257,7 +1274,7 @@ useEffect(() => {
                       msOverflowStyle: "none",
                     }}
                   >
-                    {sameCategoryProducts.map((colorProduct, index) => {
+                    {sameProductColorVariants.map((colorProduct, index) => {
                       const isCurrentProduct = colorProduct._id === product._id;
 
                       const image = colorProduct.images?.[0]
@@ -1367,8 +1384,6 @@ useEffect(() => {
                               </div>
                             )}
                           </div>
-
-                           
                         </motion.button>
                       );
                     })}
@@ -1389,7 +1404,7 @@ useEffect(() => {
                   />
                 </div>
 
-                {sameCategoryProducts.length > 4 && (
+                {sameProductColorVariants.length > 4 && (
                   <div
                     className="
                       mt-1
@@ -1407,6 +1422,20 @@ useEffect(() => {
                     <span className="text-[#76131d]">→</span>
                   </div>
                 )}
+              </motion.div>
+            )}
+            {sameProductColorVariants.length === 1 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-[#dfd2c0] bg-[#fffaf2] px-3 py-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full border border-[#b9aa99] bg-[#76131d]" />
+                  <span className="text-[8px] uppercase tracking-[0.16em] text-[#6f594e]">
+                    Color: <span className="font-semibold">Only One Color Available</span>
+                  </span>
+                </div>
               </motion.div>
             )}
 
