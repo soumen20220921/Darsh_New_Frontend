@@ -21,19 +21,19 @@ import {
 ========================================================= */
 
 const ALL_CATEGORIES = [
-    "Kanjivaram",
+   "Pujo Special",
     "Banarasi",
-    "Bandhani",
-    "Bridal collection",
     "Kanthastitch",
-    "Pujo Special",
-    "Pure Silk Replica",
+    "Kanjivaram",
     "Pure Silk",
-    "Fancy Saree",
-    "Silk Saree",
     "Cotton Handloom",
+    "Bandhani",
     "Festive Edit",
-    "All saree",
+    "Bridal collection",
+    "Pure Silk Replica",
+    "Fancy Saree",
+    "Handloom Saree",
+    "Other Saree",
 ];
 
 
