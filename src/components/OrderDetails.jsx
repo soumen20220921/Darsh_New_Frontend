@@ -26,8 +26,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import DeliveryEstimateSection from "./DeliveryEstimateSection";
 import { useAppContext } from "../context/AppContext";
@@ -110,7 +109,6 @@ const OrderDetails = ({ order, onClose }) => {
     status,
     step,
     icon,
-    gradient,
   } = getStatusInfo();
 
   const StatusIcon = icon;
@@ -1180,9 +1178,7 @@ const OrderDetails = ({ order, onClose }) => {
 
 
                 <a
-                  href={`https://www.google.com/search?q=${encodeURIComponent(
-                    order.trackingId
-                  )}`}
+                  href={`https://www.delhivery.com/tracking`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="

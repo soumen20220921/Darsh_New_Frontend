@@ -1,12 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  Heart,
+  Sparkles,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 const ProductCard = ({
   product,
   onAddToCart,
   isCompactMobile,
 }) => {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  /*
+    IMPORTANT:
+    Hooks must always run in the same order.
+    productId is derived safely BEFORE the hook, so an absent
+    product never causes a conditional hook call.
+  */
+  const productId =
+    product?.id || product?._id || null;
+
+  useEffect(() => {
+    if (!productId) {
+      setIsWishlisted(false);
+      return;
+    }
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("wishlist") || "[]"
+      );
+
+      setIsWishlisted(
+        Array.isArray(saved) &&
+          saved.some(
+            (item) =>
+              String(item?._id || item?.id) ===
+              String(productId)
+          )
+      );
+    } catch {
+      setIsWishlisted(false);
+    }
+  }, [productId]);
+
+  /*
+    Keep the null guard AFTER all hooks.
+    This fixes react-hooks/rules-of-hooks.
+  */
   if (!product) return null;
 
   const {
@@ -23,6 +67,93 @@ const ProductCard = ({
     subCategory,
   } = product;
 
+  const wishlistItem = {
+    ...product,
+    id: productId,
+    _id: product?._id || productId,
+    name:
+      product?.name ||
+      product?.productName ||
+      "Darsh Saree",
+    image:
+      product?.image ||
+      product?.images?.[0] ||
+      product?.img ||
+      "/IMG/placeholder.jpg",
+    price: Number(product?.price || 0),
+    oldPrice:
+      product?.oldPrice ??
+      product?.oldprice ??
+      product?.originalPrice ??
+      product?.mrp ??
+      0,
+  };
+
+  const toggleWishlist = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!productId) {
+      toast.error("Product ID not available", {
+        theme: "dark",
+      });
+      return;
+    }
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("wishlist") || "[]"
+      );
+
+      const items = Array.isArray(saved)
+        ? saved
+        : [];
+
+      const exists = items.some(
+        (item) =>
+          String(item?._id || item?.id) ===
+          String(productId)
+      );
+
+      const updated = exists
+        ? items.filter(
+            (item) =>
+              String(item?._id || item?.id) !==
+              String(productId)
+          )
+        : [...items, wishlistItem];
+
+      localStorage.setItem(
+        "wishlist",
+        JSON.stringify(updated)
+      );
+
+      window.dispatchEvent(
+        new Event("darsh-wishlist-updated")
+      );
+
+      setIsWishlisted(!exists);
+
+      toast.success(
+        exists
+          ? "Removed from wishlist"
+          : "Added to wishlist",
+        {
+          theme: "dark",
+          autoClose: 1400,
+        }
+      );
+    } catch {
+      toast.error(
+        "Unable to update wishlist",
+        { theme: "dark" }
+      );
+    }
+  };
+
+  const isPremium =
+    Number(price || 0) >= 5000;
+
   const discount =
     oldPrice && Number(price) < Number(oldPrice)
       ? Math.round(
@@ -32,7 +163,7 @@ const ProductCard = ({
         )
       : null;
 
-  const productLink = `/productDetails/${id}`;
+  const productLink = `/productDetails/${productId}`;
 
   const handleScrollTop = () => {
     window.scrollTo({
@@ -43,7 +174,13 @@ const ProductCard = ({
   };
 
   return (
-    <article
+    <motion.article
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className={`
         group
         relative
@@ -170,6 +307,114 @@ const ProductCard = ({
 
 
         {/* ===================================================
+            WISHLIST
+        =================================================== */}
+
+        <motion.button
+          type="button"
+          onClick={toggleWishlist}
+          whileTap={{ scale: 0.88 }}
+          whileHover={{ scale: 1.06 }}
+          aria-label={
+            isWishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
+          className="
+            absolute
+            top-3
+            right-3
+            z-30
+            flex
+            h-9
+            w-9
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-white/60
+            bg-[#FFFDF8]/90
+            text-[#741522]
+            shadow-[0_6px_18px_rgba(63,22,22,0.12)]
+            backdrop-blur-md
+            transition-all
+            duration-300
+            hover:bg-[#741522]
+            hover:text-white
+          "
+        >
+          <motion.span
+            animate={
+              isWishlisted
+                ? {
+                    scale: [1, 1.25, 1],
+                    rotate: [0, -8, 8, 0],
+                  }
+                : { scale: 1 }
+            }
+            transition={{ duration: 0.35 }}
+          >
+            <Heart
+              size={16}
+              strokeWidth={1.5}
+              fill={
+                isWishlisted
+                  ? "currentColor"
+                  : "none"
+            }
+          />
+          </motion.span>
+
+          {isWishlisted && (
+            <span
+              className="
+                absolute
+                -right-0.5
+                -top-0.5
+                h-2
+                w-2
+                rounded-full
+                bg-[#C9A24A]
+              "
+            />
+          )}
+        </motion.button>
+
+        {/* PREMIUM BADGE */}
+
+        {isPremium && (
+          <div
+            className="
+              absolute
+              bottom-3
+              left-3
+              z-20
+              flex
+              items-center
+              gap-1.5
+              rounded-full
+              border
+              border-[#C9A24A]/50
+              bg-[#FFFDF8]/90
+              px-2.5
+              py-1.5
+              text-[6px]
+              font-semibold
+              tracking-[0.16em]
+              text-[#741522]
+              shadow-sm
+              backdrop-blur-md
+            "
+          >
+            <Sparkles
+              size={10}
+              className="text-[#C9A24A]"
+            />
+            PREMIUM
+          </div>
+        )}
+
+                {/* ===================================================
             HOVER VIEW BUTTON
         =================================================== */}
 
@@ -463,7 +708,7 @@ const ProductCard = ({
         "
       />
 
-    </article>
+    </motion.article>
   );
 };
 

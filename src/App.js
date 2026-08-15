@@ -27,6 +27,8 @@ import Animated404Page from "./pages/PageFooter/Animated404Page.jsx";
 import WhatsAppChat from "./components/WhatsAppChat";
 import ScrollToTop from "./components/ScrollToTop";
 import SareesByColor from "./pages/SareesByColor";
+import Wishlist from "./pages/Wishlist.jsx";
+import PremiumSarees from "./pages/PremiumSarees.jsx";
 
 
 
@@ -57,6 +59,8 @@ const App = () => {
             <Route path="/Categories/:name" element={<Categories />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/PaymentOptions" element={<PaymentOptions />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/premium-sarees" element={<PremiumSarees />}/>
             <Route
               path="/CancellationandRefund"
               element={<CancellationAndRefund />}
@@ -70,7 +74,7 @@ const App = () => {
             <Route path="/success" element={<PaymentSuccess />} />
             <Route path="/failure" element={<PaymentFailed />} />
             <Route path="/sarees-by-color" element={<SareesByColor />} />
-\            <Route
+            <Route
               path="/account"
               element={context.login ? <Account /> : <Auth />}
             />

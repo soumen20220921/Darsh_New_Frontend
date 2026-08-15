@@ -17,6 +17,7 @@ import {
   Clock,
   CircleOff,
   Hourglass,
+  Heart,
   ZoomIn,
   ZoomOut,
   RotateCw,
@@ -35,6 +36,290 @@ import { motion, AnimatePresence } from "framer-motion";
    DARSH PRODUCT DETAILS
    Luxury / Editorial Saree Design
 ========================================================= */
+
+
+/* ============================================================
+   SHARED DARSH WISHLIST BUTTON
+   Source of truth: localStorage "wishlist"
+   Compatible with the existing Wishlist page.
+============================================================ */
+
+const DARSH_WISHLIST_KEY = "wishlist";
+
+const getWishlistId = (product) =>
+  product?._id || product?.id || product?.productId || null;
+
+const readDarshWishlist = () => {
+  try {
+    const raw = localStorage.getItem(
+      DARSH_WISHLIST_KEY
+    );
+
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const emitWishlistUpdate = () => {
+  /*
+    Keep both events so older components continue
+    working while the new pages use one source of truth.
+  */
+  window.dispatchEvent(
+    new Event("wishlistUpdated")
+  );
+
+  window.dispatchEvent(
+    new Event("darsh-wishlist-updated")
+  );
+};
+
+const DarshWishlistButton = ({
+  product,
+  className = "",
+}) => {
+  const productId = getWishlistId(product);
+
+  const [wished, setWished] = useState(() =>
+    productId
+      ? readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      : false
+  );
+
+  useEffect(() => {
+    const sync = () => {
+      if (!productId) {
+        setWished(false);
+        return;
+      }
+
+      setWished(
+        readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      );
+    };
+
+    sync();
+
+    window.addEventListener(
+      "wishlistUpdated",
+      sync
+    );
+
+    window.addEventListener(
+      "darsh-wishlist-updated",
+      sync
+    );
+
+    window.addEventListener(
+      "storage",
+      sync
+    );
+
+    return () => {
+      window.removeEventListener(
+        "wishlistUpdated",
+        sync
+      );
+
+      window.removeEventListener(
+        "darsh-wishlist-updated",
+        sync
+      );
+
+      window.removeEventListener(
+        "storage",
+        sync
+      );
+    };
+  }, [productId]);
+
+  const toggleWishlist = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!productId) {
+      return;
+    }
+
+    const current =
+      readDarshWishlist();
+
+    const exists = current.some(
+      (item) =>
+        getWishlistId(item) ===
+        productId
+    );
+
+    const next = exists
+      ? current.filter(
+          (item) =>
+            getWishlistId(item) !==
+            productId
+        )
+      : [
+          ...current,
+          {
+            ...product,
+            id:
+              product?.id ||
+              productId,
+            _id:
+              product?._id ||
+              productId,
+            name:
+              product?.name ||
+              product?.productName ||
+              "Darsh Saree",
+            productName:
+              product?.productName ||
+              product?.name ||
+              "Darsh Saree",
+            price: Number(
+              product?.price || 0
+            ),
+            image:
+              product?.image ||
+              product?.images?.[0] ||
+              product?.img ||
+              "/IMG/saree.png",
+          },
+        ];
+
+    try {
+      localStorage.setItem(
+        DARSH_WISHLIST_KEY,
+        JSON.stringify(next)
+      );
+
+      setWished(!exists);
+      emitWishlistUpdate();
+    } catch {
+      // Ignore storage failures gracefully.
+    }
+  };
+
+  if (!productId) {
+    return null;
+  }
+
+  return (
+    <motion.button
+      type="button"
+      aria-label={
+        wished
+          ? "Remove from wishlist"
+          : "Add to wishlist"
+      }
+      aria-pressed={wished}
+      onClick={toggleWishlist}
+      whileTap={{
+        scale: 0.88,
+      }}
+      whileHover={{
+        scale: 1.08,
+      }}
+      className={`
+        group/wishlist
+        absolute
+        right-3
+        top-3
+        z-30
+        flex
+        h-9
+        w-9
+        items-center
+        justify-center
+        rounded-full
+        border
+        shadow-sm
+        backdrop-blur-md
+        transition-all
+        duration-300
+        sm:right-4
+        sm:top-4
+        sm:h-10
+        sm:w-10
+
+        ${
+          wished
+            ? "border-[#741522] bg-[#741522] text-white shadow-[0_8px_25px_rgba(116,21,34,.28)]"
+            : "border-white/80 bg-white/85 text-[#741522] hover:border-[#C9A24A] hover:bg-white"
+        }
+
+        ${className}
+      `}
+    >
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={wished ? "liked" : "idle"}
+          initial={{
+            scale: 0.55,
+            opacity: 0,
+            rotate: -12,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          exit={{
+            scale: 0.55,
+            opacity: 0,
+          }}
+          transition={{
+            duration: 0.2,
+          }}
+        >
+          <Heart
+            size={17}
+            strokeWidth={1.7}
+            fill={
+              wished
+                ? "currentColor"
+                : "none"
+          }
+          />
+        </motion.span>
+      </AnimatePresence>
+
+      {wished && (
+        <motion.span
+          initial={{
+            scale: 0,
+            opacity: 0,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          className="
+            pointer-events-none
+            absolute
+            -right-0.5
+            -top-0.5
+            h-2
+            w-2
+            rounded-full
+            bg-[#E7C979]
+          "
+        />
+      )}
+    </motion.button>
+  );
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -120,6 +405,31 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(false);
 
   const [isAdded, setIsAdded] = useState(false);
+
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    const syncWishlist = () => {
+      const wishlistId = getWishlistId(product);
+      setIsWishlisted(
+        Boolean(wishlistId) &&
+          readDarshWishlist().some(
+            (item) => getWishlistId(item) === wishlistId
+          )
+      );
+    };
+
+    syncWishlist();
+    window.addEventListener("wishlistUpdated", syncWishlist);
+    window.addEventListener("darsh-wishlist-updated", syncWishlist);
+    window.addEventListener("storage", syncWishlist);
+
+    return () => {
+      window.removeEventListener("wishlistUpdated", syncWishlist);
+      window.removeEventListener("darsh-wishlist-updated", syncWishlist);
+      window.removeEventListener("storage", syncWishlist);
+    };
+  }, [product]);
 
   const [showFAQ, setShowFAQ] = useState({});
 
@@ -851,6 +1161,7 @@ useEffect(() => {
                 onTouchEnd={handleTouchEnd}
                 onClick={toggleZoomMode}
               >
+                
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={images[selectedImage] || "placeholder"}
@@ -1875,6 +2186,59 @@ useEffect(() => {
               )}
             </motion.div>
 
+
+            {/* Wishlist — directly after Add to Bag */}
+            <motion.button
+              type="button"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.985 }}
+              onClick={(event) => {
+                const id = getWishlistId(product);
+                if (!id) return;
+
+                const current = readDarshWishlist();
+                const exists = current.some(
+                  (item) => getWishlistId(item) === id
+                );
+
+                const wishlistItem = {
+                  ...product,
+                  id,
+                  _id: product?._id || id,
+                  name: product?.productName || product?.name || "Darsh Saree",
+                  image: product?.image || product?.images?.[0] || "/IMG/placeholder.jpg",
+                  price: Number(product?.price || 0),
+                  originalPrice: Number(product?.originalPrice || product?.oldPrice || product?.oldprice || 0),
+                };
+
+                const next = exists
+                  ? current.filter((item) => getWishlistId(item) !== id)
+                  : [...current, wishlistItem];
+
+                localStorage.setItem(DARSH_WISHLIST_KEY, JSON.stringify(next));
+                setIsWishlisted(!exists);
+                emitWishlistUpdate();
+              }}
+              className="
+                group mt-3 h-12 w-full
+                flex items-center justify-center gap-3
+                border border-[#741522]/25
+                bg-[#fffaf2]
+                text-[#741522]
+                text-[9px] uppercase tracking-[0.22em]
+                transition-all duration-300
+                hover:border-[#741522]
+                hover:bg-[#741522] hover:text-white
+              "
+            >
+              <Heart
+                size={16}
+                strokeWidth={1.4}
+                className="transition-transform duration-300 group-hover:scale-110"
+                fill={isWishlisted ? "currentColor" : "none"}
+              />
+              {isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+            </motion.button>
             {/* Share */}
 
             <div

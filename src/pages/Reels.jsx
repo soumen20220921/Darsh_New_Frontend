@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Volume2,
   VolumeX,
@@ -14,9 +9,13 @@ import {
   ArrowRight,
   Sparkles,
   Play,
+  Pause,
 } from "lucide-react";
-
 import { Link } from "react-router-dom";
+
+/* ============================================================
+   REELS DATA
+   ============================================================ */
 
 const reelsData = [
   {
@@ -24,1275 +23,627 @@ const reelsData = [
     video: "https://www.youtube.com/embed/ir9QHORiq7Q",
     title: "Mirror Modal Saree",
     subtitle:
-      " Elegant mirror work on soft modal fabric for a graceful and stylish look.",
+      "Elegant mirror work on soft modal fabric for a graceful and stylish look.",
     shopLink: "/allproducts",
-    thumbnail:
-      "/IMG/reels2.png",
+    thumbnail: "/IMG/reels2.png",
+    price: "₹ 1,450",
+    label: "Mirror Work",
   },
-
   {
     id: 2,
     video: "https://www.youtube.com/embed/l9uewPMPJj8",
     title: "Dolabari Replica Saree",
     subtitle:
-      " Traditional elegance with a premium look at an affordable price.",
+      "Traditional elegance with a premium look at an affordable price.",
     shopLink: "/allproducts",
-    thumbnail:
-      "/IMG/reels1.png"
-      },
-
+    thumbnail: "/IMG/reels1.png",
+    price: "₹ 1,780",
+    label: "Traditional Edit",
+  },
   {
     id: 3,
     video: "https://www.youtube.com/embed/gR6Ipl1pKig",
     title: "Handloom Cotton Saree",
     subtitle:
-      " Soft, breathable & beautifully handwoven for everyday comfort and elegance.",
+      "Soft, breathable & beautifully handwoven for everyday comfort and elegance.",
     shopLink: "/allproducts",
-    thumbnail:
-      "/IMG/reels3.png",
+    thumbnail: "/IMG/reels3.png",
+    price: "₹ 1,280",
+    label: "Handloom",
   },
 ];
 
+/* ============================================================
+   SMALL HELPERS
+   ============================================================ */
 
-/* =========================================================
+const getYoutubeEmbedUrl = ({ video, muted, playing }) => {
+  const separator = video.includes("?") ? "&" : "?";
+
+  return `${video}${separator}autoplay=${playing ? 1 : 0}&mute=${muted ? 0 :1}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&enablejsapi=1`;
+};
+
+const clampIndex = (index, length) => {
+  if (!length) return 0;
+  return (index + length) % length;
+};
+
+/* ============================================================
    REELS COMPONENT
-========================================================= */
+   ============================================================ */
 
 const Reels = () => {
-  const [currentReel, setCurrentReel] =
-    useState(0);
+  const [currentReel, setCurrentReel] = useState(0);
+  const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTouching, setIsTouching] = useState(false);
+  const [direction, setDirection] = useState(1);
 
-  const [muted, setMuted] =
-    useState(false);
-
-  const [isPlaying, setIsPlaying] =
-    useState(false);
-
-  const [isFullscreen, setIsFullscreen] =
-    useState(false);
-
-  const [isHovered, setIsHovered] =
-    useState(false);
-
+  const sectionRef = useRef(null);
   const reelRef = useRef(null);
   const containerRef = useRef(null);
+  const touchStartX = useRef(null);
+  const wheelLock = useRef(false);
 
+  const current = reelsData[currentReel];
 
-  /* =======================================================
-     CURRENT REEL
-  ======================================================= */
+  const previousIndex = useMemo(
+    () => clampIndex(currentReel - 1, reelsData.length),
+    [currentReel]
+  );
 
-  const current =
-    reelsData[currentReel];
+  const nextIndex = useMemo(
+    () => clampIndex(currentReel + 1, reelsData.length),
+    [currentReel]
+  );
 
+  const previousReel = reelsData[previousIndex];
+  const nextReel = reelsData[nextIndex];
 
-  /* =======================================================
-     NEXT
-  ======================================================= */
+  /* ==========================================================
+     NAVIGATION
+     ========================================================== */
 
-  const handleNextReel = () => {
-    setCurrentReel(
-      (prev) =>
-        (prev + 1) %
-        reelsData.length
-    );
-  };
+  const goToReel = useCallback((index, navDirection = 1) => {
+    setDirection(navDirection);
+    setCurrentReel(clampIndex(index, reelsData.length));
+    setIsPlaying(false);
+  }, []);
 
+  const handleNextReel = useCallback(() => {
+    goToReel(currentReel + 1, 1);
+  }, [currentReel, goToReel]);
 
-  /* =======================================================
-     PREVIOUS
-  ======================================================= */
+  const handlePrevReel = useCallback(() => {
+    goToReel(currentReel - 1, -1);
+  }, [currentReel, goToReel]);
 
-  const handlePrevReel = () => {
-    setCurrentReel(
-      (prev) =>
-        prev === 0
-          ? reelsData.length - 1
-          : prev - 1
-    );
-  };
+  /* ==========================================================
+     MUTE / PLAY
+     ========================================================== */
 
-
-  /* =======================================================
-     MUTE
-  ======================================================= */
-
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     setMuted((prev) => !prev);
-  };
+  }, []);
 
+  const togglePlay = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
 
-  /* =======================================================
+  /* ==========================================================
      FULLSCREEN
-  ======================================================= */
+     ========================================================== */
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = useCallback(async () => {
     try {
       if (!document.fullscreenElement) {
-        await containerRef.current?.requestFullscreen();
+        await containerRef.current?.requestFullscreen?.();
       } else {
-        await document.exitFullscreen();
+        await document.exitFullscreen?.();
       }
     } catch (error) {
-      console.error(
-        "Fullscreen error:",
-        error
-      );
+      console.error("Fullscreen error:", error);
     }
-  };
-
-
-  /* =======================================================
-     FULLSCREEN STATE
-  ======================================================= */
+  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(
-        Boolean(document.fullscreenElement)
-      );
+      setIsFullscreen(Boolean(document.fullscreenElement));
     };
 
-    document.addEventListener(
-      "fullscreenchange",
-      handleFullscreenChange
-    );
-
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => {
-      document.removeEventListener(
-        "fullscreenchange",
-        handleFullscreenChange
-      );
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
   }, []);
 
-
-  /* =======================================================
-     INTERSECTION OBSERVER
-  ======================================================= */
+  /* ==========================================================
+     AUTO PLAY WHEN THE SECTION IS IN VIEW
+     ========================================================== */
 
   useEffect(() => {
-    if (!reelRef.current) return;
+    if (!sectionRef.current) return undefined;
 
-    const observer =
-      new IntersectionObserver(
-        ([entry]) => {
-          setIsPlaying(
-            entry.isIntersecting &&
-              entry.intersectionRatio >= 0.65
-          );
-        },
-        {
-          threshold: [
-            0,
-            0.35,
-            0.65,
-            1,
-          ],
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
+          setIsPlaying(true);
+        } else {
+          setIsPlaying(false);
         }
-      );
+      },
+      {
+        threshold: [0, 0.25, 0.45, 0.7, 1],
+      }
+    );
 
-    observer.observe(reelRef.current);
+    observer.observe(sectionRef.current);
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [currentReel]);
 
-
-  /* =======================================================
+  /* ==========================================================
      KEYBOARD NAVIGATION
-  ======================================================= */
+     ========================================================== */
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      /*
-        Don't hijack keyboard controls
-        when typing in an input.
-      */
+      const tag = event.target?.tagName;
 
-      const tag =
-        event.target?.tagName;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
 
-      if (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        tag === "SELECT"
-      ) {
-        return;
+      if (event.key === "ArrowRight") handleNextReel();
+      if (event.key === "ArrowLeft") handlePrevReel();
+      if (event.key.toLowerCase() === "m") toggleMute();
+      if (event.key === " ") {
+        event.preventDefault();
+        togglePlay();
       }
 
-      if (
-        event.key === "ArrowRight"
-      ) {
-        handleNextReel();
-      }
-
-      if (
-        event.key === "ArrowLeft"
-      ) {
-        handlePrevReel();
-      }
-
-      if (event.key === "m") {
-        toggleMute();
-      }
-
-      if (event.key === "Escape") {
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        }
+      if (event.key === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen();
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNextReel, handlePrevReel, toggleMute, togglePlay]);
 
-    return () => {
-      window.removeEventListener(
-        "keydown",
-        handleKeyDown
-      );
-    };
-  }, []);
+  /* ==========================================================
+     TOUCH SWIPE
+     ========================================================== */
 
+  const handleTouchStart = (event) => {
+    touchStartX.current = event.touches?.[0]?.clientX ?? null;
+    setIsTouching(true);
+  };
 
-  /* =======================================================
-     YOUTUBE URL
-  ======================================================= */
+  const handleTouchEnd = (event) => {
+    const startX = touchStartX.current;
+    const endX = event.changedTouches?.[0]?.clientX;
 
-  const videoUrl =
-    `${current.video}` +
-    `?autoplay=${isPlaying ? 1 : 0}` +
-    `&mute=${muted ? 1 : 0}` +
-    `&controls=0` +
-    `&modestbranding=1` +
-    `&rel=0` +
-    `&playsinline=1`;
+    setIsTouching(false);
+    touchStartX.current = null;
 
+    if (startX == null || endX == null) return;
+
+    const distance = endX - startX;
+    if (Math.abs(distance) < 45) return;
+
+    if (distance < 0) handleNextReel();
+    else handlePrevReel();
+  };
+
+  /* ==========================================================
+     MOUSE WHEEL / TRACKPAD NAVIGATION
+     ========================================================== */
+
+  const handleWheel = (event) => {
+    if (window.innerWidth < 1024) return;
+    if (Math.abs(event.deltaX) < Math.abs(event.deltaY)) return;
+    if (Math.abs(event.deltaX) < 35 || wheelLock.current) return;
+
+    wheelLock.current = true;
+    if (event.deltaX > 0) handleNextReel();
+    else handlePrevReel();
+
+    window.setTimeout(() => {
+      wheelLock.current = false;
+    }, 550);
+  };
+
+  const videoUrl = getYoutubeEmbedUrl({
+    video: current.video,
+    muted,
+    playing: isPlaying,
+  });
 
   return (
     <section
+      ref={sectionRef}
       className="
-        relative
-        overflow-hidden
-        bg-[#f8f4eb]
-        text-[#3f1616]
-        border-t
-        border-[#741522]/10
-        py-20
-        sm:py-24
-        lg:py-28
+        relative overflow-hidden
+        border-t border-[#741522]/10
+        bg-[#faf8f3]
+        px-4 py-14 text-[#3f1616]
+        sm:px-6 sm:py-18
+        lg:px-8 lg:py-24
       "
     >
-
-      {/* ===================================================
-          DECORATIVE BACKGROUND
-      =================================================== */}
-
-      <div
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          overflow-hidden
-        "
-      >
-
-        <div
-          className="
-            absolute
-            -right-40
-            top-20
-            w-[450px]
-            h-[450px]
-            rounded-full
-            border
-            border-[#741522]/5
-          "
-        />
-
-        <div
-          className="
-            absolute
-            -left-40
-            bottom-[-150px]
-            w-[500px]
-            h-[500px]
-            rounded-full
-            border
-            border-[#d4ad54]/10
-          "
-        />
-
+      {/* ========================================================
+          BACKGROUND DECORATION
+          ======================================================== */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full border border-[#d4ad54]/10" />
+        <div className="absolute -left-52 top-1/3 h-[500px] w-[500px] rounded-full border border-[#741522]/5" />
+        <div className="absolute -right-52 bottom-0 h-[520px] w-[520px] rounded-full border border-[#d4ad54]/10" />
+        <div className="absolute left-1/2 top-20 h-40 w-40 -translate-x-1/2 rounded-full bg-[#d4ad54]/5 blur-3xl" />
       </div>
 
-
-      {/* ===================================================
-          MAIN WRAPPER
-      =================================================== */}
-
-      <div
-        className="
-          relative
-          z-10
-          max-w-[1120px]
-          mx-auto
-          px-5
-          sm:px-8
-          lg:px-0
-        "
-      >
-
-        {/* =================================================
+      <div className="relative z-10 mx-auto max-w-[1240px]">
+        {/* ======================================================
             HEADER
-        ================================================= */}
-
-        <div
-          className="
-            flex
-            flex-col
-            lg:flex-row
-            lg:items-end
-            lg:justify-between
-            gap-7
-            mb-12
-          "
-        >
-
-          <div>
-
-            {/* Eyebrow */}
-
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-                mb-4
-              "
-            >
-
-              <span
-                className="
-                  w-8
-                  h-px
-                  bg-[#d4ad54]
-                "
-              />
-
-              <span
-                className="
-                  text-[8px]
-                  sm:text-[9px]
-                  tracking-[0.38em]
-                  uppercase
-                  text-[#977e73]
-                "
-              >
-                THE DARSH EDIT
-              </span>
-
-            </div>
-
-
-            {/* Heading */}
-
-            <h2
-              className="
-                font-serif
-                font-normal
-                text-[#3f1616]
-                text-[34px]
-                sm:text-[48px]
-                lg:text-[56px]
-                leading-none
-                tracking-[-0.025em]
-              "
-            >
-              Trending looks
-              <span
-                className="
-                  block
-                  text-[#741522]
-                  italic
-                  mt-1
-                "
-              >
-                to watch
-              </span>
-            </h2>
-
-
-            {/* Description */}
-
-            <p
-              className="
-                max-w-[500px]
-                mt-5
-                text-[11px]
-                sm:text-[13px]
-                leading-6
-                text-[#806c63]
-              "
-            >
-              Discover our latest styles,
-              see the drape up close and
-              find inspiration for your
-              next Darsh look.
-            </p>
-
+            ====================================================== */}
+        <div className="mb-9 flex flex-col items-center text-center sm:mb-12">
+          <div className="mb-3 flex items-center gap-3">
+            <span className="h-px w-7 bg-[#d4ad54] sm:w-10" />
+            <span className="text-[7px] font-medium uppercase tracking-[0.35em] text-[#977e73] sm:text-[8px]">
+              THE DARSH REELS
+            </span>
+            <span className="h-px w-7 bg-[#d4ad54] sm:w-10" />
           </div>
 
+          <h2 className="font-serif text-[30px] font-normal leading-none tracking-[-0.025em] text-[#3f1616] sm:text-[42px] lg:text-[48px]">
+            Watch it. <span className="italic text-[#741522]">Love it.</span> Own it.
+          </h2>
 
-          {/* Header CTA */}
-
-          <Link
-            to="/allproducts"
-            className="
-              group
-              inline-flex
-              items-center
-              gap-3
-              self-start
-              lg:self-auto
-              border
-              border-[#741522]/40
-              text-[#741522]
-              px-6
-              py-3
-              text-[8px]
-              tracking-[0.25em]
-              uppercase
-              transition-all
-              duration-300
-              hover:bg-[#741522]
-              hover:text-[#f8f4eb]
-            "
-          >
-            Shop the looks
-
-            <ArrowRight
-              size={14}
-              strokeWidth={1.2}
-              className="
-                transition-transform
-                duration-300
-                group-hover:translate-x-1
-              "
-            />
-          </Link>
-
+          <p className="mt-4 max-w-[520px] text-[10px] leading-5 text-[#806c63] sm:text-[11px] sm:leading-6">
+            Discover the drape, texture and details before you choose your next Darsh saree.
+          </p>
         </div>
 
-
-        {/* =================================================
-            REEL AREA
-        ================================================= */}
-
+        {/* ======================================================
+            REEL STAGE
+            ====================================================== */}
         <div
-          className="
-            grid
-            grid-cols-1
-            lg:grid-cols-[minmax(0,1fr)_300px]
-            gap-8
-            lg:gap-10
-            items-start
-          "
+          onWheel={handleWheel}
+          className="relative mx-auto flex min-h-[570px] items-center justify-center sm:min-h-[690px] lg:min-h-[760px]"
         >
+          {/* LEFT PREVIEW */}
+          <button
+            type="button"
+            onClick={handlePrevReel}
+            aria-label={`Previous reel: ${previousReel.title}`}
+            className="
+              group absolute left-0 z-10 hidden
+              h-[360px] w-[220px]
+              overflow-hidden rounded-sm
+              border border-black/10 bg-black
+              shadow-[0_18px_45px_rgba(50,20,20,0.13)]
+              transition-all duration-500
+              hover:-translate-x-2 hover:scale-[1.015]
+              xl:block xl:w-[250px] xl:h-[405px]
+            "
+          >
+            <img
+              src={previousReel.thumbnail}
+              alt={previousReel.title}
+              className="h-full w-full object-cover opacity-55 blur-[1px] grayscale-[15%] transition-all duration-700 group-hover:scale-105 group-hover:opacity-75 group-hover:blur-0"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-black/35 to-black/70" />
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-left">
+              <p className="text-[7px] uppercase tracking-[0.25em] text-white/60">
+                REEL {String(previousIndex + 1).padStart(2, "0")}
+              </p>
+              <h3 className="mt-2 font-serif text-[18px] leading-tight text-white">
+                {previousReel.title}
+              </h3>
+              <p className="mt-1 text-[9px] text-white/65">{previousReel.price}</p>
+            </div>
+          </button>
 
-          {/* ===============================================
-              PLAYER
-          =============================================== */}
+          {/* RIGHT PREVIEW */}
+          <button
+            type="button"
+            onClick={handleNextReel}
+            aria-label={`Next reel: ${nextReel.title}`}
+            className="
+              group absolute right-0 z-10 hidden
+              h-[360px] w-[220px]
+              overflow-hidden rounded-sm
+              border border-black/10 bg-black
+              shadow-[0_18px_45px_rgba(50,20,20,0.13)]
+              transition-all duration-500
+              hover:translate-x-2 hover:scale-[1.015]
+              xl:block xl:w-[250px] xl:h-[405px]
+            "
+          >
+            <img
+              src={nextReel.thumbnail}
+              alt={nextReel.title}
+              className="h-full w-full object-cover opacity-55 blur-[1px] grayscale-[15%] transition-all duration-700 group-hover:scale-105 group-hover:opacity-75 group-hover:blur-0"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-black/25 via-black/35 to-black/70" />
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-left">
+              <p className="text-[7px] uppercase tracking-[0.25em] text-white/60">
+                REEL {String(nextIndex + 1).padStart(2, "0")}
+              </p>
+              <h3 className="mt-2 font-serif text-[18px] leading-tight text-white">
+                {nextReel.title}
+              </h3>
+              <p className="mt-1 text-[9px] text-white/65">{nextReel.price}</p>
+            </div>
+          </button>
 
+          {/* OUTER ARROWS */}
+          <button
+            type="button"
+            onClick={handlePrevReel}
+            aria-label="Previous reel"
+            className="
+              absolute left-0 top-1/2 z-30
+              flex h-10 w-10 -translate-y-1/2 items-center justify-center
+              rounded-full border border-[#3f1616]/30 bg-white/90 text-[#3f1616]
+              shadow-sm backdrop-blur
+              transition-all duration-300 hover:-translate-x-1 hover:bg-[#741522] hover:text-white
+              sm:h-11 sm:w-11
+              xl:left-[17%]
+            "
+          >
+            <ChevronLeft size={18} strokeWidth={1.5} />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleNextReel}
+            aria-label="Next reel"
+            className="
+              absolute right-0 top-1/2 z-30
+              flex h-10 w-10 -translate-y-1/2 items-center justify-center
+              rounded-full border border-[#3f1616]/30 bg-white/90 text-[#3f1616]
+              shadow-sm backdrop-blur
+              transition-all duration-300 hover:translate-x-1 hover:bg-[#741522] hover:text-white
+              sm:h-11 sm:w-11
+              xl:right-[17%]
+            "
+          >
+            <ChevronRight size={18} strokeWidth={1.5} />
+          </button>
+
+          {/* ====================================================
+              CENTER PORTRAIT PLAYER
+              ==================================================== */}
           <div
             ref={containerRef}
-            className="
-              relative
-              bg-[#4b1117]
-              overflow-hidden
-              min-h-[520px]
-              sm:min-h-[620px]
-              lg:min-h-[650px]
-              flex
-              items-center
-              justify-center
-              group/player
-            "
-            onMouseEnter={() =>
-              setIsHovered(true)
-            }
-            onMouseLeave={() =>
-              setIsHovered(false)
-            }
+            className={`
+              group/player relative z-20
+              h-[570px] w-[calc(100vw-88px)] max-w-[350px]
+              overflow-hidden rounded-[2px]
+              bg-black
+              shadow-[0_25px_80px_rgba(49,16,20,0.25)]
+              ring-1 ring-black/10
+              transition-transform duration-500
+              sm:h-[650px] sm:w-[365px]
+              lg:h-[710px] lg:w-[400px]
+              xl:h-[730px] xl:w-[410px]
+              ${isTouching ? "scale-[0.985]" : ""}
+            `}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
+            {/* slim luxury frame */}
+            <div className="pointer-events-none absolute inset-2 z-30 border border-white/15 sm:inset-3" />
 
-            {/* Decorative frame */}
-
-            <div
-              className="
-                pointer-events-none
-                absolute
-                inset-3
-                sm:inset-4
-                border
-                border-[#d4ad54]/20
-                z-20
-              "
-            />
-
-
-            {/* Reel */}
-
+            {/* video */}
             <div
               ref={reelRef}
-              className="
-                relative
-                w-full
-                h-full
-                min-h-[520px]
-                sm:min-h-[620px]
-                lg:min-h-[650px]
-                flex
-                items-center
-                justify-center
-                bg-black
-              "
+              className="absolute inset-0 flex items-center justify-center bg-black"
             >
-
               <iframe
-                key={`${current.id}-${muted}`}
+                key={`${current.id}-${muted}-${isPlaying}`}
                 src={videoUrl}
                 title={current.title}
-                className="
-                  w-full
-                  h-full
-                  min-h-[520px]
-                  sm:min-h-[620px]
-                  lg:min-h-[650px]
-                  border-0
-                "
-                allow="
-                  accelerometer;
-                  autoplay;
-                  clipboard-write;
-                  encrypted-media;
-                  gyroscope;
-                  picture-in-picture;
-                  fullscreen
-                "
+                className="h-full w-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
               />
-
-
-              {/* =========================================
-                  TOP BRAND LABEL
-              ========================================= */}
-
-              <div
-                className="
-                  absolute
-                  top-7
-                  left-7
-                  sm:left-9
-                  z-30
-                  flex
-                  items-center
-                  gap-2
-                  pointer-events-none
-                "
-              >
-
-                <Sparkles
-                  size={13}
-                  strokeWidth={1}
-                  className="
-                    text-[#d4ad54]
-                  "
-                />
-
-                <span
-                  className="
-                    text-[8px]
-                    tracking-[0.3em]
-                    uppercase
-                    text-[#f8f4eb]
-                  "
-                >
-                  DARSH
-                </span>
-
-              </div>
-
-
-              {/* =========================================
-                  PLAY INDICATOR
-              ========================================= */}
-
-              {!isPlaying && (
-                <div
-                  className="
-                    absolute
-                    inset-0
-                    z-20
-                    flex
-                    items-center
-                    justify-center
-                    pointer-events-none
-                  "
-                >
-                  <div
-                    className="
-                      w-14
-                      h-14
-                      sm:w-16
-                      sm:h-16
-                      border
-                      border-[#f8f4eb]/60
-                      flex
-                      items-center
-                      justify-center
-                      bg-[#741522]/50
-                      backdrop-blur-sm
-                    "
-                  >
-                    <Play
-                      size={19}
-                      fill="currentColor"
-                      strokeWidth={1}
-                      className="
-                        text-[#f8f4eb]
-                        ml-0.5
-                      "
-                    />
-                  </div>
-                </div>
-              )}
-
-
-              {/* =========================================
-                  BOTTOM OVERLAY
-              ========================================= */}
-
-              <div
-                className="
-                  absolute
-                  left-0
-                  right-0
-                  bottom-0
-                  z-30
-                  p-6
-                  sm:p-8
-                  bg-gradient-to-t
-                  from-[#2d070c]/95
-                  via-[#2d070c]/60
-                  to-transparent
-                  pointer-events-none
-                "
-              >
-
-                <div
-                  className="
-                    max-w-[500px]
-                  "
-                >
-
-                  <p
-                    className="
-                      text-[7px]
-                      tracking-[0.28em]
-                      uppercase
-                      text-[#d4ad54]
-                      mb-2
-                    "
-                  >
-                    WATCH THE WEAVE
-                  </p>
-
-                  <h3
-                    className="
-                      font-serif
-                      text-[#f8f4eb]
-                      text-[22px]
-                      sm:text-[27px]
-                    "
-                  >
-                    {current.title}
-                  </h3>
-
-                  <p
-                    className="
-                      mt-2
-                      text-[10px]
-                      sm:text-[11px]
-                      text-[#f8f4eb]/70
-                    "
-                  >
-                    {current.subtitle}
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              {/* =========================================
-                  CONTROLS
-              ========================================= */}
-
-              <div
-                className={`
-                  absolute
-                  bottom-6
-                  right-6
-                  sm:right-8
-                  z-40
-                  flex
-                  gap-1
-                  transition-all
-                  duration-300
-                  ${
-                    isHovered
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-2"
-                  }
-                `}
-              >
-
-                {/* Mute */}
-
-                <button
-                  type="button"
-                  onClick={toggleMute}
-                  aria-label={
-                    muted
-                      ? "Unmute reel"
-                      : "Mute reel"
-                  }
-                  className="
-                    w-10
-                    h-10
-                    border
-                    border-[#f8f4eb]/40
-                    bg-[#4b1117]/60
-                    backdrop-blur-sm
-                    text-[#f8f4eb]
-                    flex
-                    items-center
-                    justify-center
-                    transition-all
-                    duration-300
-                    hover:bg-[#d4ad54]
-                    hover:text-[#4b1117]
-                    hover:border-[#d4ad54]
-                  "
-                >
-                  {muted ? (
-                    <VolumeX
-                      size={16}
-                      strokeWidth={1.2}
-                    />
-                  ) : (
-                    <Volume2
-                      size={16}
-                      strokeWidth={1.2}
-                    />
-                  )}
-                </button>
-
-
-                {/* Fullscreen */}
-
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  aria-label={
-                    isFullscreen
-                      ? "Exit fullscreen"
-                      : "Enter fullscreen"
-                  }
-                  className="
-                    w-10
-                    h-10
-                    border
-                    border-[#f8f4eb]/40
-                    bg-[#4b1117]/60
-                    backdrop-blur-sm
-                    text-[#f8f4eb]
-                    flex
-                    items-center
-                    justify-center
-                    transition-all
-                    duration-300
-                    hover:bg-[#d4ad54]
-                    hover:text-[#4b1117]
-                    hover:border-[#d4ad54]
-                  "
-                >
-                  {isFullscreen ? (
-                    <Minimize
-                      size={16}
-                      strokeWidth={1.2}
-                    />
-                  ) : (
-                    <Maximize
-                      size={16}
-                      strokeWidth={1.2}
-                    />
-                  )}
-                </button>
-
-              </div>
-
-
-              {/* =========================================
-                  LEFT / RIGHT NAVIGATION
-              ========================================= */}
-
-              {reelsData.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePrevReel}
-                    aria-label="Previous reel"
-                    className="
-                      absolute
-                      left-5
-                      top-1/2
-                      -translate-y-1/2
-                      z-40
-                      w-10
-                      h-10
-                      border
-                      border-[#f8f4eb]/40
-                      bg-[#4b1117]/40
-                      backdrop-blur-sm
-                      text-[#f8f4eb]
-                      flex
-                      items-center
-                      justify-center
-                      transition-all
-                      duration-300
-                      hover:bg-[#d4ad54]
-                      hover:text-[#4b1117]
-                    "
-                  >
-                    <ChevronLeft
-                      size={18}
-                      strokeWidth={1.2}
-                    />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleNextReel}
-                    aria-label="Next reel"
-                    className="
-                      absolute
-                      right-5
-                      top-1/2
-                      -translate-y-1/2
-                      z-40
-                      w-10
-                      h-10
-                      border
-                      border-[#f8f4eb]/40
-                      bg-[#4b1117]/40
-                      backdrop-blur-sm
-                      text-[#f8f4eb]
-                      flex
-                      items-center
-                      justify-center
-                      transition-all
-                      duration-300
-                      hover:bg-[#d4ad54]
-                      hover:text-[#4b1117]
-                    "
-                  >
-                    <ChevronRight
-                      size={18}
-                      strokeWidth={1.2}
-                    />
-                  </button>
-                </>
-              )}
-
             </div>
 
-          </div>
+            {/* top gradient */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 bg-gradient-to-b from-black/65 to-transparent" />
 
-
-          {/* ===============================================
-              REEL LIST
-          =============================================== */}
-
-          <div
-            className="
-              hidden
-              lg:block
-            "
-          >
-
-            <div
-              className="
-                border-t
-                border-[#741522]/15
-              "
-            >
-
-              <div
-                className="
-                  py-5
-                  flex
-                  items-center
-                  justify-between
-                  border-b
-                  border-[#741522]/15
-                "
-              >
-
-                <span
-                  className="
-                    text-[8px]
-                    tracking-[0.3em]
-                    uppercase
-                    text-[#977e73]
-                  "
-                >
-                  LATEST REELS
-                </span>
-
-                <span
-                  className="
-                    text-[9px]
-                    text-[#977e73]
-                  "
-                >
-                  {String(
-                    currentReel + 1
-                  ).padStart(2, "0")}
-                  /
-                  {String(
-                    reelsData.length
-                  ).padStart(2, "0")}
-                </span>
-
-              </div>
-
-
-              {/* Reel items */}
-
-              <div>
-                {reelsData.map(
-                  (reel, index) => {
-                    const active =
-                      index === currentReel;
-
-                    return (
-                      <button
-                        key={reel.id}
-                        type="button"
-                        onClick={() =>
-                          setCurrentReel(index)
-                        }
-                        className={`
-                          w-full
-                          text-left
-                          flex
-                          gap-4
-                          py-5
-                          border-b
-                          border-[#741522]/10
-                          transition-all
-                          duration-400
-                          group
-                          ${
-                            active
-                              ? "bg-[#eee5d6]"
-                              : "hover:bg-[#eee5d6]/60"
-                          }
-                        `}
-                      >
-
-                        {/* Thumbnail */}
-
-                        <div
-                          className="
-                            relative
-                            w-[74px]
-                            aspect-[9/12]
-                            shrink-0
-                            overflow-hidden
-                            bg-[#e9dfcf]
-                          "
-                        >
-
-                          <img
-                            src={reel.thumbnail}
-                            alt=""
-                            className="
-                              w-full
-                              h-full
-                              object-cover
-                              transition-transform
-                              duration-700
-                              group-hover:scale-105
-                            "
-                          />
-
-                          <div
-                            className={`
-                              absolute
-                              inset-0
-                              flex
-                              items-center
-                              justify-center
-                              ${
-                                active
-                                  ? "bg-[#741522]/35"
-                                  : "bg-black/10"
-                              }
-                            `}
-                          >
-                            <Play
-                              size={13}
-                              fill="currentColor"
-                              className="
-                                text-white
-                              "
-                            />
-                          </div>
-
-                        </div>
-
-
-                        {/* Text */}
-
-                        <div
-                          className="
-                            py-1
-                            min-w-0
-                          "
-                        >
-
-                          <p
-                            className="
-                              text-[7px]
-                              tracking-[0.22em]
-                              uppercase
-                              text-[#977e73]
-                              mb-2
-                            "
-                          >
-                            REEL{" "}
-                            {String(
-                              index + 1
-                            ).padStart(2, "0")}
-                          </p>
-
-                          <h4
-                            className={`
-                              font-serif
-                              text-[17px]
-                              leading-tight
-                              ${
-                                active
-                                  ? "text-[#741522]"
-                                  : "text-[#3f1616]"
-                              }
-                            `}
-                          >
-                            {reel.title}
-                          </h4>
-
-                          <span
-                            className="
-                              inline-flex
-                              items-center
-                              gap-2
-                              mt-3
-                              text-[7px]
-                              tracking-[0.2em]
-                              uppercase
-                              text-[#977e73]
-                            "
-                          >
-                            Watch
-
-                            <ArrowRight
-                              size={11}
-                              className="
-                                transition-transform
-                                group-hover:translate-x-1
-                              "
-                            />
-                          </span>
-
-                        </div>
-
-                      </button>
-                    );
-                  }
-                )}
-              </div>
-
-            </div>
-
-
-            {/* Keyboard hint */}
-
-            <div
-              className="
-                mt-6
-                flex
-                items-center
-                gap-3
-                text-[#a18b80]
-              "
-            >
-
-              <span
-                className="
-                  text-[7px]
-                  tracking-[0.2em]
-                  uppercase
-                "
-              >
-                ← →
+            {/* top brand */}
+            <div className="absolute left-6 top-5 z-40 flex items-center gap-2 sm:left-7 sm:top-6">
+              <Sparkles size={12} strokeWidth={1.2} className="text-[#d4ad54]" />
+              <span className="text-[7px] uppercase tracking-[0.32em] text-white/90 sm:text-[8px]">
+                DARSH
               </span>
-
-              <span
-                className="
-                  text-[8px]
-                "
-              >
-                Use arrow keys to browse
-              </span>
-
             </div>
 
-          </div>
+            {/* reel counter */}
+            <div className="absolute right-6 top-5 z-40 rounded-full border border-white/20 bg-black/20 px-2.5 py-1 backdrop-blur-md sm:right-7 sm:top-6">
+              <span className="text-[7px] tracking-[0.2em] text-white/80">
+                {String(currentReel + 1).padStart(2, "0")} / {String(reelsData.length).padStart(2, "0")}
+              </span>
+            </div>
 
-        </div>
-
-
-        {/* =================================================
-            MOBILE REEL INDICATORS
-        ================================================= */}
-
-        {reelsData.length > 1 && (
-          <div
-            className="
-              flex
-              lg:hidden
-              justify-center
-              items-center
-              gap-2
-              mt-7
-            "
-          >
-
-            {reelsData.map(
-              (_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() =>
-                    setCurrentReel(index)
-                  }
-                  aria-label={`Open reel ${
-                    index + 1
-                  }`}
-                  className={`
-                    h-px
-                    transition-all
-                    duration-500
-                    ${
-                      index === currentReel
-                        ? "w-9 bg-[#741522]"
-                        : "w-4 bg-[#741522]/20"
-                    }
-                  `}
-                />
-              )
+            {/* paused indicator */}
+            {!isPlaying && (
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label="Play reel"
+                className="absolute left-1/2 top-1/2 z-40 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-black/30 text-white backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-[#741522]/75"
+              >
+                <Play size={20} fill="currentColor" strokeWidth={1} className="ml-0.5" />
+              </button>
             )}
 
+            {/* bottom info */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-6 pb-6 pt-28 sm:px-7 sm:pb-7">
+              <p className="text-[7px] uppercase tracking-[0.28em] text-[#e2c26b]">
+                {current.label}
+              </p>
+              <h3 className="mt-2 font-serif text-[23px] leading-tight text-white sm:text-[27px]">
+                {current.title}
+              </h3>
+              <p className="mt-2 max-w-[290px] text-[9px] leading-4 text-white/70 sm:text-[10px]">
+                {current.subtitle}
+              </p>
+
+              <div className="mt-4 flex items-center gap-4">
+                <span className="text-[12px] font-medium text-white">{current.price}</span>
+                <span className="h-px w-7 bg-[#d4ad54]" />
+                <span className="text-[7px] uppercase tracking-[0.22em] text-white/60">
+                  WATCH THE WEAVE
+                </span>
+              </div>
+            </div>
+
+            {/* controls */}
+            <div
+              className={`
+                absolute bottom-6 right-5 z-50 flex gap-1.5
+                transition-all duration-300
+                sm:bottom-7 sm:right-6
+                ${isHovered ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}
+              `}
+            >
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label={isPlaying ? "Pause reel" : "Play reel"}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-all hover:border-[#d4ad54] hover:bg-[#d4ad54] hover:text-[#3f1616]"
+              >
+                {isPlaying ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleMute}
+                aria-label={muted ? "Unmute reel" : "Mute reel"}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-all hover:border-[#d4ad54] hover:bg-[#d4ad54] hover:text-[#3f1616]"
+              >
+                {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white backdrop-blur-md transition-all hover:border-[#d4ad54] hover:bg-[#d4ad54] hover:text-[#3f1616]"
+              >
+                {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+              </button>
+            </div>
           </div>
-        )}
-
-
-        {/* =================================================
-            FOOT NOTE
-        ================================================= */}
-
-        <div
-          className="
-            mt-10
-            flex
-            flex-col
-            sm:flex-row
-            items-center
-            justify-center
-            gap-3
-            text-center
-          "
-        >
-
-          <span
-            className="
-              text-[8px]
-              tracking-[0.22em]
-              uppercase
-              text-[#977e73]
-            "
-          >
-            SOUND ON FOR THE FULL EXPERIENCE
-          </span>
-
-          <span
-            className="
-              hidden
-              sm:block
-              w-5
-              h-px
-              bg-[#d4ad54]
-            "
-          />
-
-          <span
-            className="
-              text-[8px]
-              text-[#a18b80]
-            "
-          >
-            Press M to mute
-          </span>
-
         </div>
 
+        {/* ======================================================
+            MOBILE / TABLET PRODUCT STRIP
+            ====================================================== */}
+        <div className="mt-7 grid grid-cols-3 gap-2 xl:hidden sm:mx-auto sm:max-w-[620px] sm:gap-3">
+          {reelsData.map((reel, index) => {
+            const active = index === currentReel;
+
+            return (
+              <button
+                key={reel.id}
+                type="button"
+                onClick={() => goToReel(index, index > currentReel ? 1 : -1)}
+                className={`group overflow-hidden rounded-sm border text-left transition-all duration-500 ${
+                  active
+                    ? "border-[#741522]/35 bg-[#eee5d6] shadow-sm"
+                    : "border-black/10 bg-white hover:border-[#741522]/20"
+                }`}
+              >
+                <div className="relative aspect-[9/12] overflow-hidden bg-[#e8dfd3]">
+                  <img
+                    src={reel.thumbnail}
+                    alt={reel.title}
+                    className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${
+                      active ? "scale-105" : "opacity-75"
+                    }`}
+                  />
+                  <div className={`absolute inset-0 transition ${active ? "bg-[#741522]/15" : "bg-black/10"}`} />
+                  <span className="absolute bottom-2 left-2 rounded-full bg-black/35 px-2 py-1 text-[6px] uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+                <div className="p-2.5 sm:p-3">
+                  <p className="truncate font-serif text-[11px] text-[#3f1616] sm:text-[13px]">
+                    {reel.title}
+                  </p>
+                  <span className="mt-1 block text-[7px] uppercase tracking-[0.14em] text-[#977e73]">
+                    {reel.price}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ======================================================
+            SHOP CTA
+            ====================================================== */}
+        <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:mt-11 sm:flex-row">
+          <Link
+            to={current.shopLink}
+            className="group inline-flex items-center gap-3 border border-[#741522]/40 px-6 py-3 text-[8px] uppercase tracking-[0.25em] text-[#741522] transition-all duration-300 hover:bg-[#741522] hover:text-[#faf8f3]"
+          >
+            Shop this look
+            <ArrowRight size={13} strokeWidth={1.2} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+
+          <div className="flex items-center gap-2 text-[7px] uppercase tracking-[0.2em] text-[#a18b80]">
+            <span className="h-px w-5 bg-[#d4ad54]" />
+            Swipe / use arrows to explore
+            <span className="h-px w-5 bg-[#d4ad54]" />
+          </div>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {reelsData.map((reel, index) => (
+            <button
+              key={reel.id}
+              type="button"
+              onClick={() => goToReel(index, index > currentReel ? 1 : -1)}
+              aria-label={`Open ${reel.title}`}
+              className={`h-px transition-all duration-500 ${
+                index === currentReel ? "w-10 bg-[#741522]" : "w-4 bg-[#741522]/20 hover:bg-[#741522]/45"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-3 text-center">
+          <Sparkles size={10} className="text-[#d4ad54]" />
+          <span className="text-[7px] uppercase tracking-[0.22em] text-[#977e73]">
+            Sound on for the full experience · Press M to mute · Space to play/pause
+          </span>
+          <Sparkles size={10} className="text-[#d4ad54]" />
+        </div>
       </div>
 
+      <style>{`
+        @keyframes reelsSoftFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
 
-      {/* ===================================================
-          REDUCED MOTION
-      =================================================== */}
-
-      <style>
-        {`
-          @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-              animation-duration: 0.01ms !important;
-              animation-iteration-count: 1 !important;
-              transition-duration: 0.01ms !important;
-            }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
           }
-        `}
-      </style>
-
+        }
+      `}</style>
     </section>
   );
 };

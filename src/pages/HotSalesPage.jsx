@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Award,
   Eye,
+  Heart,
   Flame,
   Shield,
   Sparkles,
@@ -14,8 +15,293 @@ import {
   Truck,
   Zap,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppContext } from "../context/AppContext.jsx";
+
+
+/* ============================================================
+   SHARED DARSH WISHLIST BUTTON
+   Source of truth: localStorage "wishlist"
+   Compatible with the existing Wishlist page.
+============================================================ */
+
+const DARSH_WISHLIST_KEY = "wishlist";
+
+const getWishlistId = (product) =>
+  product?._id || product?.id || product?.productId || null;
+
+const readDarshWishlist = () => {
+  try {
+    const raw = localStorage.getItem(
+      DARSH_WISHLIST_KEY
+    );
+
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const emitWishlistUpdate = () => {
+  /*
+    Keep both events so older components continue
+    working while the new pages use one source of truth.
+  */
+  window.dispatchEvent(
+    new Event("wishlistUpdated")
+  );
+
+  window.dispatchEvent(
+    new Event("darsh-wishlist-updated")
+  );
+};
+
+const DarshWishlistButton = ({
+  product,
+  className = "",
+}) => {
+  const productId = getWishlistId(product);
+
+  const [wished, setWished] = useState(() =>
+    productId
+      ? readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      : false
+  );
+
+  useEffect(() => {
+    const sync = () => {
+      if (!productId) {
+        setWished(false);
+        return;
+      }
+
+      setWished(
+        readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      );
+    };
+
+    sync();
+
+    window.addEventListener(
+      "wishlistUpdated",
+      sync
+    );
+
+    window.addEventListener(
+      "darsh-wishlist-updated",
+      sync
+    );
+
+    window.addEventListener(
+      "storage",
+      sync
+    );
+
+    return () => {
+      window.removeEventListener(
+        "wishlistUpdated",
+        sync
+      );
+
+      window.removeEventListener(
+        "darsh-wishlist-updated",
+        sync
+      );
+
+      window.removeEventListener(
+        "storage",
+        sync
+      );
+    };
+  }, [productId]);
+
+  const toggleWishlist = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!productId) {
+      return;
+    }
+
+    const current =
+      readDarshWishlist();
+
+    const exists = current.some(
+      (item) =>
+        getWishlistId(item) ===
+        productId
+    );
+
+    const next = exists
+      ? current.filter(
+          (item) =>
+            getWishlistId(item) !==
+            productId
+        )
+      : [
+          ...current,
+          {
+            ...product,
+            id:
+              product?.id ||
+              productId,
+            _id:
+              product?._id ||
+              productId,
+            name:
+              product?.name ||
+              product?.productName ||
+              "Darsh Saree",
+            productName:
+              product?.productName ||
+              product?.name ||
+              "Darsh Saree",
+            price: Number(
+              product?.price || 0
+            ),
+            image:
+              product?.image ||
+              product?.images?.[0] ||
+              product?.img ||
+              "/IMG/saree.png",
+          },
+        ];
+
+    try {
+      localStorage.setItem(
+        DARSH_WISHLIST_KEY,
+        JSON.stringify(next)
+      );
+
+      setWished(!exists);
+      emitWishlistUpdate();
+    } catch {
+      // Ignore storage failures gracefully.
+    }
+  };
+
+  if (!productId) {
+    return null;
+  }
+
+  return (
+    <motion.button
+      type="button"
+      aria-label={
+        wished
+          ? "Remove from wishlist"
+          : "Add to wishlist"
+      }
+      aria-pressed={wished}
+      onClick={toggleWishlist}
+      whileTap={{
+        scale: 0.88,
+      }}
+      whileHover={{
+        scale: 1.08,
+      }}
+      className={`
+        group/wishlist
+        absolute
+        right-3
+        top-3
+        z-30
+        flex
+        h-9
+        w-9
+        items-center
+        justify-center
+        rounded-full
+        border
+        shadow-sm
+        backdrop-blur-md
+        transition-all
+        duration-300
+        sm:right-4
+        sm:top-4
+        sm:h-10
+        sm:w-10
+
+        ${
+          wished
+            ? "border-[#741522] bg-[#741522] text-white shadow-[0_8px_25px_rgba(116,21,34,.28)]"
+            : "border-white/80 bg-white/85 text-[#741522] hover:border-[#C9A24A] hover:bg-white"
+        }
+
+        ${className}
+      `}
+    >
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={wished ? "liked" : "idle"}
+          initial={{
+            scale: 0.55,
+            opacity: 0,
+            rotate: -12,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          exit={{
+            scale: 0.55,
+            opacity: 0,
+          }}
+          transition={{
+            duration: 0.2,
+          }}
+        >
+          <Heart
+            size={17}
+            strokeWidth={1.7}
+            fill={
+              wished
+                ? "currentColor"
+                : "none"
+          }
+          />
+        </motion.span>
+      </AnimatePresence>
+
+      {wished && (
+        <motion.span
+          initial={{
+            scale: 0,
+            opacity: 0,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          className="
+            pointer-events-none
+            absolute
+            -right-0.5
+            -top-0.5
+            h-2
+            w-2
+            rounded-full
+            bg-[#E7C979]
+          "
+        />
+      )}
+    </motion.button>
+  );
+};
 
 const HotSalesPage = () => {
   const { allProduct, url } = useAppContext();
@@ -318,6 +604,8 @@ const HotSalesPage = () => {
 
               <div className="relative min-h-[400px] sm:min-h-[500px] md:min-h-[560px] overflow-hidden">
 
+                <DarshWishlistButton product={dealOfTheDay} />
+
                 <Link
                   to={`/productDetails/${dealOfTheDay._id}`}
                   onClick={scrollTop}
@@ -493,6 +781,8 @@ const HotSalesPage = () => {
 
                       <div className="relative aspect-[0.78] overflow-hidden bg-[#eee5d5]">
 
+                        <DarshWishlistButton product={product} />
+
                         <Link
                           to={`/productDetails/${product._id}`}
                           onClick={scrollTop}
@@ -526,13 +816,7 @@ const HotSalesPage = () => {
 
                         </div>
 
-                        {/* Discount */}
-
-                        {discount && (
-                          <span className="absolute right-3 top-3 sm:right-4 sm:top-4 bg-[#d4ad54] px-2.5 py-1.5 text-[7px] tracking-[0.12em] text-[#4a1815]">
-                            -{discount}%
-                          </span>
-                        )}
+                      
 
                         {/* Desktop button */}
 

@@ -13,7 +13,10 @@ import {
   ChevronRight,
   Sparkles,
   Flame,
+  Heart,
+  Crown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import SignatureWeaves from "../components/SignatureWeaves";
 import Hero from "../components/Hero";
@@ -192,6 +195,7 @@ const LuxuryProductCard = ({
           bg-[#eee5d5]
         "
       >
+        <DarshWishlistButton product={product} />
         <img
           src={image}
           alt={`${name} - Darsh Saree`}
@@ -696,6 +700,291 @@ const ColorStories = ({ products, url }) => {
    HOME COMPONENT
 ========================================================= */
 
+
+/* ============================================================
+   SHARED DARSH WISHLIST BUTTON
+   Source of truth: localStorage "wishlist"
+   Compatible with the existing Wishlist page.
+============================================================ */
+
+const DARSH_WISHLIST_KEY = "wishlist";
+
+const getWishlistId = (product) =>
+  product?._id || product?.id || product?.productId || null;
+
+const readDarshWishlist = () => {
+  try {
+    const raw = localStorage.getItem(
+      DARSH_WISHLIST_KEY
+    );
+
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    return Array.isArray(parsed)
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const emitWishlistUpdate = () => {
+  /*
+    Keep both events so older components continue
+    working while the new pages use one source of truth.
+  */
+  window.dispatchEvent(
+    new Event("wishlistUpdated")
+  );
+
+  window.dispatchEvent(
+    new Event("darsh-wishlist-updated")
+  );
+};
+
+const DarshWishlistButton = ({
+  product,
+  className = "",
+}) => {
+  const productId = getWishlistId(product);
+
+  const [wished, setWished] = useState(() =>
+    productId
+      ? readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      : false
+  );
+
+  useEffect(() => {
+    const sync = () => {
+      if (!productId) {
+        setWished(false);
+        return;
+      }
+
+      setWished(
+        readDarshWishlist().some(
+          (item) =>
+            getWishlistId(item) ===
+            productId
+        )
+      );
+    };
+
+    sync();
+
+    window.addEventListener(
+      "wishlistUpdated",
+      sync
+    );
+
+    window.addEventListener(
+      "darsh-wishlist-updated",
+      sync
+    );
+
+    window.addEventListener(
+      "storage",
+      sync
+    );
+
+    return () => {
+      window.removeEventListener(
+        "wishlistUpdated",
+        sync
+      );
+
+      window.removeEventListener(
+        "darsh-wishlist-updated",
+        sync
+      );
+
+      window.removeEventListener(
+        "storage",
+        sync
+      );
+    };
+  }, [productId]);
+
+  const toggleWishlist = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!productId) {
+      return;
+    }
+
+    const current =
+      readDarshWishlist();
+
+    const exists = current.some(
+      (item) =>
+        getWishlistId(item) ===
+        productId
+    );
+
+    const next = exists
+      ? current.filter(
+          (item) =>
+            getWishlistId(item) !==
+            productId
+        )
+      : [
+          ...current,
+          {
+            ...product,
+            id:
+              product?.id ||
+              productId,
+            _id:
+              product?._id ||
+              productId,
+            name:
+              product?.name ||
+              product?.productName ||
+              "Darsh Saree",
+            productName:
+              product?.productName ||
+              product?.name ||
+              "Darsh Saree",
+            price: Number(
+              product?.price || 0
+            ),
+            image:
+      product?.image ||
+      product?.images?.[0] ||
+      product?.img ||
+      "/IMG/placeholder.jpg",
+    price: Number(product?.price || 0),
+          },
+        ];
+
+    try {
+      localStorage.setItem(
+        DARSH_WISHLIST_KEY,
+        JSON.stringify(next)
+      );
+
+      setWished(!exists);
+      emitWishlistUpdate();
+    } catch {
+      // Ignore storage failures gracefully.
+    }
+  };
+
+  if (!productId) {
+    return null;
+  }
+
+  return (
+    <motion.button
+      type="button"
+      aria-label={
+        wished
+          ? "Remove from wishlist"
+          : "Add to wishlist"
+      }
+      aria-pressed={wished}
+      onClick={toggleWishlist}
+      whileTap={{
+        scale: 0.88,
+      }}
+      whileHover={{
+        scale: 1.08,
+      }}
+      className={`
+        group/wishlist
+        absolute
+        right-3
+        top-3
+        z-30
+        flex
+        h-9
+        w-9
+        items-center
+        justify-center
+        rounded-full
+        border
+        shadow-sm
+        backdrop-blur-md
+        transition-all
+        duration-300
+        sm:right-4
+        sm:top-4
+        sm:h-10
+        sm:w-10
+
+        ${
+          wished
+            ? "border-[#741522] bg-[#741522] text-white shadow-[0_8px_25px_rgba(116,21,34,.28)]"
+            : "border-white/80 bg-white/85 text-[#741522] hover:border-[#C9A24A] hover:bg-white"
+        }
+
+        ${className}
+      `}
+    >
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={wished ? "liked" : "idle"}
+          initial={{
+            scale: 0.55,
+            opacity: 0,
+            rotate: -12,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          exit={{
+            scale: 0.55,
+            opacity: 0,
+          }}
+          transition={{
+            duration: 0.2,
+          }}
+        >
+          <Heart
+            size={17}
+            strokeWidth={1.7}
+            fill={
+              wished
+                ? "currentColor"
+                : "none"
+          }
+          />
+        </motion.span>
+      </AnimatePresence>
+
+      {wished && (
+        <motion.span
+          initial={{
+            scale: 0,
+            opacity: 0,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          className="
+            pointer-events-none
+            absolute
+            -right-0.5
+            -top-0.5
+            h-2
+            w-2
+            rounded-full
+            bg-[#E7C979]
+          "
+        />
+      )}
+    </motion.button>
+  );
+};
+
 const Home = () => {
   const {
     allProduct,
@@ -813,6 +1102,75 @@ const Home = () => {
       }));
   }, [allProduct]);
 
+  
+
+  const premiumSarees = useMemo(() => {
+    const source = Array.isArray(allProduct)
+      ? [...allProduct]
+      : [...fallbackProducts];
+
+
+   
+
+    const getPremiumText = (product) =>
+      [
+        product?.productName,
+        product?.name,
+        product?.title,
+        product?.fabric,
+        product?.description,
+        product?.shortDescription,
+        ...(Array.isArray(product?.tags)
+          ? product.tags
+          : []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+  
+
+      
+
+    /*
+      IMPORTANT:
+      No category check here.
+      A product priced ₹5,000+ is eligible.
+    */
+    const eligiblePremiumProducts =
+      source.filter(
+        (product) =>
+          Number(product?.price || 0) >= 5000
+      );
+
+    return eligiblePremiumProducts
+      .sort((a, b) => {
+        
+        // 2. Higher-value products next
+        return (
+          Number(b?.price || 0) -
+          Number(a?.price || 0)
+        );
+      })
+      .filter(
+        (product, index, array) =>
+          array.findIndex(
+            (item) =>
+              String(
+                item?._id || item?.id
+              ) ===
+              String(
+                product?._id || product?.id
+              )
+          ) === index
+      )
+      .slice(0, 8)
+      .map((product) => ({
+        ...product,
+        badge:
+          product?.badge || "PREMIUM",
+      }));
+  }, [allProduct, fallbackProducts]);
   /* =================================================
      RESET INDICES
   ================================================= */
@@ -1419,6 +1777,90 @@ const Home = () => {
       />
 
       {/* =========================================================
+          PREMIUM SAREES — COMPACT HOME EDIT
+      ========================================================= */}
+
+      {premiumSarees.length > 0 && (
+        <section
+          className="
+            relative overflow-hidden
+            border-b border-[#741522]/10
+            bg-[#3f1616]
+            py-10 sm:py-12
+          "
+        >
+          <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <div className="mb-2 flex items-center gap-2">
+                  <Sparkles size={12} className="text-[#E7C979]" />
+                  <span className="text-[7px] uppercase tracking-[0.34em] text-[#d8c2a7] sm:text-[8px]">
+                    THE DARSH SIGNATURE EDIT
+                  </span>
+                </div>
+                <h2 className="font-serif text-[30px] leading-none text-[#fff8ed] sm:text-[38px]">
+                  Premium Sarees
+                </h2>
+                <p className="mt-2 max-w-[520px] text-[10px] leading-5 text-[#dccdc0] sm:text-[11px]">
+                  A refined edit of exceptional silks, heirloom weaves and statement drapes.
+                </p>
+              </div>
+
+              <Link
+                to="/premium-sarees"
+                onClick={scrollTop}
+                className="group inline-flex w-fit shrink-0 items-center gap-2 border border-[#d4ad54]/55 px-5 py-2.5 text-[7px] uppercase tracking-[0.24em] text-[#f4d98a] transition-all duration-300 hover:bg-[#d4ad54] hover:text-[#3f1616] sm:px-6"
+              >
+                Explore premium
+                <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
+              {premiumSarees.map((product, index) => {
+                const id = product?._id || product?.id;
+                const image = product?.images?.[0]
+                  ? `${url}/img/${product.images[0]}`
+                  : product?.image || "/IMG/saree.png";
+                const name = product?.productName || product?.name || "Premium Saree";
+                const price = Number(product?.price || 0);
+
+                return (
+                  <Link
+                    key={id || index}
+                    to={`/productDetails/${id}`}
+                    onClick={scrollTop}
+                    className="group relative overflow-hidden border border-white/10 bg-[#4a1c1e]"
+                  >
+                    <div className="relative aspect-[0.82] overflow-hidden">
+                      <DarshWishlistButton product={product} />
+                      <img
+                        src={image}
+                        alt={`${name} - Darsh Premium Saree`}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.05]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#210b0d]/90 via-transparent to-transparent" />
+                      <span className="absolute flex flex-nowrap gap-1 left-2 top-2 border border-[#f1d78c]/45 bg-[#3f1616]/75 px-2 py-1 text-[6px] uppercase tracking-[0.18em] text-[#f5d98a] backdrop-blur-sm">
+                        <Crown size={10} /> PREMIUM
+                      </span>
+                      <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+                        <h3 className="truncate font-serif text-[15px] text-white sm:text-[18px]">{name}</h3>
+                        <p className="mt-1 text-[8px] tracking-[0.12em] text-[#eadaca]">
+                          ₹{price.toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -right-24 top-0 h-48 w-48 rounded-full bg-[#d4ad54]/10 blur-3xl" />
+        </section>
+      )}
+
+      {/* =========================================================
           NEW ARRIVALS
       ========================================================= */}
 
@@ -1659,9 +2101,10 @@ const Home = () => {
                 gap-4
                 overflow-x-auto
                 overscroll-x-contain
+                overscroll-y-auto
                 px-4
                 pb-4
-                touch-pan-x
+                touch-auto
               "
             >
               {newArrivals.map(
@@ -2150,6 +2593,7 @@ const Home = () => {
               className="
                 -mx-4
                 block
+                min-w-0
                 sm:hidden
                 pl-4
               "
@@ -2174,9 +2618,10 @@ const Home = () => {
                   gap-4
                   overflow-x-auto
                   overscroll-x-contain
+                  overscroll-y-auto
                   px-4
                   pb-4
-                  touch-pan-x
+                  touch-auto
                 "
               >
                 {hotSales.map(
@@ -2611,11 +3056,38 @@ const Home = () => {
 
           .new-arrivals-mobile,
           .hot-sales-mobile {
+            overflow-y: visible;
+          }
+
+          .new-arrivals-mobile,
+          .hot-sales-mobile {
             -ms-overflow-style: none;
             scrollbar-width: none;
             scroll-behavior: smooth;
             overscroll-behavior-x: contain;
+            overscroll-behavior-y: auto;
+            touch-action: pan-x pan-y;
             -webkit-overflow-scrolling: touch;
+          }
+
+          /* Keep horizontal product rails independent without blocking
+             normal vertical page scrolling on touch devices. */
+          .new-arrivals-mobile,
+          .hot-sales-mobile {
+            max-width: 100%;
+            min-width: 0;
+          }
+
+          @media (max-width: 639px) {
+            .new-arrivals-mobile,
+            .hot-sales-mobile {
+              scroll-snap-type: x proximity;
+            }
+
+            .new-arrivals-mobile > *,
+            .hot-sales-mobile > * {
+              scroll-snap-align: start;
+            }
           }
 
           @media (prefers-reduced-motion: reduce) {

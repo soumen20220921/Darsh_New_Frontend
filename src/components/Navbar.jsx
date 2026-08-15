@@ -1,5 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   Search,
   ShoppingBag,
@@ -8,10 +18,103 @@ import {
   UserRound,
   Package,
   ChevronRight,
+  ChevronDown,
+  Heart,
+  Truck,
   Sparkles,
+  ArrowUpRight,
+  Crown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  motion,
+  AnimatePresence,
+} from "framer-motion";
+
 import { useAppContext } from "../context/AppContext.jsx";
+import { toast } from "react-toastify";
+
+/* ============================================================
+   CONSTANTS
+============================================================ */
+
+const WISHLIST_KEY = "wishlist";
+
+const DELHIVERY_TRACKING_URL =
+  "https://www.delhivery.com/tracking";
+
+/* ============================================================
+   AWB HELPER
+   Supports different backend field names.
+============================================================ */
+
+const getOrderAwb = (orderItem) => {
+  if (!orderItem) return "";
+
+  return (
+    orderItem?.awb ||
+    orderItem?.AWB ||
+    orderItem?.awbNumber ||
+    orderItem?.awb_number ||
+    orderItem?.trackingId ||
+    orderItem?.trackingID ||
+    orderItem?.trackingNumber ||
+    orderItem?.tracking_number ||
+    orderItem?.waybill ||
+    orderItem?.wayBill ||
+    orderItem?.shipment?.awb ||
+    orderItem?.shipment?.awbNumber ||
+    orderItem?.shipment?.waybill ||
+    orderItem?.shipping?.awb ||
+    orderItem?.shipping?.awbNumber ||
+    orderItem?.delivery?.awb ||
+    orderItem?.delivery?.awbNumber ||
+    ""
+  );
+};
+
+/* ============================================================
+   CHECK REAL AWB
+============================================================ */
+
+const isValidAwb = (awb) => {
+  if (!awb) return false;
+
+  const value = String(awb).trim();
+
+  if (!value) return false;
+
+  const invalidValues = [
+    "pending",
+    "null",
+    "undefined",
+    "n/a",
+    "na",
+    "-",
+    "not assigned",
+    "not available",
+  ];
+
+  return !invalidValues.includes(
+    value.toLowerCase()
+  );
+};
+
+/* ============================================================
+   CATEGORY NAME
+============================================================ */
+
+const cleanCategory = (value) => {
+  if (!value) return "";
+
+  return String(value)
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+/* ============================================================
+   NAVBAR
+============================================================ */
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -22,138 +125,459 @@ const Navbar = () => {
     setLogin,
     totalItems,
     order = [],
+    allProduct = [],
   } = useAppContext();
 
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
+  /* ==========================================================
+     STATES
+  ========================================================== */
 
-  // ============================================================
-  // DARSH LOGO
-  // ============================================================
+  const [scrolled, setScrolled] =
+    useState(false);
+
+  const [mobileMenu, setMobileMenu] =
+    useState(false);
+
+  const [
+    desktopCategoryOpen,
+    setDesktopCategoryOpen,
+  ] = useState(false);
+
+  const [
+    mobileCategoryOpen,
+    setMobileCategoryOpen,
+  ] = useState(false);
+
+  const [
+    trackingOpen,
+    setTrackingOpen,
+  ] = useState(false);
+
+  const [
+    trackingNumber,
+    setTrackingNumber,
+  ] = useState("");
+
+  const [
+    wishlistCount,
+    setWishlistCount,
+  ] = useState(0);
+
+  /* ==========================================================
+     BASIC
+  ========================================================== */
 
   const logoSrc = "/IMG/Logo.jpg";
 
-  // ============================================================
-  // USER NAME
-  // ============================================================
+  const userName =
+    localStorage.getItem("name");
 
-  const userName = localStorage.getItem("name");
+  /* ==========================================================
+     DYNAMIC CATEGORIES
+     
+     IMPORTANT:
+     No hardcoded category names.
+     
+     Reads:
+     allProduct[].category
+  ========================================================== */
 
-  // ============================================================
-  // PAID ORDER COUNT
-  // ============================================================
+  const dynamicCategories = useMemo(() => {
+    if (!Array.isArray(allProduct)) {
+      return [];
+    }
 
-  const paidOrderCount = Array.isArray(order)
-    ? order.filter(
-        (item) =>
-          item?.payStatus &&
-          item.payStatus.toLowerCase() === "paid"
-      ).length
-    : 0;
+    const categoryMap = new Map();
 
-  // ============================================================
-  // LOGIN CHECK
-  // ============================================================
+    allProduct.forEach((product) => {
+      const category = cleanCategory(
+        product?.category
+      );
+
+      if (!category) return;
+
+      const key =
+        category.toLowerCase();
+
+      if (!categoryMap.has(key)) {
+        categoryMap.set(
+          key,
+          category
+        );
+      }
+    });
+
+    return Array.from(
+      categoryMap.values()
+    ).sort((a, b) =>
+      a.localeCompare(
+        b,
+        undefined,
+        {
+          sensitivity: "base",
+        }
+      )
+    );
+  }, [allProduct]);
+
+  /* ==========================================================
+     CUSTOMER AWB LIST
+     
+     ONLY REAL AWBs.
+  ========================================================== */
+
+  const customerAwbs = useMemo(() => {
+    if (!Array.isArray(order)) {
+      return [];
+    }
+
+    return order
+      .map((item) =>
+        getOrderAwb(item)
+      )
+      .filter((awb) =>
+        isValidAwb(awb)
+      )
+      .map((awb) =>
+        String(awb).trim()
+      )
+      .filter(
+        (awb, index, array) =>
+          array.indexOf(awb) ===
+          index
+      );
+  }, [order]);
+
+  const hasTrackableOrder =
+    customerAwbs.length > 0;
+
+  const latestAwb =
+    customerAwbs[0] || "";
+
+  /* ==========================================================
+     PAID ORDERS
+  ========================================================== */
+
+  const paidOrderCount =
+    Array.isArray(order)
+      ? order.filter((item) => {
+          const status =
+            String(
+              item?.payStatus || ""
+            ).toLowerCase();
+
+          return (
+            status === "paid" ||
+            status === "success" ||
+            status === "completed"
+          );
+        }).length
+      : 0;
+
+  /* ==========================================================
+     WISHLIST COUNT
+  ========================================================== */
+
+  const readWishlistCount = () => {
+    try {
+      const raw =
+        localStorage.getItem(
+          WISHLIST_KEY
+        );
+
+      if (!raw) {
+        setWishlistCount(0);
+        return;
+      }
+
+      const parsed =
+        JSON.parse(raw);
+
+      setWishlistCount(
+        Array.isArray(parsed)
+          ? parsed.length
+          : 0
+      );
+    } catch {
+      setWishlistCount(0);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    readWishlistCount();
+
+    const handleWishlistUpdate =
+      () => {
+        readWishlistCount();
+      };
+
+    window.addEventListener(
+      "darsh-wishlist-updated",
+      handleWishlistUpdate
+    );
+
+    window.addEventListener(
+      "wishlistUpdated",
+      handleWishlistUpdate
+    );
+
+    window.addEventListener(
+      "storage",
+      handleWishlistUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        "darsh-wishlist-updated",
+        handleWishlistUpdate
+      );
+
+      window.removeEventListener(
+        "wishlistUpdated",
+        handleWishlistUpdate
+      );
+
+      window.removeEventListener(
+        "storage",
+        handleWishlistUpdate
+      );
+    };
+  }, []);
+
+  /* ==========================================================
+     LOGIN
+  ========================================================== */
+
+  useEffect(() => {
+    const token =
+      localStorage.getItem("token");
 
     if (token) {
       setLogin(true);
     }
   }, [setLogin]);
 
-  // ============================================================
-  // SCROLL EFFECT
-  // ============================================================
+  /* ==========================================================
+     SCROLL
+  ========================================================== */
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 25);
+      setScrolled(
+        window.scrollY > 25
+      );
     };
 
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
     };
   }, []);
 
-  // ============================================================
-  // CLOSE MOBILE MENU WHEN ROUTE CHANGES
-  // ============================================================
+  /* ==========================================================
+     CLOSE MENUS ON ROUTE
+  ========================================================== */
 
   useEffect(() => {
     setMobileMenu(false);
+    setDesktopCategoryOpen(false);
+    setMobileCategoryOpen(false);
+    setTrackingOpen(false);
   }, [location.pathname]);
 
-  // ============================================================
-  // PREVENT BODY SCROLL WHEN MOBILE MENU IS OPEN
-  // ============================================================
+  /* ==========================================================
+     BODY LOCK
+  ========================================================== */
 
   useEffect(() => {
-    if (mobileMenu) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    const oldOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      mobileMenu
+        ? "hidden"
+        : "";
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow =
+        oldOverflow;
     };
   }, [mobileMenu]);
 
-  // ============================================================
-  // NAVIGATION
-  // ============================================================
+  /* ==========================================================
+     NAVIGATION
+  ========================================================== */
 
   const goTo = (path) => {
     setMobileMenu(false);
+    setDesktopCategoryOpen(false);
+    setMobileCategoryOpen(false);
 
     navigate(path);
 
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
+    window.setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    }, 0);
   };
 
-  // ============================================================
-  // ACTIVE ROUTE
-  // ============================================================
+  /* ==========================================================
+     CATEGORY NAVIGATION
+     
+     Your existing Categories page uses:
+     
+     /Categories/:name
+  ========================================================== */
+
+  const goToCategory = (
+    category
+  ) => {
+    if (!category) return;
+
+    setDesktopCategoryOpen(false);
+    setMobileCategoryOpen(false);
+    setMobileMenu(false);
+
+    navigate(
+      `/Categories/${encodeURIComponent(
+        category
+      )}`
+    );
+
+    window.setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    }, 0);
+  };
+
+  /* ==========================================================
+     ACTIVE
+  ========================================================== */
 
   const isActive = (path) => {
     if (path === "/") {
-      return location.pathname === "/";
+      return (
+        location.pathname === "/"
+      );
     }
 
-    return location.pathname.startsWith(path);
+    return location.pathname.startsWith(
+      path
+    );
   };
 
+  /* ==========================================================
+     TRACKING
+     
+     Redirect directly to Delhivery.
+  ========================================================== */
+
+  const openDelhivery = (awb) => {
+    const value =
+      String(awb || "").trim();
+
+    if (!value) {
+      toast.info(
+        "Please enter your AWB / Tracking Number",
+        {
+          theme: "dark",
+        }
+      );
+
+      return;
+    }
+
+    const url =
+      `${DELHIVERY_TRACKING_URL}?awb=${encodeURIComponent(
+        value
+      )}`;
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  /* ==========================================================
+     TRACK SUBMIT
+  ========================================================== */
+
+  const handleTrackSubmit = (
+    event
+  ) => {
+    event.preventDefault();
+
+    const value =
+      trackingNumber.trim();
+
+    if (!value) return;
+
+    setTrackingOpen(false);
+    setMobileMenu(false);
+
+    openDelhivery(value);
+  };
+
+  /* ==========================================================
+     USE LATEST AWB
+  ========================================================== */
+
+  const useLatestAwb = () => {
+    if (!latestAwb) {
+      toast.info(
+        "No AWB is available yet",
+        {
+          theme: "dark",
+        }
+      );
+
+      return;
+    }
+
+    setTrackingNumber(
+      latestAwb
+    );
+  };
+
+  
   return (
     <>
-      {/* ========================================================
-          ANNOUNCEMENT BAR
-      ======================================================== */}
+      {/* ======================================================
+          ANNOUNCEMENT
+      ====================================================== */}
 
       <div
         className="
           relative
           z-[70]
+          flex
           h-[31px]
+          items-center
+          justify-center
           overflow-hidden
           bg-[#741522]
           text-[#FFF9F0]
-          flex
-          items-center
-          justify-center
         "
       >
         <div
           className="
             flex
-            items-center
             whitespace-nowrap
             text-[5.5px]
             font-medium
@@ -162,28 +586,32 @@ const Navbar = () => {
             sm:tracking-[0.32em]
           "
         >
-          <span>FREE SHIPPING ACROSS INDIA</span>
+          <span>
+            FREE SHIPPING ACROSS INDIA
+          </span>
 
           <span className="mx-2 opacity-50 sm:mx-3">
             ◆
           </span>
 
-          <span>HANDLOOM COLLECTION</span>
+          <span>
+            HANDLOOM COLLECTION
+          </span>
 
           <span className="mx-2 opacity-50 sm:mx-3">
             ◆
           </span>
 
-          <span>CRAFTED WITH LOVE</span>
+          <span>
+            CRAFTED WITH LOVE
+          </span>
         </div>
-
-        {/* Shine */}
 
         <div
           className="
             absolute
-            top-0
             -left-[100%]
+            top-0
             h-full
             w-[35%]
             bg-gradient-to-r
@@ -195,9 +623,9 @@ const Navbar = () => {
         />
       </div>
 
-      {/* ========================================================
-          MAIN NAVBAR
-      ======================================================== */}
+      {/* ======================================================
+          MAIN HEADER
+      ====================================================== */}
 
       <header
         className={`
@@ -210,12 +638,11 @@ const Navbar = () => {
           backdrop-blur-xl
           transition-all
           duration-500
-          ease-out
 
           ${
             scrolled
               ? "shadow-[0_8px_30px_rgba(74,35,25,0.10)]"
-              : "shadow-none"
+              : ""
           }
         `}
       >
@@ -224,15 +651,14 @@ const Navbar = () => {
             relative
             mx-auto
             flex
-            max-w-[1500px]
+            max-w-[1600px]
             items-center
             justify-between
-            px-4
-            sm:px-7
-            lg:px-12
-
-            transition-all
-            duration-500
+            px-3
+            sm:px-6
+            lg:px-8
+            xl:px-10
+            2xl:px-12
 
             ${
               scrolled
@@ -242,7 +668,7 @@ const Navbar = () => {
           `}
         >
           {/* ==================================================
-              DARSH CIRCULAR LOGO
+              LOGO
           ================================================== */}
 
           <Link
@@ -253,16 +679,14 @@ const Navbar = () => {
 
               window.scrollTo({
                 top: 0,
-                left: 0,
                 behavior: "smooth",
               });
             }}
             className="
               group
-              relative
               flex
+              shrink-0
               items-center
-              select-none
             "
           >
             <motion.div
@@ -278,42 +702,42 @@ const Navbar = () => {
               }}
               transition={{
                 duration: 0.8,
-                ease: [0.22, 1, 0.36, 1],
+                ease: [
+                  0.22,
+                  1,
+                  0.36,
+                  1,
+                ],
               }}
               className={`
                 relative
                 flex
+                shrink-0
                 items-center
                 justify-center
                 rounded-full
-                transition-all
-                duration-500
 
                 ${
                   scrolled
                     ? "h-[52px] w-[52px] sm:h-[58px] sm:w-[58px]"
-                    : "h-[61px] w-[61px] sm:h-[68px] sm:w-[68px]"
+                    : "h-[52px] w-[52px] sm:h-[68px] sm:w-[68px]"
                 }
               `}
             >
-              {/* Soft Glow */}
-
               <div
                 className="
                   absolute
                   -inset-2
                   rounded-full
                   bg-[#C9A24A]/10
-                  blur-lg
                   opacity-0
+                  blur-lg
                   transition-all
                   duration-500
-                  group-hover:opacity-100
                   group-hover:scale-110
+                  group-hover:opacity-100
                 "
               />
-
-              {/* Outer Circle */}
 
               <div
                 className="
@@ -327,11 +751,8 @@ const Navbar = () => {
                   transition-all
                   duration-500
                   group-hover:border-[#741522]
-                  group-hover:shadow-[0_8px_28px_rgba(201,162,74,0.28)]
                 "
               />
-
-              {/* Inner Circle */}
 
               <div
                 className="
@@ -340,89 +761,14 @@ const Navbar = () => {
                   rounded-full
                   border
                   border-[#C9A24A]/40
-                  pointer-events-none
-                  transition-all
-                  duration-500
-                  group-hover:inset-[4px]
-                  group-hover:border-[#C9A24A]/70
                 "
               />
-
-              {/* Top Decorative Dot */}
-
-              <span
-                className="
-                  absolute
-                  top-[6px]
-                  left-1/2
-                  z-20
-                  h-[3px]
-                  w-[3px]
-                  -translate-x-1/2
-                  rounded-full
-                  bg-[#C9A24A]
-                "
-              />
-
-              {/* Bottom Decorative Dot */}
-
-              <span
-                className="
-                  absolute
-                  bottom-[6px]
-                  left-1/2
-                  z-20
-                  h-[3px]
-                  w-[3px]
-                  -translate-x-1/2
-                  rounded-full
-                  bg-[#C9A24A]
-                "
-              />
-
-              {/* Left Decorative Dot */}
-
-              <span
-                className="
-                  absolute
-                  left-[6px]
-                  top-1/2
-                  z-20
-                  h-[2px]
-                  w-[2px]
-                  -translate-y-1/2
-                  rounded-full
-                  bg-[#C9A24A]
-                "
-              />
-
-              {/* Right Decorative Dot */}
-
-              <span
-                className="
-                  absolute
-                  right-[6px]
-                  top-1/2
-                  z-20
-                  h-[2px]
-                  w-[2px]
-                  -translate-y-1/2
-                  rounded-full
-                  bg-[#C9A24A]
-                "
-              />
-
-              {/* Logo Image */}
 
               <motion.img
                 src={logoSrc}
                 alt="Darsh"
                 whileHover={{
                   scale: 1.07,
-                }}
-                transition={{
-                  duration: 0.35,
-                  ease: "easeOut",
                 }}
                 className="
                   relative
@@ -434,17 +780,24 @@ const Navbar = () => {
                   p-1
                   mix-blend-multiply
                 "
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
+                onError={(event) => {
+                  event.currentTarget.style.display =
+                    "none";
                 }}
               />
 
-              {/* Animated Sparkle */}
-
               <motion.div
                 animate={{
-                  scale: [1, 1.18, 1],
-                  rotate: [0, 8, 0],
+                  scale: [
+                    1,
+                    1.18,
+                    1,
+                  ],
+                  rotate: [
+                    0,
+                    8,
+                    0,
+                  ],
                 }}
                 transition={{
                   duration: 3,
@@ -468,28 +821,28 @@ const Navbar = () => {
               >
                 <Sparkles
                   size={11}
-                  strokeWidth={1.5}
                   className="text-[#C9A24A]"
                 />
               </motion.div>
             </motion.div>
 
-            {/* Desktop Brand Text */}
-
             <div
               className="
-                ml-3
+                ml-2
                 flex-col
                 justify-center
+                sm:ml-3
               "
             >
               <span
                 className="
                   font-serif
-                  text-[15px]
+                  text-[12px]
+                  sm:text-[15px]
                   font-semibold
-                  tracking-[0.25em]
+                  tracking-[0.22em]
                   text-[#741522]
+                  lg:text-[18px]
                 "
               >
                 DARSH
@@ -498,12 +851,13 @@ const Navbar = () => {
               <span
                 className="
                   mt-0.5
-                  hidden 
-                  sm:flex
-                  text-[6.5px]
+                  hidden
+                  text-[6px]
                   font-medium
-                  tracking-[0.28em]
+                  tracking-[0.25em]
                   text-[#806B63]
+                  lg:text-[6.5px]
+                  sm:flex
                 "
               >
                 HANDWOVEN SAREES
@@ -513,6 +867,9 @@ const Navbar = () => {
 
           {/* ==================================================
               DESKTOP NAVIGATION
+              
+              IMPORTANT:
+              whitespace-nowrap keeps everything one line.
           ================================================== */}
 
           <nav
@@ -522,207 +879,441 @@ const Navbar = () => {
               hidden
               -translate-x-1/2
               items-center
-              gap-8
+              gap-4
+              whitespace-nowrap
               lg:flex
-              xl:gap-11
+              xl:gap-5
+              2xl:gap-7
             "
           >
-            {/* SHOP */}
+            <DesktopNavButton
+              label="SHOP"
+              active={isActive("/")}
+              onClick={() =>
+                goTo("/")
+              }
+            />
 
-            <button
-              onClick={() => goTo("/")}
-              className={`
-                group
+            <DesktopNavButton
+              label="NEW ARRIVALS"
+              icon={
+                <Sparkles
+                  size={10}
+                  className="text-[#C9A24A]"
+                />
+              }
+              onClick={() =>
+                goTo("/newarrivals")
+              }
+            />
+
+            {/* =================================================
+                SHOP BY CATEGORY
+            ================================================= */}
+
+            <div
+              className="
                 relative
-                py-3
-                text-[10px]
-                font-medium
-                tracking-[0.28em]
-                transition-colors
-                duration-300
-                xl:text-[11px]
-
-                ${
-                  isActive("/")
-                    ? "text-[#741522]"
-                    : "text-[#806B63] hover:text-[#741522]"
+                shrink-0
+              "
+              onMouseEnter={() =>
+                setDesktopCategoryOpen(
+                  true
+                )
+              }
+              onMouseLeave={() =>
+                setDesktopCategoryOpen(
+                  false
+                )
+              }
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setDesktopCategoryOpen(
+                    (value) =>
+                      !value
+                  )
                 }
-              `}
-            >
-              SHOP
-
-              <span
-                className={`
-                  absolute
-                  bottom-0
-                  left-0
-                  h-[1px]
-                  bg-[#741522]
-                  transition-all
-                  duration-500
-
-                  ${
-                    isActive("/")
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
-                  }
-                `}
-              />
-            </button>
-
-            {/* NEW ARRIVALS */}
-
-            <button
-              onClick={() => goTo("/newarrivals")}
-              className="
-                group
-                relative
-                flex
-                items-center
-                gap-1.5
-                py-3
-                text-[10px]
-                font-medium
-                tracking-[0.25em]
-                text-[#806B63]
-                transition-colors
-                duration-300
-                hover:text-[#741522]
-                xl:text-[11px]
-              "
-            >
-              NEW ARRIVALS
-
-              <Sparkles
-                size={11}
-                strokeWidth={1.5}
                 className="
-                  text-[#C9A24A]
-                  transition-transform
+                  group
+                  relative
+                  flex
+                  shrink-0
+                  items-center
+                  gap-1
+                  whitespace-nowrap
+                  py-3
+                  text-[8px]
+                  font-medium
+                  tracking-[0.14em]
+                  text-[#806B63]
+                  transition-colors
                   duration-300
-                  group-hover:rotate-12
+                  hover:text-[#741522]
+                  xl:text-[9px]
+                  xl:tracking-[0.17em]
+                  2xl:text-[10px]
+                  2xl:tracking-[0.19em]
                 "
-              />
+              >
+                SHOP BY CATEGORY
 
-              <span
-                className="
-                  absolute
-                  bottom-0
-                  left-0
-                  h-[1px]
-                  w-0
-                  bg-[#741522]
-                  transition-all
-                  duration-500
-                  group-hover:w-full
-                "
-              />
-            </button>
+                <ChevronDown
+                  size={11}
+                  className={`
+                    transition-transform
+                    duration-300
 
-            {/* HOT SALES */}
+                    ${
+                      desktopCategoryOpen
+                        ? "rotate-180 text-[#741522]"
+                        : ""
+                    }
+                  `}
+                />
 
-            <button
-              onClick={() => goTo("/hotsales")}
-              className="
-                group
-                relative
-                py-3
-                text-[10px]
-                font-medium
-                tracking-[0.28em]
-                text-[#806B63]
-                transition-colors
-                duration-300
-                hover:text-[#741522]
-                xl:text-[11px]
-              "
-            >
-              HOT SALES
+                <span
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    h-[1px]
+                    w-0
+                    bg-[#741522]
+                    transition-all
+                    duration-500
+                    group-hover:w-full
+                  "
+                />
+              </button>
 
-              <span
-                className="
-                  absolute
-                  bottom-0
-                  left-0
-                  h-[1px]
-                  w-0
-                  bg-[#741522]
-                  transition-all
-                  duration-500
-                  group-hover:w-full
-                "
-              />
-            </button>
+              {/* DESKTOP MEGA MENU */}
 
-            {/* OUR STORY */}
+              <AnimatePresence>
+                {desktopCategoryOpen && (
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: 12,
+                      scale: 0.98,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 12,
+                      scale: 0.98,
+                    }}
+                    transition={{
+                      duration: 0.24,
+                      ease: [
+                        0.22,
+                        1,
+                        0.36,
+                        1,
+                      ],
+                    }}
+                    className="
+                      absolute
+                      left-1/2
+                      top-full
+                      z-[100]
+                      w-[680px]
+                      -translate-x-1/2
+                      pt-4
+                    "
+                  >
+                    <div
+                      className="
+                        overflow-hidden
+                        rounded-2xl
+                        border
+                        border-[#741522]/10
+                        bg-[#FFFDF8]
+                        p-6
+                        shadow-[0_25px_70px_rgba(74,35,25,0.18)]
+                      "
+                    >
+                      {/* HEADER */}
 
-            <button
-              onClick={() => goTo("/aboutus")}
-              className="
-                group
-                relative
-                py-3
-                text-[10px]
-                font-medium
-                tracking-[0.28em]
-                text-[#806B63]
-                transition-colors
-                duration-300
-                hover:text-[#741522]
-                xl:text-[11px]
-              "
-            >
-              OUR STORY
+                      <div
+                        className="
+                          mb-5
+                          flex
+                          items-end
+                          justify-between
+                          border-b
+                          border-[#741522]/10
+                          pb-4
+                        "
+                      >
+                        <div>
+                          <p
+                            className="
+                              text-[7px]
+                              font-semibold
+                              tracking-[0.28em]
+                              text-[#C9A24A]
+                            "
+                          >
+                            EXPLORE DARSH
+                          </p>
 
-              <span
-                className="
-                  absolute
-                  bottom-0
-                  left-0
-                  h-[1px]
-                  w-0
-                  bg-[#741522]
-                  transition-all
-                  duration-500
-                  group-hover:w-full
-                "
-              />
-            </button>
+                          <h3
+                            className="
+                              mt-1
+                              font-serif
+                              text-xl
+                              text-[#3F302B]
+                            "
+                          >
+                            Shop By Category
+                          </h3>
+                        </div>
 
-            {/* CONTACT */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            goTo(
+                              "/allproducts"
+                            )
+                          }
+                          className="
+                            flex
+                            items-center
+                            gap-1
+                            whitespace-nowrap
+                            text-[8px]
+                            font-semibold
+                            tracking-[0.15em]
+                            text-[#741522]
+                            transition-colors
+                            hover:text-[#C9A24A]
+                          "
+                        >
+                          VIEW ALL
+                          <ArrowUpRight
+                            size={12}
+                          />
+                        </button>
+                      </div>
 
-            <button
-              onClick={() => goTo("/contactus")}
-              className="
-                group
-                relative
-                py-3
-                text-[10px]
-                font-medium
-                tracking-[0.28em]
-                text-[#806B63]
-                transition-colors
-                duration-300
-                hover:text-[#741522]
-                xl:text-[11px]
-              "
-            >
-              CONTACT
+                      {/* DYNAMIC CATEGORY GRID */}
 
-              <span
-                className="
-                  absolute
-                  bottom-0
-                  left-0
-                  h-[1px]
-                  w-0
-                  bg-[#741522]
-                  transition-all
-                  duration-500
-                  group-hover:w-full
-                "
-              />
-            </button>
+                      {dynamicCategories.length >
+                      0 ? (
+                        <div
+                          className="
+                            grid
+                            max-h-[360px]
+                            grid-cols-3
+                            gap-x-5
+                            gap-y-1
+                            overflow-y-auto
+                            pr-1
+                          "
+                        >
+                          {dynamicCategories.map(
+                            (
+                              category,
+                              index
+                            ) => (
+                              <motion.button
+                                key={
+                                  category
+                                }
+                                type="button"
+                                initial={{
+                                  opacity: 0,
+                                  x: -7,
+                                }}
+                                animate={{
+                                  opacity: 1,
+                                  x: 0,
+                                }}
+                                transition={{
+                                  delay:
+                                    Math.min(
+                                      index *
+                                        0.02,
+                                      0.3
+                                    ),
+                                }}
+                                onClick={() =>
+                                  goToCategory(
+                                    category
+                                  )
+                                }
+                                className="
+                                  group/category
+                                  flex
+                                  min-w-0
+                                  items-center
+                                  justify-between
+                                  rounded-lg
+                                  px-2
+                                  py-2.5
+                                  text-left
+                                  transition-all
+                                  duration-200
+                                  hover:bg-[#741522]/5
+                                  hover:pl-3
+                                "
+                              >
+                                <span
+                                  className="
+                                    truncate
+                                    text-[9px]
+                                    tracking-[0.06em]
+                                    text-[#6E5A52]
+                                    transition-colors
+                                    group-hover/category:text-[#741522]
+                                  "
+                                >
+                                  {category}
+                                </span>
+
+                                <ChevronRight
+                                  size={12}
+                                  className="
+                                    shrink-0
+                                    text-[#C9A24A]
+                                    opacity-0
+                                    transition-all
+                                    duration-200
+                                    group-hover/category:translate-x-0.5
+                                    group-hover/category:opacity-100
+                                  "
+                                />
+                              </motion.button>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="
+                            flex
+                            min-h-[140px]
+                            items-center
+                            justify-center
+                            text-center
+                          "
+                        >
+                          <div>
+                            <Sparkles
+                              size={20}
+                              className="
+                                mx-auto
+                                mb-3
+                                text-[#C9A24A]
+                              "
+                            />
+
+                            <p
+                              className="
+                                text-[8px]
+                                tracking-[0.15em]
+                                text-[#9A8982]
+                              "
+                            >
+                              NO CATEGORIES
+                              AVAILABLE
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FOOTER */}
+
+                      <div
+                        className="
+                          mt-5
+                          flex
+                          items-center
+                          justify-between
+                          rounded-xl
+                          bg-[#741522]
+                          px-4
+                          py-3
+                          text-white
+                        "
+                      >
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                          "
+                        >
+                          <Sparkles
+                            size={13}
+                            className="text-[#E7C979]"
+                          />
+
+                          <span
+                            className="
+                              text-[7px]
+                              tracking-[0.15em]
+                              sm:text-[8px]
+                            "
+                          >
+                            FIND YOUR
+                            PERFECT WEAVE
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            goTo(
+                              "/allproducts"
+                            )
+                          }
+                          className="
+                            whitespace-nowrap
+                            text-[7px]
+                            font-semibold
+                            tracking-[0.14em]
+                            underline
+                            underline-offset-4
+                            sm:text-[8px]
+                          "
+                        >
+                          SHOP NOW
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <DesktopNavButton
+              label="HOT SALES"
+              onClick={() =>
+                goTo("/hotsales")
+              }
+            />
+            <DesktopNavButton
+  label="PREMIUM SAREES"
+              active={isActive("/premium-sarees")}
+              premium
+              icon={<Crown size={17} strokeWidth={2} />}
+  onClick={() => goTo("/premium-sarees")}
+/>
+
+
+            <DesktopNavButton
+              label="OUR STORY"
+              onClick={() =>
+                goTo("/aboutus")
+              }
+            />
+
           </nav>
 
           {/* ==================================================
@@ -732,61 +1323,73 @@ const Navbar = () => {
           <div
             className="
               flex
+              shrink-0
               items-center
-              gap-0.5
-              sm:gap-1
+              gap-0
+              sm:gap-0.5
             "
           >
             {/* SEARCH */}
 
-            <button
-              onClick={() => goTo("/allproducts")}
-              aria-label="Search"
-              className="
-                group
-                relative
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                text-[#6E5A52]
-                transition-all
-                duration-300
-                hover:text-[#741522]
-                sm:h-10
-                sm:w-10
-              "
+            <IconAction
+              label="Search"
+              onClick={() =>
+                goTo("/allproducts")
+              }
             >
               <Search
-                size={20}
+                size={19}
                 strokeWidth={1.5}
-                className="
-                  transition-transform
-                  duration-300
-                  group-hover:scale-110
-                "
               />
+            </IconAction>
 
-              <span
-                className="
-                  absolute
-                  bottom-1
-                  left-1/2
-                  h-[1px]
-                  w-0
-                  -translate-x-1/2
-                  bg-[#741522]
-                  transition-all
-                  duration-300
-                  group-hover:w-5
-                "
+            {/* WISHLIST */}
+
+            <IconAction
+              label="Wishlist"
+              active={isActive(
+                "/wishlist"
+              )}
+              badge={
+                wishlistCount > 0
+                  ? wishlistCount
+                  : null
+              }
+              onClick={() =>
+                goTo("/wishlist")
+              }
+            >
+              <Heart
+                size={19}
+                strokeWidth={1.5}
+                fill={
+                  isActive(
+                    "/wishlist"
+                  )
+                    ? "currentColor"
+                    : "none"
+                }
               />
-            </button>
+            </IconAction>
+
+            {/* TRACK */}
+
+            <IconAction
+              label="Track Your Order"
+              onClick={() =>
+                setTrackingOpen(true)
+              }
+            >
+              <Truck
+                size={19}
+                strokeWidth={1.5}
+              />
+            </IconAction>
 
             {/* ACCOUNT */}
 
-            <button
+            <IconAction
+              label="Account"
               onClick={() =>
                 goTo(
                   login
@@ -794,101 +1397,55 @@ const Navbar = () => {
                     : "/account"
                 )
               }
-              aria-label="Account"
               className="
-                group
                 hidden
-                h-10
-                w-10
-                items-center
-                justify-center
-                text-[#6E5A52]
-                transition-all
-                duration-300
-                hover:text-[#741522]
                 sm:flex
               "
             >
               <UserRound
-                size={20}
+                size={19}
                 strokeWidth={1.5}
-                className="
-                  transition-transform
-                  duration-300
-                  group-hover:-translate-y-0.5
-                "
               />
-            </button>
+            </IconAction>
 
             {/* CART */}
 
-            <button
-              onClick={() => goTo("/cart")}
-              aria-label="Shopping bag"
-              className="
-                group
-                relative
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                text-[#741522]
-                sm:h-10
-                sm:w-10
-              "
+            <IconAction
+              label="Shopping Bag"
+              accent
+              active={isActive(
+                "/cart"
+              )}
+              badge={
+                totalItems > 0
+                  ? totalItems
+                  : null
+              }
+              onClick={() =>
+                goTo("/cart")
+              }
             >
               <ShoppingBag
-                size={20}
+                size={19}
                 strokeWidth={1.5}
-                className="
-                  transition-transform
-                  duration-300
-                  group-hover:-translate-y-0.5
-                "
               />
-
-              {totalItems > 0 && (
-                <motion.span
-                  initial={{
-                    scale: 0,
-                    opacity: 0,
-                  }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                  }}
-                  className="
-                    absolute
-                    -right-0.5
-                    -top-0.5
-                    flex
-                    h-[17px]
-                    min-w-[17px]
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-[#741522]
-                    px-1
-                    text-[8px]
-                    font-semibold
-                    text-white
-                  "
-                >
-                  {totalItems > 9
-                    ? "9+"
-                    : totalItems}
-                </motion.span>
-              )}
-            </button>
+            </IconAction>
 
             {/* MOBILE MENU */}
 
             <button
+              type="button"
               onClick={() =>
-                setMobileMenu(!mobileMenu)
+                setMobileMenu(
+                  (value) =>
+                    !value
+                )
               }
-              aria-label="Open menu"
+              aria-label={
+                mobileMenu
+                  ? "Close menu"
+                  : "Open menu"
+              }
               className="
                 ml-1
                 flex
@@ -902,7 +1459,9 @@ const Navbar = () => {
                 sm:w-10
               "
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence
+                mode="wait"
+              >
                 {mobileMenu ? (
                   <motion.div
                     key="close"
@@ -952,9 +1511,432 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* ========================================================
-          MOBILE MENU
-      ======================================================== */}
+      {/* ======================================================
+          TRACKING MODAL
+      ====================================================== */}
+
+      <AnimatePresence>
+        {trackingOpen && (
+          <motion.div
+            className="
+              fixed
+              inset-0
+              z-[120]
+              flex
+              items-center
+              justify-center
+              bg-[#351B18]/50
+              px-4
+              backdrop-blur-sm
+            "
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
+            onMouseDown={() =>
+              setTrackingOpen(false)
+            }
+          >
+            <motion.form
+              onSubmit={
+                handleTrackSubmit
+              }
+              onMouseDown={(event) =>
+                event.stopPropagation()
+              }
+              initial={{
+                opacity: 0,
+                y: 25,
+                scale: 0.96,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                y: 20,
+                scale: 0.96,
+              }}
+              transition={{
+                duration: 0.3,
+              }}
+              className="
+                relative
+                w-full
+                max-w-md
+                overflow-hidden
+                rounded-3xl
+                border
+                border-[#C9A24A]/30
+                bg-[#FFFDF8]
+                p-6
+                shadow-[0_30px_100px_rgba(35,15,12,0.28)]
+                sm:p-8
+              "
+            >
+              {/* CLOSE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  setTrackingOpen(
+                    false
+                  )
+                }
+                className="
+                  absolute
+                  right-4
+                  top-4
+                  flex
+                  h-9
+                  w-9
+                  items-center
+                  justify-center
+                  rounded-full
+                  border
+                  border-[#741522]/10
+                  text-[#806B63]
+                  transition-all
+                  hover:bg-[#741522]
+                  hover:text-white
+                "
+              >
+                <X size={17} />
+              </button>
+
+              {/* HEADER */}
+
+              <div className="mb-6">
+                <motion.div
+                  animate={{
+                    y: [
+                      0,
+                      -3,
+                      0,
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                  className="
+                    mb-3
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[#741522]/5
+                    text-[#741522]
+                  "
+                >
+                  <Truck
+                    size={20}
+                    strokeWidth={1.4}
+                  />
+                </motion.div>
+
+                <p
+                  className="
+                    text-[8px]
+                    font-semibold
+                    tracking-[0.28em]
+                    text-[#C9A24A]
+                  "
+                >
+                  DARSH DELIVERY
+                </p>
+
+                <h3
+                  className="
+                    mt-1
+                    font-serif
+                    text-2xl
+                    text-[#3F302B]
+                  "
+                >
+                  Track Your Order
+                </h3>
+
+                <p
+                  className="
+                    mt-2
+                    text-xs
+                    leading-relaxed
+                    text-[#806B63]
+                  "
+                >
+                  Enter your AWB /
+                  tracking number
+                  and continue to
+                  Delhivery tracking.
+                </p>
+              </div>
+
+              {/* =================================================
+                  ORDER STATUS
+              ================================================= */}
+
+              <div
+                className="
+                  mb-4
+                  rounded-2xl
+                  border
+                  border-[#741522]/10
+                  bg-[#F8F5ED]
+                  p-4
+                "
+              >
+                <div
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    gap-3
+                  "
+                >
+                  <div>
+                    <p
+                      className="
+                        text-[7px]
+                        font-semibold
+                        tracking-[0.2em]
+                        text-[#C9A24A]
+                      "
+                    >
+                      YOUR SHIPMENTS
+                    </p>
+
+                    <p
+                      className="
+                        mt-1
+                        text-xs
+                        text-[#5C4942]
+                      "
+                    >
+                      {hasTrackableOrder
+                        ? `${customerAwbs.length} shipment${
+                            customerAwbs.length >
+                            1
+                              ? "s"
+                              : ""
+                          } with AWB`
+                        : "No AWB assigned yet"}
+                    </p>
+                  </div>
+
+                  <Package
+                    size={18}
+                    className="
+                      shrink-0
+                      text-[#741522]
+                    "
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    goTo(
+                      "/account?tab=3"
+                    )
+                  }
+                  className="
+                    mt-3
+                    flex
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-[#741522]/15
+                    bg-white
+                    px-4
+                    py-2.5
+                    text-[8px]
+                    font-semibold
+                    tracking-[0.18em]
+                    text-[#741522]
+                    transition-all
+                    duration-300
+                    hover:border-[#741522]
+                    hover:bg-[#741522]
+                    hover:text-white
+                  "
+                >
+                  VIEW MY ORDERS
+
+                  <ArrowUpRight
+                    size={13}
+                  />
+                </button>
+              </div>
+
+              {/* =================================================
+                  AWB INPUT
+              ================================================= */}
+
+              <div className="relative">
+                <input
+                  value={
+                    trackingNumber
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setTrackingNumber(
+                      event.target
+                        .value
+                    )
+                  }
+                  placeholder="AWB / Tracking Number"
+                  className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-[#741522]/15
+                    bg-[#F8F5ED]
+                    px-4
+                    py-3.5
+                    pr-12
+                    text-sm
+                    text-[#3F302B]
+                    outline-none
+                    transition
+                    focus:border-[#C9A24A]
+                    focus:ring-4
+                    focus:ring-[#C9A24A]/10
+                  "
+                />
+
+                <Package
+                  size={17}
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-[#9A8982]
+                  "
+                />
+              </div>
+
+              {/* TRACK */}
+
+              <button
+                type="submit"
+                disabled={
+                  !trackingNumber.trim()
+                }
+                className="
+                  mt-4
+                  flex
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[#741522]
+                  px-5
+                  py-3.5
+                  text-[9px]
+                  font-semibold
+                  tracking-[0.22em]
+                  text-white
+                  transition
+                  hover:bg-[#5E101C]
+                  disabled:cursor-not-allowed
+                  disabled:opacity-40
+                "
+              >
+                TRACK ON DELHIVERY
+
+                <ArrowUpRight
+                  size={14}
+                />
+              </button>
+
+              {/* LATEST AWB */}
+
+              {hasTrackableOrder && (
+                <button
+                  type="button"
+                  onClick={
+                    useLatestAwb
+                  }
+                  className="
+                    mt-3
+                    flex
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    text-[8px]
+                    font-semibold
+                    tracking-[0.13em]
+                    text-[#741522]
+                    transition-colors
+                    hover:text-[#C9A24A]
+                  "
+                >
+                  USE LATEST AWB
+
+                  <ChevronRight
+                    size={12}
+                  />
+                </button>
+              )}
+
+              {/* HELP */}
+
+              <p
+                className="
+                  mt-4
+                  text-center
+                  text-[8px]
+                  leading-relaxed
+                  tracking-[0.04em]
+                  text-[#9A8982]
+                "
+              >
+                Find your AWB:
+                <button
+                  type="button"
+                  onClick={() =>
+                    goTo(
+                      "/account?tab=3"
+                    )
+                  }
+                  className="
+                    mx-1
+                    font-semibold
+                    text-[#741522]
+                    underline
+                    underline-offset-2
+                  "
+                >
+                  My Orders
+                </button>
+                → View Order Details
+                → Copy AWB
+              </p>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ======================================================
+          MOBILE DRAWER
+      ====================================================== */}
 
       <AnimatePresence>
         {mobileMenu && (
@@ -975,11 +1957,13 @@ const Navbar = () => {
               opacity: 0,
             }}
           >
-            {/* Overlay */}
+            {/* OVERLAY */}
 
             <motion.div
               onClick={() =>
-                setMobileMenu(false)
+                setMobileMenu(
+                  false
+                )
               }
               className="
                 absolute
@@ -987,18 +1971,9 @@ const Navbar = () => {
                 bg-[#351B18]/45
                 backdrop-blur-sm
               "
-              initial={{
-                opacity: 0,
-              }}
-              animate={{
-                opacity: 1,
-              }}
-              exit={{
-                opacity: 0,
-              }}
             />
 
-            {/* Drawer */}
+            {/* DRAWER */}
 
             <motion.div
               className="
@@ -1007,8 +1982,8 @@ const Navbar = () => {
                 top-0
                 flex
                 h-full
-                w-[88%]
-                max-w-[420px]
+                w-[90%]
+                max-w-[440px]
                 flex-col
                 overflow-hidden
                 bg-[#F8F5ED]
@@ -1025,12 +2000,15 @@ const Navbar = () => {
               }}
               transition={{
                 duration: 0.45,
-                ease: [0.22, 1, 0.36, 1],
+                ease: [
+                  0.22,
+                  1,
+                  0.36,
+                  1,
+                ],
               }}
             >
-              {/* =================================================
-                  MOBILE DRAWER HEADER
-              ================================================= */}
+              {/* MOBILE HEADER */}
 
               <div
                 className="
@@ -1046,18 +2024,13 @@ const Navbar = () => {
                   sm:px-7
                 "
               >
-                {/* Circle Logo */}
-
                 <Link
                   to="/"
-                  onClick={() => {
-                    setMobileMenu(false);
-
-                    window.scrollTo({
-                      top: 0,
-                      behavior: "smooth",
-                    });
-                  }}
+                  onClick={() =>
+                    setMobileMenu(
+                      false
+                    )
+                  }
                   className="
                     group
                     flex
@@ -1075,8 +2048,6 @@ const Navbar = () => {
                       rounded-full
                     "
                   >
-                    {/* Outer */}
-
                     <div
                       className="
                         absolute
@@ -1085,11 +2056,8 @@ const Navbar = () => {
                         border
                         border-[#C9A24A]
                         bg-[#FFFDF8]
-                        shadow-[0_6px_20px_rgba(116,21,34,0.12)]
                       "
                     />
-
-                    {/* Inner */}
 
                     <div
                       className="
@@ -1100,8 +2068,6 @@ const Navbar = () => {
                         border-[#C9A24A]/40
                       "
                     />
-
-                    {/* Logo */}
 
                     <img
                       src={logoSrc}
@@ -1115,21 +2081,11 @@ const Navbar = () => {
                         object-contain
                         p-1
                         mix-blend-multiply
-                        transition-transform
-                        duration-500
-                        group-hover:scale-105
                       "
-                      onError={(e) => {
-                        e.currentTarget.style.display =
-                          "none";
-                      }}
                     />
-
-                    {/* Sparkle */}
 
                     <Sparkles
                       size={11}
-                      strokeWidth={1.5}
                       className="
                         absolute
                         -right-1
@@ -1166,11 +2122,12 @@ const Navbar = () => {
                   </div>
                 </Link>
 
-                {/* Close */}
-
                 <button
+                  type="button"
                   onClick={() =>
-                    setMobileMenu(false)
+                    setMobileMenu(
+                      false
+                    )
                   }
                   aria-label="Close menu"
                   className="
@@ -1184,21 +2141,15 @@ const Navbar = () => {
                     border-[#741522]/20
                     text-[#741522]
                     transition-all
-                    duration-300
                     hover:bg-[#741522]
                     hover:text-white
                   "
                 >
-                  <X
-                    size={20}
-                    strokeWidth={1.5}
-                  />
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* =================================================
-                  MOBILE NAVIGATION
-              ================================================= */}
+              {/* MOBILE CONTENT */}
 
               <div
                 className="
@@ -1211,8 +2162,6 @@ const Navbar = () => {
                   sm:pt-10
                 "
               >
-                {/* Welcome */}
-
                 <motion.div
                   initial={{
                     opacity: 0,
@@ -1225,7 +2174,10 @@ const Navbar = () => {
                   transition={{
                     delay: 0.15,
                   }}
-                  className="mb-8 sm:mb-10"
+                  className="
+                    mb-8
+                    sm:mb-10
+                  "
                 >
                   <p
                     className="
@@ -1250,55 +2202,355 @@ const Navbar = () => {
                     "
                   >
                     {login
-                      ? userName || "Darsh"
+                      ? userName ||
+                        "Darsh"
                       : "The Darsh Collection"}
                   </h2>
                 </motion.div>
 
-                <div className="space-y-0">
+                <div>
                   {/* SHOP */}
 
                   <MobileNavItem
                     number="01"
                     label="SHOP"
-                    onClick={() => goTo("/")}
-                    active={isActive("/")}
+                    active={isActive(
+                      "/"
+                    )}
+                    onClick={() =>
+                      goTo("/")
+                    }
                   />
 
-                  {/* NEW ARRIVALS */}
+                  {/* CATEGORY */}
+
+                  <div
+                    className="
+                      border-b
+                      border-[#741522]/10
+                    "
+                  >
+                    <motion.button
+                      type="button"
+                      whileTap={{
+                        scale: 0.985,
+                      }}
+                      onClick={() =>
+                        setMobileCategoryOpen(
+                          (value) =>
+                            !value
+                        )
+                      }
+                      className="
+                        group
+                        flex
+                        w-full
+                        items-center
+                        justify-between
+                        py-4
+                        text-left
+                        sm:py-5
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          items-center
+                          gap-4
+                        "
+                      >
+                        <span
+                          className="
+                            text-[8px]
+                            tracking-[0.2em]
+                            text-[#C9A24A]
+                          "
+                        >
+                          02
+                        </span>
+
+                        <span
+                          className="
+                            whitespace-nowrap
+                            text-[10px]
+                            font-medium
+                            tracking-[0.19em]
+                            text-[#5C4942]
+                            transition-colors
+                            group-hover:text-[#741522]
+                            sm:text-[12px]
+                          "
+                        >
+                          SHOP BY CATEGORY
+                        </span>
+                      </div>
+
+                      <motion.div
+                        animate={{
+                          rotate:
+                            mobileCategoryOpen
+                              ? 180
+                              : 0,
+                        }}
+                      >
+                        <ChevronDown
+                          size={17}
+                          className="
+                            text-[#9A8982]
+                          "
+                        />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence
+                      initial={false}
+                    >
+                      {mobileCategoryOpen && (
+                        <motion.div
+                          initial={{
+                            height: 0,
+                            opacity: 0,
+                          }}
+                          animate={{
+                            height:
+                              "auto",
+                            opacity: 1,
+                          }}
+                          exit={{
+                            height: 0,
+                            opacity: 0,
+                          }}
+                          transition={{
+                            duration: 0.3,
+                          }}
+                          className="
+                            overflow-hidden
+                          "
+                        >
+                          <div
+                            className="
+                              mb-4
+                              max-h-[380px]
+                              overflow-y-auto
+                              rounded-2xl
+                              border
+                              border-[#741522]/10
+                              bg-white/45
+                              p-3
+                            "
+                          >
+                            {dynamicCategories.length >
+                            0 ? (
+                              dynamicCategories.map(
+                                (
+                                  category,
+                                  index
+                                ) => (
+                                  <motion.button
+                                    key={
+                                      category
+                                    }
+                                    type="button"
+                                    initial={{
+                                      opacity: 0,
+                                      x: -8,
+                                    }}
+                                    animate={{
+                                      opacity: 1,
+                                      x: 0,
+                                    }}
+                                    transition={{
+                                      delay:
+                                        Math.min(
+                                          index *
+                                            0.02,
+                                          0.25
+                                        ),
+                                    }}
+                                    onClick={() =>
+                                      goToCategory(
+                                        category
+                                      )
+                                    }
+                                    className="
+                                      group
+                                      flex
+                                      w-full
+                                      items-center
+                                      justify-between
+                                      rounded-lg
+                                      px-3
+                                      py-3
+                                      text-left
+                                      transition-all
+                                      hover:bg-[#741522]/5
+                                    "
+                                  >
+                                    <span
+                                      className="
+                                        min-w-0
+                                        truncate
+                                        text-[9px]
+                                        tracking-[0.07em]
+                                        text-[#6E5A52]
+                                        group-hover:text-[#741522]
+                                      "
+                                    >
+                                      {
+                                        category
+                                      }
+                                    </span>
+
+                                    <ChevronRight
+                                      size={13}
+                                      className="
+                                        shrink-0
+                                        text-[#9A8982]
+                                        transition-transform
+                                        group-hover:translate-x-1
+                                      "
+                                    />
+                                  </motion.button>
+                                )
+                              )
+                            ) : (
+                              <div
+                                className="
+                                  py-7
+                                  text-center
+                                "
+                              >
+                                <Sparkles
+                                  size={18}
+                                  className="
+                                    mx-auto
+                                    mb-2
+                                    text-[#C9A24A]
+                                  "
+                                />
+
+                                <p
+                                  className="
+                                    text-[8px]
+                                    tracking-[0.15em]
+                                    text-[#9A8982]
+                                  "
+                                >
+                                  NO CATEGORIES
+                                  AVAILABLE
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* NEW */}
 
                   <MobileNavItem
-                    number="02"
+                    number="03"
                     label="NEW ARRIVALS"
                     onClick={() =>
-                      goTo("/newarrivals")
+                      goTo(
+                        "/newarrivals"
+                      )
                     }
                     icon={
                       <Sparkles
-                        size={16}
-                        strokeWidth={1.3}
+                        size={17}
                       />
                     }
                   />
 
-                  {/* HOT SALES */}
+                  {/* PREMIUM */}
 
                   <MobileNavItem
-                    number="03"
+                    number="04"
+                    label="PREMIUM SAREES"
+                    active={isActive(
+                      "/premium-sarees"
+                    )}
+                    premium
+                    icon={
+                      <Crown
+                        size={17}
+                      />
+                    }
+                    onClick={() =>
+                      goTo("/premium-sarees")
+                    }
+                  />
+
+                  {/* SALES */}
+
+                  <MobileNavItem
+                    number="05"
                     label="HOT SALES"
                     onClick={() =>
                       goTo("/hotsales")
                     }
                   />
 
+                  {/* WISHLIST */}
+
+                  <MobileNavItem
+                    number="06"
+                    label="WISHLIST"
+                    active={isActive(
+                      "/wishlist"
+                    )}
+                    badge={
+                      wishlistCount >
+                      0
+                        ? wishlistCount
+                        : null
+                    }
+                    icon={
+                      <Heart
+                        size={17}
+                      />
+                    }
+                    onClick={() =>
+                      goTo("/wishlist")
+                    }
+                  />
+
+                  {/* TRACK */}
+
+                  <MobileNavItem
+                    number="07"
+                    label="TRACK YOUR ORDER"
+                    icon={
+                      <Truck
+                        size={17}
+                      />
+                    }
+                    onClick={() => {
+                      setMobileMenu(
+                        false
+                      );
+
+                      setTrackingOpen(
+                        true
+                      );
+                    }}
+                  />
+
                   {/* ACCOUNT */}
 
                   <MobileNavItem
-                    number="04"
+                    number="08"
                     label={
                       login
                         ? "MY ACCOUNT"
                         : "LOGIN / SIGN UP"
+                    }
+                    icon={
+                      <UserRound
+                        size={17}
+                      />
                     }
                     onClick={() =>
                       goTo(
@@ -1307,32 +2559,26 @@ const Navbar = () => {
                           : "/account"
                       )
                     }
-                    icon={
-                      <UserRound
-                        size={17}
-                        strokeWidth={1.3}
-                      />
-                    }
                   />
 
-                  {/* SHOPPING BAG */}
+                  {/* CART */}
 
                   <MobileNavItem
-                    number="05"
-                    label="SHOPPING BAG"
-                    onClick={() =>
-                      goTo("/cart")
-                    }
-                    badge={
-                      totalItems > 0
-                        ? totalItems
-                        : null
-                    }
+                    number="09"
+                     label="SHOPPING BAG"
                     icon={
                       <ShoppingBag
                         size={17}
-                        strokeWidth={1.3}
                       />
+                    }
+                    badge={
+                      totalItems >
+                      0
+                        ? totalItems
+                        : null
+                    }
+                    onClick={() =>
+                      goTo("/cart")
                     }
                   />
 
@@ -1340,29 +2586,31 @@ const Navbar = () => {
 
                   {login && (
                     <MobileNavItem
-                      number="06"
-                      label="MY ORDERS"
-                      onClick={() =>
-                        goTo("/account?tab=3")
-                      }
-                      badge={
-                        paidOrderCount > 0
-                          ? paidOrderCount
-                          : null
-                      }
+                      number="10"
+                       label="MY ORDERS"
                       icon={
                         <Package
                           size={17}
-                          strokeWidth={1.3}
                         />
+                      }
+                      badge={
+                        paidOrderCount >
+                        0
+                          ? paidOrderCount
+                          : null
+                      }
+                      onClick={() =>
+                        goTo(
+                          "/account?tab=3"
+                        )
                       }
                     />
                   )}
 
-                  {/* OUR STORY */}
+                  {/* STORY */}
 
                   <MobileNavItem
-                    number="07"
+                    number="11"
                     label="OUR STORY"
                     onClick={() =>
                       goTo("/aboutus")
@@ -1372,15 +2620,17 @@ const Navbar = () => {
                   {/* CONTACT */}
 
                   <MobileNavItem
-                    number="08"
+                    number="12"
                     label="CONTACT"
                     onClick={() =>
-                      goTo("/contactus")
+                      goTo(
+                        "/contactus"
+                      )
                     }
                   />
                 </div>
 
-                {/* Quote */}
+                {/* QUOTE */}
 
                 <motion.div
                   initial={{
@@ -1390,14 +2640,17 @@ const Navbar = () => {
                     opacity: 1,
                   }}
                   transition={{
-                    delay: 0.55,
+                    delay: 0.5,
                   }}
-                  className="mt-12 sm:mt-14"
+                  className="
+                    mt-12
+                    sm:mt-14
+                  "
                 >
                   <div
                     className="
                       mb-4
-                      h-[1px]
+                      h-px
                       w-8
                       bg-[#741522]
                     "
@@ -1412,16 +2665,15 @@ const Navbar = () => {
                       text-[#806B63]
                     "
                   >
-                    Woven with tradition,
+                    Woven with
+                    tradition,
                     <br />
                     made for today.
                   </p>
                 </motion.div>
               </div>
 
-              {/* =================================================
-                  MOBILE FOOTER
-              ================================================= */}
+              {/* FOOTER */}
 
               <div
                 className="
@@ -1449,24 +2701,23 @@ const Navbar = () => {
                 >
                   <Sparkles
                     size={10}
-                    strokeWidth={1.2}
                     className="text-[#C9A24A]"
                   />
 
                   <p
                     className="
                       text-[7px]
-                      tracking-[0.22em]
+                      tracking-[0.2em]
                       text-[#9A8982]
-                      sm:text-[8px]
                     "
                   >
-                    © DARSH · HANDWOVEN SAREES
+                    © DARSH ·
+                    HANDWOVEN
+                    SAREES
                   </p>
 
                   <Sparkles
                     size={10}
-                    strokeWidth={1.2}
                     className="text-[#C9A24A]"
                   />
                 </div>
@@ -1476,9 +2727,9 @@ const Navbar = () => {
         )}
       </AnimatePresence>
 
-      {/* ========================================================
-          CUSTOM ANIMATIONS
-      ======================================================== */}
+      {/* ======================================================
+          ANIMATION
+      ====================================================== */}
 
       <style>
         {`
@@ -1510,6 +2761,227 @@ const Navbar = () => {
 };
 
 /* ============================================================
+   DESKTOP NAV BUTTON
+============================================================ */
+
+const DesktopNavButton = ({
+  label,
+  onClick,
+  active = false,
+  icon = null,
+  premium = false,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        group
+        relative
+        flex
+        shrink-0
+        items-center
+        gap-1.5
+        whitespace-nowrap
+        rounded-full
+        border
+        py-2.5
+        px-3
+        text-[8px]
+        font-medium
+        tracking-[0.14em]
+        transition-all
+        duration-300
+        xl:text-[9px]
+        xl:tracking-[0.17em]
+        2xl:text-[10px]
+        2xl:tracking-[0.19em]
+        ${
+          premium
+            ? "border-[#D7B95C]/70 bg-gradient-to-r from-[#FFF8D9] via-[#F5DEA0] to-[#E9C968] text-[#654A0A] shadow-[0_3px_14px_rgba(201,162,74,0.22)] hover:-translate-y-0.5 hover:border-[#C9A24A] hover:shadow-[0_6px_18px_rgba(201,162,74,0.30)]"
+            : active
+              ? "border-transparent text-[#741522]"
+              : "border-transparent text-[#806B63] hover:text-[#741522]"
+        }
+      `}
+    >
+      {premium && (
+        <span
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            overflow-hidden
+            rounded-full
+          "
+        >
+          <span
+            className="
+              absolute
+              -left-1/2
+              top-0
+              h-full
+              w-1/3
+              -skew-x-12
+              bg-gradient-to-r
+              from-transparent
+              via-white/50
+              to-transparent
+              opacity-70
+              transition-all
+              duration-700
+              group-hover:left-[120%]
+            "
+          />
+        </span>
+      )}
+
+      <span className="relative z-10 whitespace-nowrap">
+        {label}
+        {!premium && (
+          <span
+            className={`
+              absolute
+              -bottom-1
+              left-0
+              h-px
+              bg-[#741522]
+              transition-all
+              duration-500
+              ${active ? "w-full" : "w-0 group-hover:w-full"}
+            `}
+          />
+        )}
+      </span>
+
+      {icon && (
+        <motion.span
+          className="relative z-10"
+          animate={{ y: [0, -1, 0] }}
+          transition={{
+            duration: premium ? 2.4 : 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          {icon}
+        </motion.span>
+      )}
+
+      {premium && (
+        <Sparkles
+          size={10}
+          strokeWidth={2}
+          className="relative z-10 text-[#A77B12] opacity-80"
+        />
+      )}
+    </button>
+  );
+};
+
+/* ============================================================
+   ICON ACTION
+============================================================ */
+
+const IconAction = ({
+  label,
+  onClick,
+  children,
+  badge = null,
+  active = false,
+  accent = false,
+  className = "",
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`
+        group
+        relative
+        flex
+        h-9
+        w-9
+        shrink-0
+        items-center
+        justify-center
+        transition-all
+        duration-300
+        sm:h-10
+        sm:w-10
+
+        ${
+          active || accent
+            ? "text-[#741522]"
+            : "text-[#6E5A52] hover:text-[#741522]"
+        }
+
+        ${className}
+      `}
+    >
+      <motion.span
+        whileHover={{
+          y: -1,
+          scale: 1.06,
+        }}
+      >
+        {children}
+      </motion.span>
+
+      <span
+        className="
+          absolute
+          bottom-1
+          left-1/2
+          h-px
+          w-0
+          -translate-x-1/2
+          bg-[#741522]
+          transition-all
+          duration-300
+          group-hover:w-5
+        "
+      />
+
+      {badge !== null && (
+        <motion.span
+          initial={{
+            scale: 0,
+            opacity: 0,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          className="
+            absolute
+            -right-0.5
+            -top-0.5
+            flex
+            h-[17px]
+            min-w-[17px]
+            items-center
+            justify-center
+            rounded-full
+            bg-[#741522]
+            px-1
+            text-[8px]
+            font-semibold
+            text-white
+          "
+        >
+          {badge > 9
+            ? "9+"
+            : badge}
+        </motion.span>
+      )}
+    </button>
+  );
+};
+
+/* ============================================================
    MOBILE NAV ITEM
 ============================================================ */
 
@@ -1518,37 +2990,56 @@ const MobileNavItem = ({
   label,
   onClick,
   icon,
-  badge,
-  active,
+  badge = null,
+  active = false,
+  premium = false,
 }) => {
   return (
     <motion.button
       whileTap={{
-        scale: 0.98,
+        scale: 0.985,
       }}
+      type="button"
       onClick={onClick}
-      className="
+      className={`
         group
         flex
         w-full
         items-center
         justify-between
         border-b
-        border-[#741522]/10
         py-4
         text-left
+        transition-all
+        duration-300
         sm:py-5
-      "
+        ${
+          premium
+            ? "border-[#D7B95C]/50 bg-gradient-to-r from-[#FFF9E2] via-[#F6E5AF] to-[#EED27A] px-4 shadow-[0_4px_16px_rgba(201,162,74,0.16)]"
+            : "border-[#741522]/10"
+        }
+      `}
     >
-      <div className="flex items-center gap-4">
+      <div
+        className="
+          flex
+          min-w-0
+          items-center
+          gap-4
+        "
+      >
         <span
           className={`
+            shrink-0
             text-[8px]
             tracking-[0.2em]
+
             ${
-              active
-                ? "text-[#C9A24A]"
-                : "text-[#9A8982]"
+              premium
+                ? "font-semibold text-[#A77B12]"
+                : active
+                  ? "text-[#C9A24A]"
+                  : "text-[#9A8982]"
             }
           `}
         >
@@ -1557,15 +3048,19 @@ const MobileNavItem = ({
 
         <span
           className={`
-            text-[11px]
-            tracking-[0.25em]
+            whitespace-nowrap
+            text-[10px]
+            tracking-[0.19em]
             transition-colors
             sm:text-[12px]
+            sm:tracking-[0.25em]
 
             ${
-              active
-                ? "font-semibold text-[#741522]"
-                : "text-[#5C4942] group-hover:text-[#741522]"
+              premium
+                ? "font-semibold text-[#654A0A]"
+                : active
+                  ? "font-semibold text-[#741522]"
+                  : "text-[#5C4942] group-hover:text-[#741522]"
             }
           `}
         >
@@ -1573,38 +3068,48 @@ const MobileNavItem = ({
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
-        {badge !== null &&
-          badge !== undefined && (
-            <span
-              className="
-                flex
-                h-5
-                min-w-5
-                items-center
-                justify-center
-                rounded-full
-                bg-[#741522]
-                px-1.5
-                text-[9px]
-                font-medium
-                text-white
-              "
-            >
-              {badge > 9 ? "9+" : badge}
-            </span>
-          )}
+      <div
+        className="
+          ml-3
+          flex
+          shrink-0
+          items-center
+          gap-2
+        "
+      >
+        {badge !== null && (
+          <span
+            className="
+              flex
+              h-5
+              min-w-5
+              items-center
+              justify-center
+              rounded-full
+              bg-[#741522]
+              px-1.5
+              text-[9px]
+              font-medium
+              text-white
+            "
+          >
+            {badge > 9
+              ? "9+"
+              : badge}
+          </span>
+        )}
 
         {icon ? (
           <span
             className={`
-              ${
-                active
-                  ? "text-[#741522]"
-                  : "text-[#9A8982]"
-              }
               transition-colors
-              group-hover:text-[#741522]
+              ${
+                premium
+                  ? "text-[#8A6410]"
+                  : active
+                    ? "text-[#741522]"
+                    : "text-[#9A8982] group-hover:text-[#741522]"
+              }
             `}
           >
             {icon}
@@ -1615,7 +3120,7 @@ const MobileNavItem = ({
             strokeWidth={1.2}
             className="
               text-[#9A8982]
-              transition-transform
+              transition-all
               duration-300
               group-hover:translate-x-1
               group-hover:text-[#741522]

@@ -487,10 +487,10 @@ const WhatsAppChat = () => {
           }
           className="
             relative
-            w-14
-            h-14
-            sm:w-16
-            sm:h-16
+            w-11
+            h-11
+            sm:w-14
+            sm:h-14
             rounded-full
             bg-[#76131d]
             border
@@ -542,7 +542,7 @@ const WhatsAppChat = () => {
                   scale: 0.7,
                 }}
               >
-                <FaWhatsapp size={26} />
+                <FaWhatsapp size={24} />
               </motion.div>
             )}
           </AnimatePresence>
