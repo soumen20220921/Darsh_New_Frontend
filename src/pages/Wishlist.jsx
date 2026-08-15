@@ -1,4 +1,5 @@
 import React, {
+  useContext,
   useEffect,
   useState,
 } from "react";
@@ -15,6 +16,7 @@ import {
 } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAppContext } from "../context/AppContext";
 
 const STORAGE_KEY = "wishlist";
 
@@ -23,6 +25,12 @@ const Wishlist = () => {
 
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const { token, url } = useAppContext();
+    /* ============================================================
+     ADD TO CART
+  ============================================================ */
+
 
   /* ============================================================
      LOAD WISHLIST
@@ -146,96 +154,19 @@ const Wishlist = () => {
     item?.productName ||
     "Darsh Saree";
 
-  /* ============================================================
-     ROBUST PRODUCT IMAGE RESOLVER
-     ------------------------------------------------------------
-     Wishlist items can come from different pages / API responses,
-     so image data may be:
-       - image: "..."
-       - image: [...]
-       - images: [...]
-       - imageUrl / img / thumbnail
-       - an object containing url/src/path
-       - a JSON string containing an image array
+const getImage = (item) => {
+  const imageId = item?.image || item?.images?.[0];
 
-     Always return one safe URL/string for the <img>.
-  ============================================================ */
+  if (!imageId) return "";
 
-  const getImage = (item) => {
-    const rawCandidates = [
-      item?.image,
-      item?.images,
-      item?.imageUrl,
-      item?.img,
-      item?.thumbnail,
-      item?.thumbnailUrl,
-      item?.photo,
-      item?.coverImage,
-    ];
+  const imageUrl = `${url}/IMG/${imageId}`;
 
-    const flattenImageValue = (value) => {
-      if (!value) return null;
+  console.log("IMAGE ID:", imageId);
+  console.log("IMAGE URL:", imageUrl);
 
-      if (typeof value === "string") {
-        const trimmed = value.trim();
+  return imageUrl;
+};
 
-        if (!trimmed) return null;
-
-        // Handle image arrays stored as JSON strings.
-        if (
-          (trimmed.startsWith("[") &&
-            trimmed.endsWith("]")) ||
-          (trimmed.startsWith("{") &&
-            trimmed.endsWith("}"))
-        ) {
-          try {
-            return flattenImageValue(
-              JSON.parse(trimmed)
-            );
-          } catch {
-            return trimmed;
-          }
-        }
-
-        return trimmed;
-      }
-
-      if (Array.isArray(value)) {
-        for (const entry of value) {
-          const resolved =
-            flattenImageValue(entry);
-
-          if (resolved) return resolved;
-        }
-
-        return null;
-      }
-
-      if (typeof value === "object") {
-        return (
-          flattenImageValue(value.url) ||
-          flattenImageValue(value.src) ||
-          flattenImageValue(value.path) ||
-          flattenImageValue(value.image) ||
-          flattenImageValue(value.imageUrl) ||
-          flattenImageValue(value.secure_url) ||
-          flattenImageValue(value.location) ||
-          null
-        );
-      }
-
-      return null;
-    };
-
-    for (const candidate of rawCandidates) {
-      const resolved =
-        flattenImageValue(candidate);
-
-      if (resolved) return resolved;
-    }
-
-    return "/IMG/placeholder.jpg";
-  };
 
   const getPrice = (item) =>
     Number(
@@ -695,15 +626,30 @@ const WishlistCard = ({
   onMoveToCart,
   onOpen,
 }) => {
+  const { url } = useAppContext();
   const price = getPrice(item);
 
   const [imageSrc, setImageSrc] = useState(
     () => getImage(item)
   );
 
-  useEffect(() => {
-    setImageSrc(getImage(item));
-  }, [item, getImage]);
+  const getWhisListImage = (item) => {
+  const rawImage = item?.image || item?.images?.[0];
+
+  if (!rawImage) return "/IMG/placeholder.jpg";
+
+  const imageId = rawImage.split("/").filter(Boolean).pop();
+
+  return `${url}/img/${imageId}`;
+};
+
+useEffect(() => {
+  const image = getWhisListImage(item);
+  setImageSrc(image);
+  // console.log("Image URL:", image);
+}, [item]);
+
+
   const originalPrice = getOriginalPrice(item);
 
  
