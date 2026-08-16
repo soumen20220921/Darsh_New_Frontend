@@ -1,15 +1,14 @@
 import React, {
+  useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
-
 import {
   Link,
   useLocation,
   useNavigate,
 } from "react-router-dom";
-
 import {
   Search,
   ShoppingBag,
@@ -24,29 +23,35 @@ import {
   Sparkles,
   ArrowUpRight,
   Crown,
+  Home,
+  Grid3X3,
+  LogIn,
+  MapPin,
 } from "lucide-react";
-
 import {
   motion,
   AnimatePresence,
+  useReducedMotion,
 } from "framer-motion";
-
 import { useAppContext } from "../context/AppContext.jsx";
 import { toast } from "react-toastify";
 
 /* ============================================================
-   CONSTANTS
+   CONFIG
 ============================================================ */
 
 const WISHLIST_KEY = "wishlist";
-
-const DELHIVERY_TRACKING_URL =
-  "https://www.delhivery.com/tracking";
+const LOGO_SRC = "/IMG/Logo.jpg";
+const DELHIVERY_TRACKING_URL = "https://www.delhivery.com/tracking";
 
 /* ============================================================
-   AWB HELPER
-   Supports different backend field names.
+   HELPERS
 ============================================================ */
+
+const cleanCategory = (value) => {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/\s+/g, " ").trim();
+};
 
 const getOrderAwb = (orderItem) => {
   if (!orderItem) return "";
@@ -73,18 +78,13 @@ const getOrderAwb = (orderItem) => {
   );
 };
 
-/* ============================================================
-   CHECK REAL AWB
-============================================================ */
-
 const isValidAwb = (awb) => {
   if (!awb) return false;
 
   const value = String(awb).trim();
-
   if (!value) return false;
 
-  const invalidValues = [
+  const invalidValues = new Set([
     "pending",
     "null",
     "undefined",
@@ -93,23 +93,9 @@ const isValidAwb = (awb) => {
     "-",
     "not assigned",
     "not available",
-  ];
+  ]);
 
-  return !invalidValues.includes(
-    value.toLowerCase()
-  );
-};
-
-/* ============================================================
-   CATEGORY NAME
-============================================================ */
-
-const cleanCategory = (value) => {
-  if (!value) return "";
-
-  return String(value)
-    .replace(/\s+/g, " ")
-    .trim();
+  return !invalidValues.has(value.toLowerCase());
 };
 
 /* ============================================================
@@ -119,508 +105,363 @@ const cleanCategory = (value) => {
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const reduceMotion = useReducedMotion();
 
   const {
     login,
     setLogin,
-    totalItems,
+    totalItems = 0,
     order = [],
     allProduct = [],
   } = useAppContext();
 
-  /* ==========================================================
-     STATES
-  ========================================================== */
-
-  const [scrolled, setScrolled] =
-    useState(false);
-
-  const [mobileMenu, setMobileMenu] =
-    useState(false);
-
-  const [
-    desktopCategoryOpen,
-    setDesktopCategoryOpen,
-  ] = useState(false);
-
-  const [
-    mobileCategoryOpen,
-    setMobileCategoryOpen,
-  ] = useState(false);
-
-  const [
-    trackingOpen,
-    setTrackingOpen,
-  ] = useState(false);
-
-  const [
-    trackingNumber,
-    setTrackingNumber,
-  ] = useState("");
-
-  const [
-    wishlistCount,
-    setWishlistCount,
-  ] = useState(0);
-
-  /* ==========================================================
-     BASIC
-  ========================================================== */
-
-  const logoSrc = "/IMG/Logo.jpg";
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [trackingOpen, setTrackingOpen] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   const userName =
-    localStorage.getItem("name");
+    typeof window !== "undefined"
+      ? localStorage.getItem("name")
+      : "";
 
-  /* ==========================================================
+  /* ----------------------------------------------------------
      DYNAMIC CATEGORIES
-     
-     IMPORTANT:
-     No hardcoded category names.
-     
-     Reads:
-     allProduct[].category
-  ========================================================== */
+  ---------------------------------------------------------- */
 
   const dynamicCategories = useMemo(() => {
-    if (!Array.isArray(allProduct)) {
-      return [];
-    }
+    if (!Array.isArray(allProduct)) return [];
 
-    const categoryMap = new Map();
+    const map = new Map();
 
     allProduct.forEach((product) => {
-      const category = cleanCategory(
-        product?.category
-      );
-
+      const category = cleanCategory(product?.category);
       if (!category) return;
 
-      const key =
-        category.toLowerCase();
-
-      if (!categoryMap.has(key)) {
-        categoryMap.set(
-          key,
-          category
-        );
-      }
+      const key = category.toLowerCase();
+      if (!map.has(key)) map.set(key, category);
     });
 
-    return Array.from(
-      categoryMap.values()
-    ).sort((a, b) =>
-      a.localeCompare(
-        b,
-        undefined,
-        {
-          sensitivity: "base",
-        }
-      )
+    return Array.from(map.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, {
+        sensitivity: "base",
+      })
     );
   }, [allProduct]);
 
-  /* ==========================================================
-     CUSTOMER AWB LIST
-     
-     ONLY REAL AWBs.
-  ========================================================== */
+  /* ----------------------------------------------------------
+     CUSTOMER AWB
+  ---------------------------------------------------------- */
 
   const customerAwbs = useMemo(() => {
-    if (!Array.isArray(order)) {
-      return [];
-    }
+    if (!Array.isArray(order)) return [];
 
     return order
-      .map((item) =>
-        getOrderAwb(item)
-      )
-      .filter((awb) =>
-        isValidAwb(awb)
-      )
-      .map((awb) =>
-        String(awb).trim()
-      )
+      .map(getOrderAwb)
+      .filter(isValidAwb)
+      .map((awb) => String(awb).trim())
       .filter(
         (awb, index, array) =>
-          array.indexOf(awb) ===
-          index
+          array.indexOf(awb) === index
       );
   }, [order]);
 
-  const hasTrackableOrder =
-    customerAwbs.length > 0;
+  const latestAwb = customerAwbs[0] || "";
+  const hasTrackableOrder = customerAwbs.length > 0;
 
-  const latestAwb =
-    customerAwbs[0] || "";
-
-  /* ==========================================================
-     PAID ORDERS
-  ========================================================== */
-
-  const paidOrderCount =
-    Array.isArray(order)
-      ? order.filter((item) => {
-          const status =
-            String(
-              item?.payStatus || ""
-            ).toLowerCase();
-
-          return (
-            status === "paid" ||
-            status === "success" ||
-            status === "completed"
-          );
-        }).length
-      : 0;
-
-  /* ==========================================================
+  /* ----------------------------------------------------------
      WISHLIST COUNT
-  ========================================================== */
+  ---------------------------------------------------------- */
 
-  const readWishlistCount = () => {
+  const readWishlistCount = useCallback(() => {
     try {
-      const raw =
-        localStorage.getItem(
-          WISHLIST_KEY
-        );
-
-      if (!raw) {
-        setWishlistCount(0);
-        return;
-      }
-
-      const parsed =
-        JSON.parse(raw);
+      const raw = localStorage.getItem(WISHLIST_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
 
       setWishlistCount(
-        Array.isArray(parsed)
-          ? parsed.length
-          : 0
+        Array.isArray(parsed) ? parsed.length : 0
       );
     } catch {
       setWishlistCount(0);
     }
-  };
+  }, []);
 
   useEffect(() => {
     readWishlistCount();
 
-    const handleWishlistUpdate =
-      () => {
-        readWishlistCount();
-      };
+    const updateWishlist = () => readWishlistCount();
 
     window.addEventListener(
       "darsh-wishlist-updated",
-      handleWishlistUpdate
+      updateWishlist
     );
-
     window.addEventListener(
       "wishlistUpdated",
-      handleWishlistUpdate
+      updateWishlist
     );
-
     window.addEventListener(
       "storage",
-      handleWishlistUpdate
+      updateWishlist
     );
 
     return () => {
       window.removeEventListener(
         "darsh-wishlist-updated",
-        handleWishlistUpdate
+        updateWishlist
       );
-
       window.removeEventListener(
         "wishlistUpdated",
-        handleWishlistUpdate
+        updateWishlist
       );
-
       window.removeEventListener(
         "storage",
-        handleWishlistUpdate
+        updateWishlist
       );
     };
-  }, []);
+  }, [readWishlistCount]);
 
-  /* ==========================================================
+  /* ----------------------------------------------------------
      LOGIN
-  ========================================================== */
+  ---------------------------------------------------------- */
 
   useEffect(() => {
-    const token =
-      localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     if (token) {
       setLogin(true);
     }
   }, [setLogin]);
 
-  /* ==========================================================
+  /* ----------------------------------------------------------
      SCROLL
-  ========================================================== */
+  ---------------------------------------------------------- */
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(
-        window.scrollY > 25
-      );
+      setScrolled(window.scrollY > 24);
     };
 
     handleScroll();
 
     window.addEventListener(
       "scroll",
-      handleScroll
+      handleScroll,
+      { passive: true }
     );
 
-    return () => {
+    return () =>
       window.removeEventListener(
         "scroll",
         handleScroll
       );
-    };
   }, []);
 
-  /* ==========================================================
-     CLOSE MENUS ON ROUTE
-  ========================================================== */
+  /* ----------------------------------------------------------
+     CLOSE EVERYTHING WHEN ROUTE CHANGES
+  ---------------------------------------------------------- */
 
   useEffect(() => {
     setMobileMenu(false);
-    setDesktopCategoryOpen(false);
-    setMobileCategoryOpen(false);
+    setCategoryOpen(false);
     setTrackingOpen(false);
   }, [location.pathname]);
 
-  /* ==========================================================
-     BODY LOCK
-  ========================================================== */
+  /* ----------------------------------------------------------
+     BODY LOCK + ESCAPE KEY
+  ---------------------------------------------------------- */
 
   useEffect(() => {
-    const oldOverflow =
+    const hasOverlay =
+      mobileMenu || trackingOpen;
+
+    const previousOverflow =
       document.body.style.overflow;
 
-    document.body.style.overflow =
-      mobileMenu
-        ? "hidden"
-        : "";
+    if (hasOverlay) {
+      document.body.style.overflow = "hidden";
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key !== "Escape") return;
+
+      if (trackingOpen) {
+        setTrackingOpen(false);
+        return;
+      }
+
+      if (mobileMenu) {
+        setMobileMenu(false);
+        setCategoryOpen(false);
+      }
+    };
+
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
 
     return () => {
       document.body.style.overflow =
-        oldOverflow;
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
     };
-  }, [mobileMenu]);
+  }, [mobileMenu, trackingOpen]);
 
-  /* ==========================================================
+  /* ----------------------------------------------------------
      NAVIGATION
-  ========================================================== */
+  ---------------------------------------------------------- */
 
-  const goTo = (path) => {
-    setMobileMenu(false);
-    setDesktopCategoryOpen(false);
-    setMobileCategoryOpen(false);
+  const goTo = useCallback(
+    (path) => {
+      setMobileMenu(false);
+      setCategoryOpen(false);
+      setTrackingOpen(false);
 
-    navigate(path);
+      navigate(path);
 
-    window.setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "smooth",
-      });
-    }, 0);
-  };
+      window.setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: reduceMotion
+            ? "auto"
+            : "smooth",
+        });
+      }, 0);
+    },
+    [navigate, reduceMotion]
+  );
 
-  /* ==========================================================
-     CATEGORY NAVIGATION
-     
-     Your existing Categories page uses:
-     
-     /Categories/:name
-  ========================================================== */
+  const goToCategory = useCallback(
+    (category) => {
+      if (!category) return;
 
-  const goToCategory = (
-    category
-  ) => {
-    if (!category) return;
+      setMobileMenu(false);
+      setCategoryOpen(false);
 
-    setDesktopCategoryOpen(false);
-    setMobileCategoryOpen(false);
-    setMobileMenu(false);
-
-    navigate(
-      `/Categories/${encodeURIComponent(
-        category
-      )}`
-    );
-
-    window.setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "smooth",
-      });
-    }, 0);
-  };
-
-  /* ==========================================================
-     ACTIVE
-  ========================================================== */
-
-  const isActive = (path) => {
-    if (path === "/") {
-      return (
-        location.pathname === "/"
+      navigate(
+        `/Categories/${encodeURIComponent(
+          category
+        )}`
       );
-    }
 
-    return location.pathname.startsWith(
-      path
-    );
-  };
+      window.setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: reduceMotion
+            ? "auto"
+            : "smooth",
+        });
+      }, 0);
+    },
+    [navigate, reduceMotion]
+  );
 
-  /* ==========================================================
+  const isActive = useCallback(
+    (path) => {
+      if (path === "/") {
+        return location.pathname === "/";
+      }
+
+      return location.pathname.startsWith(path);
+    },
+    [location.pathname]
+  );
+
+  /* ----------------------------------------------------------
      TRACKING
-     
-     Redirect directly to Delhivery.
-  ========================================================== */
+  ---------------------------------------------------------- */
 
-  const openDelhivery = (awb) => {
-    const value =
-      String(awb || "").trim();
+  const openDelhivery = useCallback(
+    (awb) => {
+      const value = String(awb || "").trim();
 
-    if (!value) {
-      toast.info(
-        "Please enter your AWB / Tracking Number",
-        {
-          theme: "dark",
-        }
+      if (!value) {
+        toast.info(
+          "Please enter your AWB / Tracking Number",
+          { theme: "dark" }
+        );
+        return;
+      }
+
+      const url =
+        `${DELHIVERY_TRACKING_URL}?awb=` +
+        encodeURIComponent(value);
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
       );
+    },
+    []
+  );
 
-      return;
-    }
-
-    const url =
-      `${DELHIVERY_TRACKING_URL}?awb=${encodeURIComponent(
-        value
-      )}`;
-
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
-
-  /* ==========================================================
-     TRACK SUBMIT
-  ========================================================== */
-
-  const handleTrackSubmit = (
-    event
-  ) => {
+  const handleTrackSubmit = (event) => {
     event.preventDefault();
 
-    const value =
-      trackingNumber.trim();
+    const value = trackingNumber.trim();
 
     if (!value) return;
 
     setTrackingOpen(false);
     setMobileMenu(false);
-
     openDelhivery(value);
   };
-
-  /* ==========================================================
-     USE LATEST AWB
-  ========================================================== */
 
   const useLatestAwb = () => {
     if (!latestAwb) {
       toast.info(
         "No AWB is available yet",
-        {
-          theme: "dark",
-        }
+        { theme: "dark" }
       );
-
       return;
     }
 
-    setTrackingNumber(
-      latestAwb
-    );
+    setTrackingNumber(latestAwb);
   };
 
-  
+  /* ----------------------------------------------------------
+     RENDER
+  ---------------------------------------------------------- */
+
   return (
     <>
       {/* ======================================================
-          ANNOUNCEMENT
+          ANNOUNCEMENT BAR
       ====================================================== */}
 
-      <div
-        className="
-          relative
-          z-[70]
-          flex
-          h-[31px]
-          items-center
-          justify-center
-          overflow-hidden
-          bg-[#741522]
-          text-[#FFF9F0]
-        "
-      >
-        <div
-          className="
-            flex
-            whitespace-nowrap
-            text-[5.5px]
-            font-medium
-            tracking-[0.28em]
-            sm:text-[9px]
-            sm:tracking-[0.32em]
-          "
-        >
-          <span>
-            FREE SHIPPING ACROSS INDIA
-          </span>
-
-          <span className="mx-2 opacity-50 sm:mx-3">
-            ◆
-          </span>
-
-          <span>
-            HANDLOOM COLLECTION
-          </span>
-
-          <span className="mx-2 opacity-50 sm:mx-3">
-            ◆
-          </span>
-
-          <span>
-            CRAFTED WITH LOVE
-          </span>
+      <div className="relative z-[80] h-8 overflow-hidden bg-[#741522] text-[#FFF9F0] sm:h-9">
+        <div className="flex h-full items-center justify-center overflow-hidden px-3">
+          <motion.div
+            animate={
+              reduceMotion
+                ? undefined
+                : { x: ["0%", "-2%", "0%"] }
+            }
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="flex max-w-full items-center gap-2 whitespace-nowrap text-[6px] font-medium tracking-[0.22em] sm:gap-3 sm:text-[8px] sm:tracking-[0.28em]"
+          >
+            <span>FREE SHIPPING ACROSS INDIA</span>
+            <span className="opacity-50">◆</span>
+            <span>HANDLOOM COLLECTION</span>
+            <span className="opacity-50">◆</span>
+            <span>CRAFTED WITH LOVE</span>
+          </motion.div>
         </div>
 
-        <div
-          className="
-            absolute
-            -left-[100%]
-            top-0
-            h-full
-            w-[35%]
-            bg-gradient-to-r
-            from-transparent
-            via-white/10
-            to-transparent
-            animate-[navbarShine_6s_ease-in-out_infinite]
-          "
-        />
+        <div className="pointer-events-none absolute -left-[45%] top-0 h-full w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[navbarShine_6s_ease-in-out_infinite]" />
       </div>
 
       {/* ======================================================
@@ -629,42 +470,30 @@ const Navbar = () => {
 
       <header
         className={`
-          sticky
-          top-0
-          z-[60]
-          border-b
-          border-[#741522]/10
+          sticky top-0 z-[70]
+          border-b border-[#741522]/10
           bg-[#F8F5ED]/95
           backdrop-blur-xl
-          transition-all
-          duration-500
-
-          ${
-            scrolled
-              ? "shadow-[0_8px_30px_rgba(74,35,25,0.10)]"
-              : ""
-          }
+          transition-all duration-300
+          ${scrolled
+            ? "shadow-[0_8px_30px_rgba(74,35,25,0.10)]"
+            : ""}
         `}
       >
         <div
           className={`
-            relative
-            mx-auto
-            flex
-            max-w-[1600px]
-            items-center
-            justify-between
-            px-3
-            sm:px-6
-            lg:px-8
+            mx-auto flex w-full max-w-[1800px]
+            items-center justify-between
+            gap-2 px-3
+            transition-[height] duration-300
+            sm:gap-3 sm:px-5
+            md:px-7
+            lg:px-9
             xl:px-10
             2xl:px-12
-
-            ${
-              scrolled
-                ? "h-[64px] sm:h-[70px]"
-                : "h-[75px] sm:h-[84px]"
-            }
+            ${scrolled
+              ? "h-[62px] sm:h-[68px]"
+              : "h-[72px] sm:h-[80px]"}
           `}
         >
           {/* ==================================================
@@ -676,32 +505,34 @@ const Navbar = () => {
             aria-label="Darsh Home"
             onClick={() => {
               setMobileMenu(false);
+              setCategoryOpen(false);
 
               window.scrollTo({
                 top: 0,
-                behavior: "smooth",
+                behavior: reduceMotion
+                  ? "auto"
+                  : "smooth",
               });
             }}
-            className="
-              group
-              flex
-              shrink-0
-              items-center
-            "
+            className="group flex min-w-0 shrink-0 items-center"
           >
             <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.7,
-                rotate: -10,
-              }}
+              initial={
+                reduceMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      scale: 0.82,
+                      rotate: -8,
+                    }
+              }
               animate={{
                 opacity: 1,
                 scale: 1,
                 rotate: 0,
               }}
               transition={{
-                duration: 0.8,
+                duration: 0.55,
                 ease: [
                   0.22,
                   1,
@@ -710,76 +541,29 @@ const Navbar = () => {
                 ],
               }}
               className={`
-                relative
-                flex
-                shrink-0
-                items-center
-                justify-center
+                relative flex shrink-0
+                items-center justify-center
                 rounded-full
-
-                ${
-                  scrolled
-                    ? "h-[52px] w-[52px] sm:h-[58px] sm:w-[58px]"
-                    : "h-[52px] w-[52px] sm:h-[68px] sm:w-[68px]"
-                }
+                ${scrolled
+                  ? "h-11 w-11 sm:h-12 sm:w-12"
+                  : "h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16"}
               `}
             >
-              <div
-                className="
-                  absolute
-                  -inset-2
-                  rounded-full
-                  bg-[#C9A24A]/10
-                  opacity-0
-                  blur-lg
-                  transition-all
-                  duration-500
-                  group-hover:scale-110
-                  group-hover:opacity-100
-                "
-              />
+              <div className="absolute -inset-2 rounded-full bg-[#C9A24A]/10 opacity-0 blur-lg transition duration-500 group-hover:scale-110 group-hover:opacity-100" />
 
-              <div
-                className="
-                  absolute
-                  inset-0
-                  rounded-full
-                  border
-                  border-[#C9A24A]
-                  bg-[#FFFDF8]
-                  shadow-[0_5px_20px_rgba(116,21,34,0.12)]
-                  transition-all
-                  duration-500
-                  group-hover:border-[#741522]
-                "
-              />
+              <div className="absolute inset-0 rounded-full border border-[#C9A24A] bg-[#FFFDF8] shadow-[0_5px_20px_rgba(116,21,34,0.12)] transition duration-500 group-hover:border-[#741522]" />
 
-              <div
-                className="
-                  absolute
-                  inset-[5px]
-                  rounded-full
-                  border
-                  border-[#C9A24A]/40
-                "
-              />
+              <div className="absolute inset-[4px] rounded-full border border-[#C9A24A]/40" />
 
               <motion.img
-                src={logoSrc}
+                src={LOGO_SRC}
                 alt="Darsh"
-                whileHover={{
-                  scale: 1.07,
-                }}
-                className="
-                  relative
-                  z-10
-                  h-[76%]
-                  w-[76%]
-                  rounded-full
-                  object-contain
-                  p-1
-                  mix-blend-multiply
-                "
+                whileHover={
+                  reduceMotion
+                    ? undefined
+                    : { scale: 1.06 }
+                }
+                className="relative z-10 h-[76%] w-[76%] rounded-full object-contain p-1 mix-blend-multiply"
                 onError={(event) => {
                   event.currentTarget.style.display =
                     "none";
@@ -787,79 +571,34 @@ const Navbar = () => {
               />
 
               <motion.div
-                animate={{
-                  scale: [
-                    1,
-                    1.18,
-                    1,
-                  ],
-                  rotate: [
-                    0,
-                    8,
-                    0,
-                  ],
-                }}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        scale: [1, 1.15, 1],
+                        rotate: [0, 8, 0],
+                      }
+                }
                 transition={{
                   duration: 3,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="
-                  absolute
-                  -right-[3px]
-                  -top-[3px]
-                  z-30
-                  flex
-                  h-5
-                  w-5
-                  items-center
-                  justify-center
-                  rounded-full
-                  bg-[#FFFDF8]
-                  shadow-sm
-                "
+                className="absolute -right-1 -top-1 z-30 flex h-5 w-5 items-center justify-center rounded-full bg-[#FFFDF8] shadow-sm"
               >
                 <Sparkles
-                  size={11}
+                  size={10}
                   className="text-[#C9A24A]"
                 />
               </motion.div>
             </motion.div>
 
-            <div
-              className="
-                ml-2
-                flex-col
-                justify-center
-                sm:ml-3
-              "
-            >
-              <span
-                className="
-                  font-serif
-                  text-[12px]
-                  sm:text-[15px]
-                  font-semibold
-                  tracking-[0.22em]
-                  text-[#741522]
-                  lg:text-[18px]
-                "
-              >
+            <div className="ml-2 min-w-0 sm:ml-3">
+              <span className="block truncate font-serif text-[12px] font-semibold tracking-[0.2em] text-[#741522] sm:text-[15px] lg:text-[18px]">
                 DARSH
               </span>
 
-              <span
-                className="
-                  mt-0.5
-                  hidden
-                  text-[6px]
-                  font-medium
-                  tracking-[0.25em]
-                  text-[#806B63]
-                  lg:text-[6.5px]
-                  sm:flex
-                "
-              >
+              <span className="mt-0.5 hidden text-[6px] font-medium tracking-[0.25em] text-[#806B63] sm:block lg:text-[6.5px]">
                 HANDWOVEN SAREES
               </span>
             </div>
@@ -867,489 +606,108 @@ const Navbar = () => {
 
           {/* ==================================================
               DESKTOP NAVIGATION
-              
-              IMPORTANT:
-              whitespace-nowrap keeps everything one line.
+              xl/2xl only — avoids collision on tablets
           ================================================== */}
 
           <nav
-            className="
-              absolute
-              left-1/2
-              hidden
-              -translate-x-1/2
-              items-center
-              gap-4
-              whitespace-nowrap
-              lg:flex
-              xl:gap-5
-              2xl:gap-7
-            "
+            aria-label="Main navigation"
+            className="hidden items-center justify-center gap-1 xl:flex 2xl:gap-2"
           >
             <DesktopNavButton
               label="SHOP"
               active={isActive("/")}
-              onClick={() =>
-                goTo("/")
-              }
+              onClick={() => goTo("/")}
             />
 
             <DesktopNavButton
               label="NEW ARRIVALS"
               icon={
                 <Sparkles
-                  size={10}
+                  size={11}
                   className="text-[#C9A24A]"
                 />
               }
+              active={isActive(
+                "/newarrivals"
+              )}
               onClick={() =>
                 goTo("/newarrivals")
               }
             />
 
-            {/* =================================================
-                SHOP BY CATEGORY
-            ================================================= */}
-
-            <div
-              className="
-                relative
-                shrink-0
-              "
-              onMouseEnter={() =>
-                setDesktopCategoryOpen(
-                  true
-                )
+            <DesktopCategoryMenu
+              open={categoryOpen}
+              setOpen={setCategoryOpen}
+              categories={dynamicCategories}
+              onCategory={goToCategory}
+              onViewAll={() =>
+                goTo("/allproducts")
               }
-              onMouseLeave={() =>
-                setDesktopCategoryOpen(
-                  false
-                )
-              }
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  setDesktopCategoryOpen(
-                    (value) =>
-                      !value
-                  )
-                }
-                className="
-                  group
-                  relative
-                  flex
-                  shrink-0
-                  items-center
-                  gap-1
-                  whitespace-nowrap
-                  py-3
-                  text-[8px]
-                  font-medium
-                  tracking-[0.14em]
-                  text-[#806B63]
-                  transition-colors
-                  duration-300
-                  hover:text-[#741522]
-                  xl:text-[9px]
-                  xl:tracking-[0.17em]
-                  2xl:text-[10px]
-                  2xl:tracking-[0.19em]
-                "
-              >
-                SHOP BY CATEGORY
-
-                <ChevronDown
-                  size={11}
-                  className={`
-                    transition-transform
-                    duration-300
-
-                    ${
-                      desktopCategoryOpen
-                        ? "rotate-180 text-[#741522]"
-                        : ""
-                    }
-                  `}
-                />
-
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[1px]
-                    w-0
-                    bg-[#741522]
-                    transition-all
-                    duration-500
-                    group-hover:w-full
-                  "
-                />
-              </button>
-
-              {/* DESKTOP MEGA MENU */}
-
-              <AnimatePresence>
-                {desktopCategoryOpen && (
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: 12,
-                      scale: 0.98,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      y: 12,
-                      scale: 0.98,
-                    }}
-                    transition={{
-                      duration: 0.24,
-                      ease: [
-                        0.22,
-                        1,
-                        0.36,
-                        1,
-                      ],
-                    }}
-                    className="
-                      absolute
-                      left-1/2
-                      top-full
-                      z-[100]
-                      w-[680px]
-                      -translate-x-1/2
-                      pt-4
-                    "
-                  >
-                    <div
-                      className="
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-[#741522]/10
-                        bg-[#FFFDF8]
-                        p-6
-                        shadow-[0_25px_70px_rgba(74,35,25,0.18)]
-                      "
-                    >
-                      {/* HEADER */}
-
-                      <div
-                        className="
-                          mb-5
-                          flex
-                          items-end
-                          justify-between
-                          border-b
-                          border-[#741522]/10
-                          pb-4
-                        "
-                      >
-                        <div>
-                          <p
-                            className="
-                              text-[7px]
-                              font-semibold
-                              tracking-[0.28em]
-                              text-[#C9A24A]
-                            "
-                          >
-                            EXPLORE DARSH
-                          </p>
-
-                          <h3
-                            className="
-                              mt-1
-                              font-serif
-                              text-xl
-                              text-[#3F302B]
-                            "
-                          >
-                            Shop By Category
-                          </h3>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            goTo(
-                              "/allproducts"
-                            )
-                          }
-                          className="
-                            flex
-                            items-center
-                            gap-1
-                            whitespace-nowrap
-                            text-[8px]
-                            font-semibold
-                            tracking-[0.15em]
-                            text-[#741522]
-                            transition-colors
-                            hover:text-[#C9A24A]
-                          "
-                        >
-                          VIEW ALL
-                          <ArrowUpRight
-                            size={12}
-                          />
-                        </button>
-                      </div>
-
-                      {/* DYNAMIC CATEGORY GRID */}
-
-                      {dynamicCategories.length >
-                      0 ? (
-                        <div
-                          className="
-                            grid
-                            max-h-[360px]
-                            grid-cols-3
-                            gap-x-5
-                            gap-y-1
-                            overflow-y-auto
-                            pr-1
-                          "
-                        >
-                          {dynamicCategories.map(
-                            (
-                              category,
-                              index
-                            ) => (
-                              <motion.button
-                                key={
-                                  category
-                                }
-                                type="button"
-                                initial={{
-                                  opacity: 0,
-                                  x: -7,
-                                }}
-                                animate={{
-                                  opacity: 1,
-                                  x: 0,
-                                }}
-                                transition={{
-                                  delay:
-                                    Math.min(
-                                      index *
-                                        0.02,
-                                      0.3
-                                    ),
-                                }}
-                                onClick={() =>
-                                  goToCategory(
-                                    category
-                                  )
-                                }
-                                className="
-                                  group/category
-                                  flex
-                                  min-w-0
-                                  items-center
-                                  justify-between
-                                  rounded-lg
-                                  px-2
-                                  py-2.5
-                                  text-left
-                                  transition-all
-                                  duration-200
-                                  hover:bg-[#741522]/5
-                                  hover:pl-3
-                                "
-                              >
-                                <span
-                                  className="
-                                    truncate
-                                    text-[9px]
-                                    tracking-[0.06em]
-                                    text-[#6E5A52]
-                                    transition-colors
-                                    group-hover/category:text-[#741522]
-                                  "
-                                >
-                                  {category}
-                                </span>
-
-                                <ChevronRight
-                                  size={12}
-                                  className="
-                                    shrink-0
-                                    text-[#C9A24A]
-                                    opacity-0
-                                    transition-all
-                                    duration-200
-                                    group-hover/category:translate-x-0.5
-                                    group-hover/category:opacity-100
-                                  "
-                                />
-                              </motion.button>
-                            )
-                          )}
-                        </div>
-                      ) : (
-                        <div
-                          className="
-                            flex
-                            min-h-[140px]
-                            items-center
-                            justify-center
-                            text-center
-                          "
-                        >
-                          <div>
-                            <Sparkles
-                              size={20}
-                              className="
-                                mx-auto
-                                mb-3
-                                text-[#C9A24A]
-                              "
-                            />
-
-                            <p
-                              className="
-                                text-[8px]
-                                tracking-[0.15em]
-                                text-[#9A8982]
-                              "
-                            >
-                              NO CATEGORIES
-                              AVAILABLE
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* FOOTER */}
-
-                      <div
-                        className="
-                          mt-5
-                          flex
-                          items-center
-                          justify-between
-                          rounded-xl
-                          bg-[#741522]
-                          px-4
-                          py-3
-                          text-white
-                        "
-                      >
-                        <div
-                          className="
-                            flex
-                            items-center
-                            gap-2
-                          "
-                        >
-                          <Sparkles
-                            size={13}
-                            className="text-[#E7C979]"
-                          />
-
-                          <span
-                            className="
-                              text-[7px]
-                              tracking-[0.15em]
-                              sm:text-[8px]
-                            "
-                          >
-                            FIND YOUR
-                            PERFECT WEAVE
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            goTo(
-                              "/allproducts"
-                            )
-                          }
-                          className="
-                            whitespace-nowrap
-                            text-[7px]
-                            font-semibold
-                            tracking-[0.14em]
-                            underline
-                            underline-offset-4
-                            sm:text-[8px]
-                          "
-                        >
-                          SHOP NOW
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            />
 
             <DesktopNavButton
               label="HOT SALES"
+              active={isActive("/hotsales")}
               onClick={() =>
                 goTo("/hotsales")
               }
             />
-            <DesktopNavButton
-  label="PREMIUM SAREES"
-              active={isActive("/premium-sarees")}
-              premium
-              icon={<Crown size={17} strokeWidth={2} />}
-  onClick={() => goTo("/premium-sarees")}
-/>
 
+            <DesktopNavButton
+              label="PREMIUM SAREES"
+              premium
+              active={isActive(
+                "/premium-sarees"
+              )}
+              icon={
+                <Crown
+                  size={13}
+                  strokeWidth={2}
+                />
+              }
+              onClick={() =>
+                goTo("/premium-sarees")
+              }
+            />
 
             <DesktopNavButton
               label="OUR STORY"
+              active={isActive("/aboutus")}
               onClick={() =>
                 goTo("/aboutus")
               }
             />
 
+            <DesktopNavButton
+              label="CONTACT"
+              active={isActive("/contactus")}
+              onClick={() =>
+                goTo("/contactus")
+              }
+            />
           </nav>
 
           {/* ==================================================
               RIGHT ACTIONS
           ================================================== */}
 
-          <div
-            className="
-              flex
-              shrink-0
-              items-center
-              gap-0
-              sm:gap-0.5
-            "
-          >
-            {/* SEARCH */}
-
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <IconAction
-              label="Search"
+              label="Search products"
+              active={isActive("/allproducts")}
               onClick={() =>
                 goTo("/allproducts")
               }
             >
               <Search
-                size={19}
-                strokeWidth={1.5}
+                size={18}
+                strokeWidth={1.6}
               />
             </IconAction>
 
-            {/* WISHLIST */}
-
             <IconAction
               label="Wishlist"
-              active={isActive(
-                "/wishlist"
-              )}
+              active={isActive("/wishlist")}
               badge={
                 wishlistCount > 0
                   ? wishlistCount
@@ -1360,36 +718,37 @@ const Navbar = () => {
               }
             >
               <Heart
-                size={19}
-                strokeWidth={1.5}
+                size={18}
+                strokeWidth={1.6}
                 fill={
-                  isActive(
-                    "/wishlist"
-                  )
+                  isActive("/wishlist")
                     ? "currentColor"
                     : "none"
                 }
               />
             </IconAction>
 
-            {/* TRACK */}
-
             <IconAction
-              label="Track Your Order"
+              label="Track your order"
+              className="hidden md:flex"
               onClick={() =>
                 setTrackingOpen(true)
               }
             >
               <Truck
-                size={19}
-                strokeWidth={1.5}
+                size={18}
+                strokeWidth={1.6}
               />
             </IconAction>
 
-            {/* ACCOUNT */}
-
             <IconAction
-              label="Account"
+              label={
+                login
+                  ? "My account"
+                  : "Login / Account"
+              }
+              className="hidden lg:flex"
+              active={isActive("/account")}
               onClick={() =>
                 goTo(
                   login
@@ -1397,25 +756,17 @@ const Navbar = () => {
                     : "/account"
                 )
               }
-              className="
-                hidden
-                sm:flex
-              "
             >
               <UserRound
-                size={19}
-                strokeWidth={1.5}
+                size={18}
+                strokeWidth={1.6}
               />
             </IconAction>
 
-            {/* CART */}
-
             <IconAction
-              label="Shopping Bag"
+              label="Shopping bag"
               accent
-              active={isActive(
-                "/cart"
-              )}
+              active={isActive("/cart")}
               badge={
                 totalItems > 0
                   ? totalItems
@@ -1427,579 +778,136 @@ const Navbar = () => {
             >
               <ShoppingBag
                 size={19}
-                strokeWidth={1.5}
+                strokeWidth={1.6}
               />
             </IconAction>
 
-            {/* MOBILE MENU */}
-
-            <button
+            {/* Menu remains available on tablet/mobile.
+                Desktop navigation starts at xl. */}
+            <motion.button
               type="button"
-              onClick={() =>
-                setMobileMenu(
-                  (value) =>
-                    !value
-                )
+              whileTap={
+                reduceMotion
+                  ? undefined
+                  : { scale: 0.92 }
               }
+              onClick={() => {
+                setMobileMenu(
+                  (value) => !value
+                );
+                setCategoryOpen(false);
+              }}
               aria-label={
                 mobileMenu
-                  ? "Close menu"
-                  : "Open menu"
+                  ? "Close navigation menu"
+                  : "Open navigation menu"
               }
-              className="
-                ml-1
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                text-[#741522]
-                lg:hidden
-                sm:h-10
-                sm:w-10
-              "
+              aria-expanded={mobileMenu}
+              className="ml-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#741522] transition hover:bg-[#741522]/5 sm:h-10 sm:w-10 xl:hidden"
             >
               <AnimatePresence
                 mode="wait"
+                initial={false}
               >
                 {mobileMenu ? (
-                  <motion.div
+                  <motion.span
                     key="close"
-                    initial={{
-                      rotate: -90,
-                      opacity: 0,
-                    }}
+                    initial={
+                      reduceMotion
+                        ? undefined
+                        : {
+                            rotate: -90,
+                            opacity: 0,
+                          }
+                    }
                     animate={{
                       rotate: 0,
                       opacity: 1,
                     }}
-                    exit={{
-                      rotate: 90,
-                      opacity: 0,
-                    }}
+                    exit={
+                      reduceMotion
+                        ? undefined
+                        : {
+                            rotate: 90,
+                            opacity: 0,
+                          }
+                    }
                   >
-                    <X
-                      size={24}
-                      strokeWidth={1.5}
-                    />
-                  </motion.div>
+                    <X size={23} />
+                  </motion.span>
                 ) : (
-                  <motion.div
+                  <motion.span
                     key="menu"
-                    initial={{
-                      rotate: 90,
-                      opacity: 0,
-                    }}
+                    initial={
+                      reduceMotion
+                        ? undefined
+                        : {
+                            rotate: 90,
+                            opacity: 0,
+                          }
+                    }
                     animate={{
                       rotate: 0,
                       opacity: 1,
                     }}
-                    exit={{
-                      rotate: -90,
-                      opacity: 0,
-                    }}
+                    exit={
+                      reduceMotion
+                        ? undefined
+                        : {
+                            rotate: -90,
+                            opacity: 0,
+                          }
+                    }
                   >
-                    <Menu
-                      size={24}
-                      strokeWidth={1.5}
-                    />
-                  </motion.div>
+                    <Menu size={23} />
+                  </motion.span>
                 )}
               </AnimatePresence>
-            </button>
+            </motion.button>
           </div>
         </div>
       </header>
 
       {/* ======================================================
-          TRACKING MODAL
-      ====================================================== */}
-
-      <AnimatePresence>
-        {trackingOpen && (
-          <motion.div
-            className="
-              fixed
-              inset-0
-              z-[120]
-              flex
-              items-center
-              justify-center
-              bg-[#351B18]/50
-              px-4
-              backdrop-blur-sm
-            "
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
-            onMouseDown={() =>
-              setTrackingOpen(false)
-            }
-          >
-            <motion.form
-              onSubmit={
-                handleTrackSubmit
-              }
-              onMouseDown={(event) =>
-                event.stopPropagation()
-              }
-              initial={{
-                opacity: 0,
-                y: 25,
-                scale: 0.96,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                y: 20,
-                scale: 0.96,
-              }}
-              transition={{
-                duration: 0.3,
-              }}
-              className="
-                relative
-                w-full
-                max-w-md
-                overflow-hidden
-                rounded-3xl
-                border
-                border-[#C9A24A]/30
-                bg-[#FFFDF8]
-                p-6
-                shadow-[0_30px_100px_rgba(35,15,12,0.28)]
-                sm:p-8
-              "
-            >
-              {/* CLOSE */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setTrackingOpen(
-                    false
-                  )
-                }
-                className="
-                  absolute
-                  right-4
-                  top-4
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#741522]/10
-                  text-[#806B63]
-                  transition-all
-                  hover:bg-[#741522]
-                  hover:text-white
-                "
-              >
-                <X size={17} />
-              </button>
-
-              {/* HEADER */}
-
-              <div className="mb-6">
-                <motion.div
-                  animate={{
-                    y: [
-                      0,
-                      -3,
-                      0,
-                    ],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                  }}
-                  className="
-                    mb-3
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-[#741522]/5
-                    text-[#741522]
-                  "
-                >
-                  <Truck
-                    size={20}
-                    strokeWidth={1.4}
-                  />
-                </motion.div>
-
-                <p
-                  className="
-                    text-[8px]
-                    font-semibold
-                    tracking-[0.28em]
-                    text-[#C9A24A]
-                  "
-                >
-                  DARSH DELIVERY
-                </p>
-
-                <h3
-                  className="
-                    mt-1
-                    font-serif
-                    text-2xl
-                    text-[#3F302B]
-                  "
-                >
-                  Track Your Order
-                </h3>
-
-                <p
-                  className="
-                    mt-2
-                    text-xs
-                    leading-relaxed
-                    text-[#806B63]
-                  "
-                >
-                  Enter your AWB /
-                  tracking number
-                  and continue to
-                  Delhivery tracking.
-                </p>
-              </div>
-
-              {/* =================================================
-                  ORDER STATUS
-              ================================================= */}
-
-              <div
-                className="
-                  mb-4
-                  rounded-2xl
-                  border
-                  border-[#741522]/10
-                  bg-[#F8F5ED]
-                  p-4
-                "
-              >
-                <div
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                    gap-3
-                  "
-                >
-                  <div>
-                    <p
-                      className="
-                        text-[7px]
-                        font-semibold
-                        tracking-[0.2em]
-                        text-[#C9A24A]
-                      "
-                    >
-                      YOUR SHIPMENTS
-                    </p>
-
-                    <p
-                      className="
-                        mt-1
-                        text-xs
-                        text-[#5C4942]
-                      "
-                    >
-                      {hasTrackableOrder
-                        ? `${customerAwbs.length} shipment${
-                            customerAwbs.length >
-                            1
-                              ? "s"
-                              : ""
-                          } with AWB`
-                        : "No AWB assigned yet"}
-                    </p>
-                  </div>
-
-                  <Package
-                    size={18}
-                    className="
-                      shrink-0
-                      text-[#741522]
-                    "
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    goTo(
-                      "/account?tab=3"
-                    )
-                  }
-                  className="
-                    mt-3
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-[#741522]/15
-                    bg-white
-                    px-4
-                    py-2.5
-                    text-[8px]
-                    font-semibold
-                    tracking-[0.18em]
-                    text-[#741522]
-                    transition-all
-                    duration-300
-                    hover:border-[#741522]
-                    hover:bg-[#741522]
-                    hover:text-white
-                  "
-                >
-                  VIEW MY ORDERS
-
-                  <ArrowUpRight
-                    size={13}
-                  />
-                </button>
-              </div>
-
-              {/* =================================================
-                  AWB INPUT
-              ================================================= */}
-
-              <div className="relative">
-                <input
-                  value={
-                    trackingNumber
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setTrackingNumber(
-                      event.target
-                        .value
-                    )
-                  }
-                  placeholder="AWB / Tracking Number"
-                  className="
-                    w-full
-                    rounded-xl
-                    border
-                    border-[#741522]/15
-                    bg-[#F8F5ED]
-                    px-4
-                    py-3.5
-                    pr-12
-                    text-sm
-                    text-[#3F302B]
-                    outline-none
-                    transition
-                    focus:border-[#C9A24A]
-                    focus:ring-4
-                    focus:ring-[#C9A24A]/10
-                  "
-                />
-
-                <Package
-                  size={17}
-                  className="
-                    absolute
-                    right-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-[#9A8982]
-                  "
-                />
-              </div>
-
-              {/* TRACK */}
-
-              <button
-                type="submit"
-                disabled={
-                  !trackingNumber.trim()
-                }
-                className="
-                  mt-4
-                  flex
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[#741522]
-                  px-5
-                  py-3.5
-                  text-[9px]
-                  font-semibold
-                  tracking-[0.22em]
-                  text-white
-                  transition
-                  hover:bg-[#5E101C]
-                  disabled:cursor-not-allowed
-                  disabled:opacity-40
-                "
-              >
-                TRACK ON DELHIVERY
-
-                <ArrowUpRight
-                  size={14}
-                />
-              </button>
-
-              {/* LATEST AWB */}
-
-              {hasTrackableOrder && (
-                <button
-                  type="button"
-                  onClick={
-                    useLatestAwb
-                  }
-                  className="
-                    mt-3
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    text-[8px]
-                    font-semibold
-                    tracking-[0.13em]
-                    text-[#741522]
-                    transition-colors
-                    hover:text-[#C9A24A]
-                  "
-                >
-                  USE LATEST AWB
-
-                  <ChevronRight
-                    size={12}
-                  />
-                </button>
-              )}
-
-              {/* HELP */}
-
-              <p
-                className="
-                  mt-4
-                  text-center
-                  text-[8px]
-                  leading-relaxed
-                  tracking-[0.04em]
-                  text-[#9A8982]
-                "
-              >
-                Find your AWB:
-                <button
-                  type="button"
-                  onClick={() =>
-                    goTo(
-                      "/account?tab=3"
-                    )
-                  }
-                  className="
-                    mx-1
-                    font-semibold
-                    text-[#741522]
-                    underline
-                    underline-offset-2
-                  "
-                >
-                  My Orders
-                </button>
-                → View Order Details
-                → Copy AWB
-              </p>
-            </motion.form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ======================================================
-          MOBILE DRAWER
+          MOBILE / TABLET DRAWER
       ====================================================== */}
 
       <AnimatePresence>
         {mobileMenu && (
           <motion.div
-            className="
-              fixed
-              inset-0
-              z-[55]
-              lg:hidden
-            "
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
+            className="fixed inset-0 z-[100] xl:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            {/* OVERLAY */}
-
-            <motion.div
-              onClick={() =>
-                setMobileMenu(
-                  false
-                )
-              }
-              className="
-                absolute
-                inset-0
-                bg-[#351B18]/45
-                backdrop-blur-sm
-              "
+            {/* Overlay */}
+            <button
+              type="button"
+              aria-label="Close navigation"
+              onClick={() => {
+                setMobileMenu(false);
+                setCategoryOpen(false);
+              }}
+              className="absolute inset-0 h-full w-full cursor-default bg-[#351B18]/45 backdrop-blur-[2px]"
             />
 
-            {/* DRAWER */}
-
-            <motion.div
-              className="
-                absolute
-                right-0
-                top-0
-                flex
-                h-full
-                w-[90%]
-                max-w-[440px]
-                flex-col
-                overflow-hidden
-                bg-[#F8F5ED]
-                shadow-2xl
-              "
-              initial={{
-                x: "100%",
-              }}
-              animate={{
-                x: 0,
-              }}
-              exit={{
-                x: "100%",
-              }}
+            {/* Drawer */}
+            <motion.aside
+              initial={
+                reduceMotion
+                  ? undefined
+                  : { x: "100%" }
+              }
+              animate={{ x: 0 }}
+              exit={
+                reduceMotion
+                  ? undefined
+                  : { x: "100%" }
+              }
               transition={{
-                duration: 0.45,
+                duration: reduceMotion
+                  ? 0
+                  : 0.38,
                 ease: [
                   0.22,
                   1,
@@ -2007,116 +915,37 @@ const Navbar = () => {
                   1,
                 ],
               }}
+              className="absolute right-0 top-0 flex h-full w-[min(92vw,460px)] flex-col overflow-hidden border-l border-[#741522]/10 bg-[#F8F5ED] shadow-2xl"
+              aria-label="Mobile navigation"
             >
-              {/* MOBILE HEADER */}
-
-              <div
-                className="
-                  flex
-                  h-[96px]
-                  shrink-0
-                  items-center
-                  justify-between
-                  border-b
-                  border-[#741522]/10
-                  px-5
-                  sm:h-[105px]
-                  sm:px-7
-                "
-              >
+              {/* Drawer Header */}
+              <div className="flex min-h-[78px] shrink-0 items-center justify-between border-b border-[#741522]/10 px-4 sm:min-h-[92px] sm:px-6">
                 <Link
                   to="/"
                   onClick={() =>
-                    setMobileMenu(
-                      false
-                    )
+                    setMobileMenu(false)
                   }
-                  className="
-                    group
-                    flex
-                    items-center
-                  "
+                  className="flex min-w-0 items-center"
                 >
-                  <div
-                    className="
-                      relative
-                      flex
-                      h-[61px]
-                      w-[61px]
-                      items-center
-                      justify-center
-                      rounded-full
-                    "
-                  >
-                    <div
-                      className="
-                        absolute
-                        inset-0
-                        rounded-full
-                        border
-                        border-[#C9A24A]
-                        bg-[#FFFDF8]
-                      "
-                    />
-
-                    <div
-                      className="
-                        absolute
-                        inset-[5px]
-                        rounded-full
-                        border
-                        border-[#C9A24A]/40
-                      "
-                    />
-
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:h-14 sm:w-14">
+                    <div className="absolute inset-0 rounded-full border border-[#C9A24A] bg-[#FFFDF8]" />
+                    <div className="absolute inset-[4px] rounded-full border border-[#C9A24A]/40" />
                     <img
-                      src={logoSrc}
+                      src={LOGO_SRC}
                       alt="Darsh"
-                      className="
-                        relative
-                        z-10
-                        h-[76%]
-                        w-[76%]
-                        rounded-full
-                        object-contain
-                        p-1
-                        mix-blend-multiply
-                      "
+                      className="relative z-10 h-[76%] w-[76%] rounded-full object-contain p-1 mix-blend-multiply"
                     />
-
                     <Sparkles
-                      size={11}
-                      className="
-                        absolute
-                        -right-1
-                        -top-1
-                        z-20
-                        text-[#C9A24A]
-                      "
+                      size={10}
+                      className="absolute -right-1 -top-1 z-20 text-[#C9A24A]"
                     />
                   </div>
 
-                  <div className="ml-3">
-                    <p
-                      className="
-                        font-serif
-                        text-[11px]
-                        font-semibold
-                        tracking-[0.25em]
-                        text-[#741522]
-                      "
-                    >
+                  <div className="ml-3 min-w-0">
+                    <p className="truncate font-serif text-[12px] font-semibold tracking-[0.24em] text-[#741522] sm:text-[14px]">
                       DARSH
                     </p>
-
-                    <p
-                      className="
-                        mt-0.5
-                        text-[6.5px]
-                        tracking-[0.28em]
-                        text-[#806B63]
-                      "
-                    >
+                    <p className="mt-0.5 text-[6px] tracking-[0.26em] text-[#806B63] sm:text-[7px]">
                       HANDWOVEN SAREES
                     </p>
                   </div>
@@ -2125,195 +954,160 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() =>
-                    setMobileMenu(
-                      false
-                    )
+                    setMobileMenu(false)
                   }
                   aria-label="Close menu"
-                  className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-full
-                    border
-                    border-[#741522]/20
-                    text-[#741522]
-                    transition-all
-                    hover:bg-[#741522]
-                    hover:text-white
-                  "
+                  className="ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#741522]/15 text-[#741522] transition hover:bg-[#741522] hover:text-white"
                 >
-                  <X size={20} />
+                  <X size={19} />
                 </button>
               </div>
 
-              {/* MOBILE CONTENT */}
+              {/* Welcome Card */}
+              <div className="shrink-0 px-5 pb-2 pt-6 sm:px-7 sm:pt-7">
+                <div className="rounded-2xl border border-[#741522]/10 bg-[#FFFDF8] p-4 shadow-[0_8px_30px_rgba(74,35,25,0.05)] sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[7px] font-semibold tracking-[0.28em] text-[#C9A24A]">
+                        {login
+                          ? "WELCOME BACK"
+                          : "WELCOME TO DARSH"}
+                      </p>
 
-              <div
-                className="
-                  flex-1
-                  overflow-y-auto
-                  px-6
-                  pb-28
-                  pt-8
-                  sm:px-7
-                  sm:pt-10
-                "
-              >
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    y: 15,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  transition={{
-                    delay: 0.15,
-                  }}
-                  className="
-                    mb-8
-                    sm:mb-10
-                  "
-                >
-                  <p
-                    className="
-                      mb-2
-                      text-[8px]
-                      uppercase
-                      tracking-[0.3em]
-                      text-[#9A8982]
-                    "
-                  >
-                    {login
-                      ? "WELCOME BACK"
-                      : "WELCOME TO"}
-                  </p>
+                      <h2 className="mt-1 truncate font-serif text-lg text-[#3F302B] sm:text-xl">
+                        {login
+                          ? userName ||
+                            "Darsh"
+                          : "The Darsh Collection"}
+                      </h2>
+                    </div>
 
-                  <h2
-                    className="
-                      font-serif
-                      text-xl
-                      text-[#3F302B]
-                      sm:text-2xl
-                    "
-                  >
-                    {login
-                      ? userName ||
-                        "Darsh"
-                      : "The Darsh Collection"}
-                  </h2>
-                </motion.div>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#741522]/5 text-[#741522]">
+                      {login ? (
+                        <UserRound size={17} />
+                      ) : (
+                        <Sparkles size={17} />
+                      )}
+                    </div>
+                  </div>
 
-                <div>
-                  {/* SHOP */}
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <QuickMobileAction
+                      icon={
+                        <Search
+                          size={15}
+                        />
+                      }
+                      label="Search"
+                      onClick={() =>
+                        goTo(
+                          "/allproducts"
+                        )
+                      }
+                    />
 
+                    <QuickMobileAction
+                      icon={
+                        <Heart
+                          size={15}
+                        />
+                      }
+                      label="Wishlist"
+                      badge={
+                        wishlistCount >
+                        0
+                          ? wishlistCount
+                          : null
+                      }
+                      onClick={() =>
+                        goTo("/wishlist")
+                      }
+                    />
+
+                    <QuickMobileAction
+                      icon={
+                        <ShoppingBag
+                          size={15}
+                        />
+                      }
+                      label="Bag"
+                      badge={
+                        totalItems > 0
+                          ? totalItems
+                          : null
+                      }
+                      onClick={() =>
+                        goTo("/cart")
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Scrollable Nav */}
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8 pt-3 [scrollbar-width:thin] sm:px-7">
+                <div className="border-t border-[#741522]/10">
                   <MobileNavItem
                     number="01"
                     label="SHOP"
-                    active={isActive(
-                      "/"
-                    )}
+                    active={isActive("/")}
+                    icon={<Home size={17} />}
                     onClick={() =>
                       goTo("/")
                     }
                   />
 
-                  {/* CATEGORY */}
-
-                  <div
-                    className="
-                      border-b
-                      border-[#741522]/10
-                    "
-                  >
-                    <motion.button
+                  {/* Categories */}
+                  <div className="border-b border-[#741522]/10">
+                    <button
                       type="button"
-                      whileTap={{
-                        scale: 0.985,
-                      }}
                       onClick={() =>
-                        setMobileCategoryOpen(
+                        setCategoryOpen(
                           (value) =>
                             !value
                         )
                       }
-                      className="
-                        group
-                        flex
-                        w-full
-                        items-center
-                        justify-between
-                        py-4
-                        text-left
-                        sm:py-5
-                      "
+                      aria-expanded={
+                        categoryOpen
+                      }
+                      className="group flex w-full items-center justify-between py-4 text-left sm:py-5"
                     >
-                      <div
-                        className="
-                          flex
-                          items-center
-                          gap-4
-                        "
-                      >
-                        <span
-                          className="
-                            text-[8px]
-                            tracking-[0.2em]
-                            text-[#C9A24A]
-                          "
-                        >
+                      <div className="flex min-w-0 items-center gap-4">
+                        <span className="shrink-0 text-[8px] tracking-[0.2em] text-[#C9A24A]">
                           02
                         </span>
 
-                        <span
-                          className="
-                            whitespace-nowrap
-                            text-[10px]
-                            font-medium
-                            tracking-[0.19em]
-                            text-[#5C4942]
-                            transition-colors
-                            group-hover:text-[#741522]
-                            sm:text-[12px]
-                          "
-                        >
+                        <span className="truncate text-[10px] font-medium tracking-[0.18em] text-[#5C4942] transition group-hover:text-[#741522] sm:text-[12px] sm:tracking-[0.22em]">
                           SHOP BY CATEGORY
                         </span>
                       </div>
 
-                      <motion.div
+                      <motion.span
                         animate={{
                           rotate:
-                            mobileCategoryOpen
+                            categoryOpen
                               ? 180
                               : 0,
                         }}
+                        className="ml-3 shrink-0 text-[#9A8982]"
                       >
                         <ChevronDown
                           size={17}
-                          className="
-                            text-[#9A8982]
-                          "
                         />
-                      </motion.div>
-                    </motion.button>
+                      </motion.span>
+                    </button>
 
                     <AnimatePresence
                       initial={false}
                     >
-                      {mobileCategoryOpen && (
+                      {categoryOpen && (
                         <motion.div
                           initial={{
                             height: 0,
                             opacity: 0,
                           }}
                           animate={{
-                            height:
-                              "auto",
+                            height: "auto",
                             opacity: 1,
                           }}
                           exit={{
@@ -2321,179 +1115,161 @@ const Navbar = () => {
                             opacity: 0,
                           }}
                           transition={{
-                            duration: 0.3,
+                            duration:
+                              reduceMotion
+                                ? 0
+                                : 0.25,
                           }}
-                          className="
-                            overflow-hidden
-                          "
+                          className="overflow-hidden"
                         >
-                          <div
-                            className="
-                              mb-4
-                              max-h-[380px]
-                              overflow-y-auto
-                              rounded-2xl
-                              border
-                              border-[#741522]/10
-                              bg-white/45
-                              p-3
-                            "
-                          >
-                            {dynamicCategories.length >
-                            0 ? (
-                              dynamicCategories.map(
-                                (
-                                  category,
-                                  index
-                                ) => (
-                                  <motion.button
-                                    key={
-                                      category
-                                    }
-                                    type="button"
-                                    initial={{
-                                      opacity: 0,
-                                      x: -8,
-                                    }}
-                                    animate={{
-                                      opacity: 1,
-                                      x: 0,
-                                    }}
-                                    transition={{
-                                      delay:
-                                        Math.min(
-                                          index *
-                                            0.02,
-                                          0.25
-                                        ),
-                                    }}
-                                    onClick={() =>
-                                      goToCategory(
-                                        category
-                                      )
-                                    }
-                                    className="
-                                      group
-                                      flex
-                                      w-full
-                                      items-center
-                                      justify-between
-                                      rounded-lg
-                                      px-3
-                                      py-3
-                                      text-left
-                                      transition-all
-                                      hover:bg-[#741522]/5
-                                    "
-                                  >
-                                    <span
-                                      className="
-                                        min-w-0
-                                        truncate
-                                        text-[9px]
-                                        tracking-[0.07em]
-                                        text-[#6E5A52]
-                                        group-hover:text-[#741522]
-                                      "
-                                    >
-                                      {
+                          <div className="mb-4 rounded-2xl border border-[#741522]/10 bg-white/55 p-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                goTo(
+                                  "/allproducts"
+                                )
+                              }
+                              className="mb-1 flex w-full items-center justify-between rounded-xl bg-[#741522] px-3 py-3 text-left text-[8px] font-semibold tracking-[0.16em] text-white"
+                            >
+                              <span>
+                                VIEW ALL PRODUCTS
+                              </span>
+                              <ArrowUpRight
+                                size={13}
+                              />
+                            </button>
+
+                            <div className="max-h-[330px] overflow-y-auto pr-1">
+                              {dynamicCategories.length >
+                              0 ? (
+                                dynamicCategories.map(
+                                  (
+                                    category,
+                                    index
+                                  ) => (
+                                    <motion.button
+                                      key={
                                         category
                                       }
-                                    </span>
+                                      type="button"
+                                      initial={
+                                        reduceMotion
+                                          ? undefined
+                                          : {
+                                              opacity: 0,
+                                              x: -8,
+                                            }
+                                      }
+                                      animate={{
+                                        opacity: 1,
+                                        x: 0,
+                                      }}
+                                      transition={{
+                                        delay:
+                                          reduceMotion
+                                            ? 0
+                                            : Math.min(
+                                                index *
+                                                  0.015,
+                                                0.2
+                                              ),
+                                      }}
+                                      onClick={() =>
+                                        goToCategory(
+                                          category
+                                        )
+                                      }
+                                      className="group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#741522]/5"
+                                    >
+                                      <span className="min-w-0 truncate text-[9px] tracking-[0.06em] text-[#6E5A52] group-hover:text-[#741522]">
+                                        {
+                                          category
+                                        }
+                                      </span>
 
-                                    <ChevronRight
-                                      size={13}
-                                      className="
-                                        shrink-0
-                                        text-[#9A8982]
-                                        transition-transform
-                                        group-hover:translate-x-1
-                                      "
-                                    />
-                                  </motion.button>
+                                      <ChevronRight
+                                        size={
+                                          13
+                                        }
+                                        className="shrink-0 text-[#9A8982] transition group-hover:translate-x-1 group-hover:text-[#741522]"
+                                      />
+                                    </motion.button>
+                                  )
                                 )
-                              )
-                            ) : (
-                              <div
-                                className="
-                                  py-7
-                                  text-center
-                                "
-                              >
-                                <Sparkles
-                                  size={18}
-                                  className="
-                                    mx-auto
-                                    mb-2
-                                    text-[#C9A24A]
-                                  "
-                                />
-
-                                <p
-                                  className="
-                                    text-[8px]
-                                    tracking-[0.15em]
-                                    text-[#9A8982]
-                                  "
-                                >
-                                  NO CATEGORIES
-                                  AVAILABLE
-                                </p>
-                              </div>
-                            )}
+                              ) : (
+                                <div className="px-3 py-8 text-center">
+                                  <Grid3X3
+                                    size={18}
+                                    className="mx-auto mb-2 text-[#C9A24A]"
+                                  />
+                                  <p className="text-[8px] tracking-[0.15em] text-[#9A8982]">
+                                    NO CATEGORIES
+                                    AVAILABLE
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
 
-                  {/* NEW */}
-
                   <MobileNavItem
                     number="03"
                     label="NEW ARRIVALS"
-                    onClick={() =>
-                      goTo(
-                        "/newarrivals"
-                      )
-                    }
+                    active={isActive(
+                      "/newarrivals"
+                    )}
                     icon={
                       <Sparkles
                         size={17}
                       />
                     }
+                    onClick={() =>
+                      goTo(
+                        "/newarrivals"
+                      )
+                    }
                   />
-
-                  {/* PREMIUM */}
 
                   <MobileNavItem
                     number="04"
                     label="PREMIUM SAREES"
+                    premium
                     active={isActive(
                       "/premium-sarees"
                     )}
-                    premium
                     icon={
                       <Crown
                         size={17}
                       />
                     }
                     onClick={() =>
-                      goTo("/premium-sarees")
+                      goTo(
+                        "/premium-sarees"
+                      )
                     }
                   />
-
-                  {/* SALES */}
 
                   <MobileNavItem
                     number="05"
                     label="HOT SALES"
+                    active={isActive(
+                      "/hotsales"
+                    )}
+                    icon={
+                      <Sparkles
+                        size={17}
+                      />
+                    }
                     onClick={() =>
-                      goTo("/hotsales")
+                      goTo(
+                        "/hotsales"
+                      )
                     }
                   />
-
-                  {/* WISHLIST */}
 
                   <MobileNavItem
                     number="06"
@@ -2517,8 +1293,6 @@ const Navbar = () => {
                     }
                   />
 
-                  {/* TRACK */}
-
                   <MobileNavItem
                     number="07"
                     label="TRACK YOUR ORDER"
@@ -2527,30 +1301,33 @@ const Navbar = () => {
                         size={17}
                       />
                     }
-                    onClick={() => {
-                      setMobileMenu(
-                        false
-                      );
-
+                    onClick={() =>
                       setTrackingOpen(
                         true
-                      );
-                    }}
+                      )
+                    }
                   />
-
-                  {/* ACCOUNT */}
 
                   <MobileNavItem
                     number="08"
                     label={
                       login
                         ? "MY ACCOUNT"
-                        : "LOGIN / SIGN UP"
+                        : "LOGIN / ACCOUNT"
                     }
+                    active={isActive(
+                      "/account"
+                    )}
                     icon={
-                      <UserRound
-                        size={17}
-                      />
+                      login ? (
+                        <UserRound
+                          size={17}
+                        />
+                      ) : (
+                        <LogIn
+                          size={17}
+                        />
+                      )
                     }
                     onClick={() =>
                       goTo(
@@ -2561,67 +1338,35 @@ const Navbar = () => {
                     }
                   />
 
-                  {/* CART */}
-
                   <MobileNavItem
                     number="09"
-                     label="SHOPPING BAG"
+                    label="OUR STORY"
+                    active={isActive(
+                      "/aboutus"
+                    )}
                     icon={
-                      <ShoppingBag
+                      <MapPin
                         size={17}
                       />
                     }
-                    badge={
-                      totalItems >
-                      0
-                        ? totalItems
-                        : null
-                    }
                     onClick={() =>
-                      goTo("/cart")
+                      goTo(
+                        "/aboutus"
+                      )
                     }
                   />
 
-                  {/* ORDERS */}
-
-                  {login && (
-                    <MobileNavItem
-                      number="10"
-                       label="MY ORDERS"
-                      icon={
-                        <Package
-                          size={17}
-                        />
-                      }
-                      badge={
-                        paidOrderCount >
-                        0
-                          ? paidOrderCount
-                          : null
-                      }
-                      onClick={() =>
-                        goTo(
-                          "/account?tab=3"
-                        )
-                      }
-                    />
-                  )}
-
-                  {/* STORY */}
-
                   <MobileNavItem
-                    number="11"
-                    label="OUR STORY"
-                    onClick={() =>
-                      goTo("/aboutus")
-                    }
-                  />
-
-                  {/* CONTACT */}
-
-                  <MobileNavItem
-                    number="12"
+                    number="10"
                     label="CONTACT"
+                    active={isActive(
+                      "/contactus"
+                    )}
+                    icon={
+                      <ArrowUpRight
+                        size={17}
+                      />
+                    }
                     onClick={() =>
                       goTo(
                         "/contactus"
@@ -2630,117 +1375,277 @@ const Navbar = () => {
                   />
                 </div>
 
-                {/* QUOTE */}
+                {/* Drawer Footer */}
+                <div className="mt-7 overflow-hidden rounded-2xl bg-[#741522] p-4 text-white shadow-[0_12px_35px_rgba(116,21,34,0.18)] sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[7px] font-semibold tracking-[0.25em] text-[#E7C979]">
+                        DARSH EDIT
+                      </p>
+                      <h3 className="mt-1 font-serif text-lg">
+                        Find your perfect
+                        weave.
+                      </h3>
+                      <p className="mt-1 text-[8px] leading-relaxed text-white/70">
+                        Handpicked sarees,
+                        timeless
+                        craftsmanship.
+                      </p>
+                    </div>
 
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                  }}
-                  transition={{
-                    delay: 0.5,
-                  }}
-                  className="
-                    mt-12
-                    sm:mt-14
-                  "
-                >
-                  <div
-                    className="
-                      mb-4
-                      h-px
-                      w-8
-                      bg-[#741522]
-                    "
-                  />
+                    <Sparkles
+                      size={18}
+                      className="shrink-0 text-[#E7C979]"
+                    />
+                  </div>
 
-                  <p
-                    className="
-                      font-serif
-                      text-sm
-                      italic
-                      leading-relaxed
-                      text-[#806B63]
-                    "
+                  <button
+                    type="button"
+                    onClick={() =>
+                      goTo(
+                        "/allproducts"
+                      )
+                    }
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-[8px] font-semibold tracking-[0.18em] text-[#741522] transition hover:bg-[#FFF9E2]"
                   >
-                    Woven with
-                    tradition,
-                    <br />
-                    made for today.
+                    EXPLORE COLLECTION
+                    <ArrowUpRight
+                      size={13}
+                    />
+                  </button>
+                </div>
+
+                <div className="py-6 text-center">
+                  <p className="text-[7px] tracking-[0.2em] text-[#9A8982]">
+                    ✦ DARSH · HANDWOVEN
+                    SAREES ✦
                   </p>
-                </motion.div>
-              </div>
-
-              {/* FOOTER */}
-
-              <div
-                className="
-                  absolute
-                  bottom-0
-                  left-0
-                  right-0
-                  border-t
-                  border-[#741522]/10
-                  bg-[#F8F5ED]/95
-                  px-5
-                  py-4
-                  backdrop-blur-md
-                  sm:px-7
-                  sm:py-5
-                "
-              >
-                <div
-                  className="
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                  "
-                >
-                  <Sparkles
-                    size={10}
-                    className="text-[#C9A24A]"
-                  />
-
-                  <p
-                    className="
-                      text-[7px]
-                      tracking-[0.2em]
-                      text-[#9A8982]
-                    "
-                  >
-                    © DARSH ·
-                    HANDWOVEN
-                    SAREES
-                  </p>
-
-                  <Sparkles
-                    size={10}
-                    className="text-[#C9A24A]"
-                  />
                 </div>
               </div>
-            </motion.div>
+            </motion.aside>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ======================================================
-          ANIMATION
+          TRACKING MODAL
+      ====================================================== */}
+
+      <AnimatePresence>
+        {trackingOpen && (
+          <motion.div
+            className="fixed inset-0 z-[130] flex items-center justify-center bg-[#351B18]/55 px-4 py-6 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={() =>
+              setTrackingOpen(false)
+            }
+          >
+            <motion.form
+              onSubmit={handleTrackSubmit}
+              onMouseDown={(event) =>
+                event.stopPropagation()
+              }
+              initial={
+                reduceMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      y: 22,
+                      scale: 0.97,
+                    }
+              }
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={
+                reduceMotion
+                  ? undefined
+                  : {
+                      opacity: 0,
+                      y: 18,
+                      scale: 0.97,
+                    }
+              }
+              transition={{
+                duration: reduceMotion
+                  ? 0
+                  : 0.28,
+              }}
+              className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[26px] border border-[#C9A24A]/30 bg-[#FFFDF8] p-5 shadow-[0_30px_100px_rgba(35,15,12,0.28)] sm:p-7"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setTrackingOpen(
+                    false
+                  )
+                }
+                aria-label="Close tracking dialog"
+                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#741522]/10 text-[#806B63] transition hover:bg-[#741522] hover:text-white sm:right-4 sm:top-4"
+              >
+                <X size={17} />
+              </button>
+
+              <div className="pr-10">
+                <motion.div
+                  animate={
+                    reduceMotion
+                      ? undefined
+                      : {
+                          y: [0, -3, 0],
+                        }
+                  }
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                  className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#741522]/5 text-[#741522]"
+                >
+                  <Truck
+                    size={20}
+                    strokeWidth={1.5}
+                  />
+                </motion.div>
+
+                <p className="text-[8px] font-semibold tracking-[0.28em] text-[#C9A24A]">
+                  DARSH DELIVERY
+                </p>
+
+                <h3 className="mt-1 font-serif text-2xl text-[#3F302B]">
+                  Track Your Order
+                </h3>
+
+                <p className="mt-2 text-xs leading-relaxed text-[#806B63]">
+                  Enter your AWB /
+                  tracking number
+                  and continue to
+                  Delhivery tracking.
+                </p>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-[#741522]/10 bg-[#F8F5ED] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[7px] font-semibold tracking-[0.2em] text-[#C9A24A]">
+                      YOUR SHIPMENTS
+                    </p>
+
+                    <p className="mt-1 text-xs text-[#5C4942]">
+                      {hasTrackableOrder
+                        ? `${customerAwbs.length} shipment${
+                            customerAwbs.length >
+                            1
+                              ? "s"
+                              : ""
+                          } with AWB`
+                        : "No AWB assigned yet"}
+                    </p>
+                  </div>
+
+                  <Package
+                    size={18}
+                    className="shrink-0 text-[#741522]"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    goTo(
+                      "/account?tab=3"
+                    )
+                  }
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#741522]/15 bg-white px-4 py-2.5 text-[8px] font-semibold tracking-[0.17em] text-[#741522] transition hover:bg-[#741522] hover:text-white"
+                >
+                  VIEW MY ORDERS
+                  <ArrowUpRight
+                    size={13}
+                  />
+                </button>
+              </div>
+
+              <div className="relative mt-4">
+                <input
+                  value={trackingNumber}
+                  onChange={(event) =>
+                    setTrackingNumber(
+                      event.target.value
+                    )
+                  }
+                  placeholder="AWB / Tracking Number"
+                  autoComplete="off"
+                  aria-label="AWB or tracking number"
+                  className="w-full rounded-xl border border-[#741522]/15 bg-[#F8F5ED] px-4 py-3.5 pr-11 text-sm text-[#3F302B] outline-none transition placeholder:text-[#A79A94] focus:border-[#C9A24A] focus:ring-4 focus:ring-[#C9A24A]/10"
+                />
+
+                <Package
+                  size={17}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9A8982]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={!trackingNumber.trim()}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-5 py-3.5 text-[9px] font-semibold tracking-[0.2em] text-white transition hover:bg-[#5E101C] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                TRACK ON DELHIVERY
+                <ArrowUpRight
+                  size={14}
+                />
+              </button>
+
+              {hasTrackableOrder && (
+                <button
+                  type="button"
+                  onClick={useLatestAwb}
+                  className="mt-3 flex w-full items-center justify-center gap-2 text-[8px] font-semibold tracking-[0.13em] text-[#741522] transition hover:text-[#C9A24A]"
+                >
+                  USE LATEST AWB
+                  <ChevronRight
+                    size={12}
+                  />
+                </button>
+              )}
+
+              <p className="mt-4 text-center text-[8px] leading-relaxed tracking-[0.03em] text-[#9A8982]">
+                Find your AWB:
+                <button
+                  type="button"
+                  onClick={() =>
+                    goTo(
+                      "/account?tab=3"
+                    )
+                  }
+                  className="mx-1 font-semibold text-[#741522] underline underline-offset-2"
+                >
+                  My Orders
+                </button>
+                → View Order Details
+                → Copy AWB
+              </p>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ======================================================
+          LOCAL ANIMATION
       ====================================================== */}
 
       <style>
         {`
           @keyframes navbarShine {
             0% {
-              left: -100%;
+              left: -45%;
             }
-
             45%,
             100% {
-              left: 130%;
+              left: 135%;
             }
           }
 
@@ -2761,6 +1666,182 @@ const Navbar = () => {
 };
 
 /* ============================================================
+   DESKTOP CATEGORY MENU
+============================================================ */
+
+const DesktopCategoryMenu = ({
+  open,
+  setOpen,
+  categories,
+  onCategory,
+  onViewAll,
+}) => {
+  return (
+    <div
+      className="relative shrink-0"
+      onMouseEnter={() =>
+        setOpen(true)
+      }
+      onMouseLeave={() =>
+        setOpen(false)
+      }
+    >
+      <button
+        type="button"
+        onClick={() =>
+          setOpen((value) => !value)
+        }
+        aria-expanded={open}
+        aria-haspopup="true"
+        className="group relative flex shrink-0 items-center gap-1 rounded-full px-3 py-2 text-[8px] font-medium tracking-[0.13em] text-[#806B63] transition hover:bg-[#741522]/5 hover:text-[#741522] 2xl:px-3.5 2xl:text-[9px] 2xl:tracking-[0.15em]"
+      >
+        SHOP BY CATEGORY
+
+        <ChevronDown
+          size={11}
+          className={`transition-transform duration-300 ${
+            open
+              ? "rotate-180 text-[#741522]"
+              : ""
+          }`}
+        />
+
+        <span className="absolute bottom-0 left-3 h-px w-0 bg-[#741522] transition-all duration-300 group-hover:w-[calc(100%-24px)]" />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 10,
+              scale: 0.98,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 10,
+              scale: 0.98,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className="absolute left-1/2 top-full z-[120] w-[min(760px,calc(100vw-32px))] -translate-x-1/2 pt-3"
+          >
+            <div className="overflow-hidden rounded-2xl border border-[#741522]/10 bg-[#FFFDF8] p-5 shadow-[0_25px_70px_rgba(74,35,25,0.18)] 2xl:p-6">
+              <div className="mb-4 flex items-end justify-between gap-4 border-b border-[#741522]/10 pb-4">
+                <div>
+                  <p className="text-[7px] font-semibold tracking-[0.28em] text-[#C9A24A]">
+                    EXPLORE DARSH
+                  </p>
+
+                  <h3 className="mt-1 font-serif text-xl text-[#3F302B]">
+                    Shop By Category
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onViewAll}
+                  className="flex shrink-0 items-center gap-1 text-[8px] font-semibold tracking-[0.14em] text-[#741522] transition hover:text-[#C9A24A]"
+                >
+                  VIEW ALL
+                  <ArrowUpRight
+                    size={12}
+                  />
+                </button>
+              </div>
+
+              <div className="max-h-[380px] overflow-y-auto pr-1">
+                {categories.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1 md:grid-cols-3">
+                    {categories.map(
+                      (category, index) => (
+                        <motion.button
+                          key={category}
+                          type="button"
+                          initial={{
+                            opacity: 0,
+                            x: -6,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            x: 0,
+                          }}
+                          transition={{
+                            delay: Math.min(
+                              index * 0.015,
+                              0.2
+                            ),
+                          }}
+                          onClick={() =>
+                            onCategory(
+                              category
+                            )
+                          }
+                          className="group flex min-w-0 items-center justify-between gap-2 rounded-lg px-2.5 py-2.5 text-left transition hover:bg-[#741522]/5 hover:pl-3"
+                        >
+                          <span className="min-w-0 truncate text-[8px] tracking-[0.04em] text-[#6E5A52] transition group-hover:text-[#741522] 2xl:text-[9px]">
+                            {category}
+                          </span>
+
+                          <ChevronRight
+                            size={12}
+                            className="shrink-0 text-[#C9A24A] opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100"
+                          />
+                        </motion.button>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex min-h-[130px] items-center justify-center text-center">
+                    <div>
+                      <Sparkles
+                        size={20}
+                        className="mx-auto mb-3 text-[#C9A24A]"
+                      />
+                      <p className="text-[8px] tracking-[0.15em] text-[#9A8982]">
+                        NO CATEGORIES
+                        AVAILABLE
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-[#741522] px-4 py-3 text-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Sparkles
+                    size={13}
+                    className="shrink-0 text-[#E7C979]"
+                  />
+                  <span className="truncate text-[7px] tracking-[0.14em] sm:text-[8px]">
+                    FIND YOUR PERFECT
+                    WEAVE
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onViewAll}
+                  className="shrink-0 text-[7px] font-semibold tracking-[0.13em] underline underline-offset-4 sm:text-[8px]"
+                >
+                  SHOP NOW
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ============================================================
    DESKTOP NAV BUTTON
 ============================================================ */
 
@@ -2776,79 +1857,47 @@ const DesktopNavButton = ({
       type="button"
       onClick={onClick}
       className={`
-        group
-        relative
-        flex
-        shrink-0
-        items-center
-        gap-1.5
+        group relative flex shrink-0
+        items-center gap-1
+        
+        px-2.5 py-2
         whitespace-nowrap
-        rounded-full
-        border
-        py-2.5
-        px-3
         text-[8px]
-        font-medium
-        tracking-[0.14em]
-        transition-all
-        duration-300
-        xl:text-[9px]
-        xl:tracking-[0.17em]
-        2xl:text-[10px]
-        2xl:tracking-[0.19em]
+        tracking-[0.12em]
+        transition-all duration-300
+        2xl:px-3
+        2xl:text-[9px]
+        2xl:tracking-[0.14em]
+
         ${
           premium
-            ? "border-[#D7B95C]/70 bg-gradient-to-r from-[#FFF8D9] via-[#F5DEA0] to-[#E9C968] text-[#654A0A] shadow-[0_3px_14px_rgba(201,162,74,0.22)] hover:-translate-y-0.5 hover:border-[#C9A24A] hover:shadow-[0_6px_18px_rgba(201,162,74,0.30)]"
+            ? "overflow-hidden rounded-full border border-[#D7B95C]/60 bg-gradient-to-r from-[#FFF9E2] via-[#F5E4AE] to-[#EED27A] font-semibold text-[#654A0A] shadow-[0_3px_14px_rgba(201,162,74,0.18)] hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(201,162,74,0.28)]"
             : active
-              ? "border-transparent text-[#741522]"
-              : "border-transparent text-[#806B63] hover:text-[#741522]"
+              ? " font-semibold text-[#741522]"
+              : "border-transparent text-[#806B63] "
         }
       `}
     >
       {premium && (
-        <span
-          className="
-            pointer-events-none
-            absolute
-            inset-0
-            overflow-hidden
-            rounded-full
-          "
-        >
-          <span
-            className="
-              absolute
-              -left-1/2
-              top-0
-              h-full
-              w-1/3
-              -skew-x-12
-              bg-gradient-to-r
-              from-transparent
-              via-white/50
-              to-transparent
-              opacity-70
-              transition-all
-              duration-700
-              group-hover:left-[120%]
-            "
-          />
+        <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+          <span className="absolute -left-1/2 top-0 h-full w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/55 to-transparent opacity-70 transition-all duration-700 group-hover:left-[120%]" />
         </span>
       )}
 
-      <span className="relative z-10 whitespace-nowrap">
+      <span className="relative z-10">
         {label}
+
         {!premium && (
           <span
             className={`
-              absolute
-              -bottom-1
-              left-0
-              h-px
+              absolute -bottom-0.5 left-0 h-px
               bg-[#741522]
-              transition-all
-              duration-500
-              ${active ? "w-full" : "w-0 group-hover:w-full"}
+              transition-all duration-300
+              ${
+                active
+                  ? "w-full"
+                  : "w-0 group-hover:w-full"
+              }
             `}
           />
         )}
@@ -2857,9 +1906,13 @@ const DesktopNavButton = ({
       {icon && (
         <motion.span
           className="relative z-10"
-          animate={{ y: [0, -1, 0] }}
+          animate={{
+            y: [0, -1, 0],
+          }}
           transition={{
-            duration: premium ? 2.4 : 2,
+            duration: premium
+              ? 2.4
+              : 2,
             repeat: Infinity,
             ease: "easeInOut",
           }}
@@ -2870,9 +1923,9 @@ const DesktopNavButton = ({
 
       {premium && (
         <Sparkles
-          size={10}
+          size={9}
           strokeWidth={2}
-          className="relative z-10 text-[#A77B12] opacity-80"
+          className="relative z-10 text-[#A77B12]"
         />
       )}
     </button>
@@ -2899,51 +1952,31 @@ const IconAction = ({
       aria-label={label}
       title={label}
       className={`
-        group
-        relative
-        flex
-        h-9
-        w-9
-        shrink-0
-        items-center
-        justify-center
-        transition-all
-        duration-300
-        sm:h-10
-        sm:w-10
-
+        group relative flex
+        h-9 w-9 shrink-0
+        items-center justify-center
+        rounded-full
+        transition-all duration-300
+        hover:bg-[#741522]/5
+        sm:h-10 sm:w-10
         ${
           active || accent
             ? "text-[#741522]"
             : "text-[#6E5A52] hover:text-[#741522]"
         }
-
         ${className}
       `}
     >
       <motion.span
         whileHover={{
           y: -1,
-          scale: 1.06,
+          scale: 1.05,
         }}
       >
         {children}
       </motion.span>
 
-      <span
-        className="
-          absolute
-          bottom-1
-          left-1/2
-          h-px
-          w-0
-          -translate-x-1/2
-          bg-[#741522]
-          transition-all
-          duration-300
-          group-hover:w-5
-        "
-      />
+      <span className="pointer-events-none absolute bottom-1 left-1/2 h-px w-0 -translate-x-1/2 bg-[#741522] transition-all duration-300 group-hover:w-4" />
 
       {badge !== null && (
         <motion.span
@@ -2955,27 +1988,41 @@ const IconAction = ({
             scale: 1,
             opacity: 1,
           }}
-          className="
-            absolute
-            -right-0.5
-            -top-0.5
-            flex
-            h-[17px]
-            min-w-[17px]
-            items-center
-            justify-center
-            rounded-full
-            bg-[#741522]
-            px-1
-            text-[8px]
-            font-semibold
-            text-white
-          "
+          className="absolute -right-0.5 -top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#741522] px-1 text-[8px] font-semibold text-white shadow-sm"
         >
-          {badge > 9
-            ? "9+"
-            : badge}
+          {badge > 9 ? "9+" : badge}
         </motion.span>
+      )}
+    </button>
+  );
+};
+
+/* ============================================================
+   QUICK MOBILE ACTION
+============================================================ */
+
+const QuickMobileAction = ({
+  icon,
+  label,
+  onClick,
+  badge = null,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-[#741522]/10 bg-[#F8F5ED] px-2 py-2.5 text-[#741522] transition hover:border-[#C9A24A]/60 hover:bg-white"
+    >
+      {icon}
+
+      <span className="text-[7px] font-medium tracking-[0.08em] text-[#6E5A52]">
+        {label}
+      </span>
+
+      {badge !== null && (
+        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#741522] px-1 text-[7px] font-semibold text-white">
+          {badge > 9 ? "9+" : badge}
+        </span>
       )}
     </button>
   );
@@ -2996,23 +2043,16 @@ const MobileNavItem = ({
 }) => {
   return (
     <motion.button
-      whileTap={{
-        scale: 0.985,
-      }}
+      whileTap={{ scale: 0.985 }}
       type="button"
       onClick={onClick}
       className={`
-        group
-        flex
-        w-full
-        items-center
-        justify-between
-        border-b
-        py-4
-        text-left
-        transition-all
-        duration-300
+        group flex w-full
+        items-center justify-between
+        border-b py-4 text-left
+        transition-all duration-300
         sm:py-5
+
         ${
           premium
             ? "border-[#D7B95C]/50 bg-gradient-to-r from-[#FFF9E2] via-[#F6E5AF] to-[#EED27A] px-4 shadow-[0_4px_16px_rgba(201,162,74,0.16)]"
@@ -3020,20 +2060,11 @@ const MobileNavItem = ({
         }
       `}
     >
-      <div
-        className="
-          flex
-          min-w-0
-          items-center
-          gap-4
-        "
-      >
+      <div className="flex min-w-0 items-center gap-4">
         <span
           className={`
-            shrink-0
-            text-[8px]
+            shrink-0 text-[8px]
             tracking-[0.2em]
-
             ${
               premium
                 ? "font-semibold text-[#A77B12]"
@@ -3048,13 +2079,12 @@ const MobileNavItem = ({
 
         <span
           className={`
-            whitespace-nowrap
+            min-w-0 truncate
             text-[10px]
-            tracking-[0.19em]
+            tracking-[0.18em]
             transition-colors
             sm:text-[12px]
-            sm:tracking-[0.25em]
-
+            sm:tracking-[0.22em]
             ${
               premium
                 ? "font-semibold text-[#654A0A]"
@@ -3068,65 +2098,32 @@ const MobileNavItem = ({
         </span>
       </div>
 
-      <div
-        className="
-          ml-3
-          flex
-          shrink-0
-          items-center
-          gap-2
-        "
-      >
+      <div className="ml-3 flex shrink-0 items-center gap-2">
         {badge !== null && (
-          <span
-            className="
-              flex
-              h-5
-              min-w-5
-              items-center
-              justify-center
-              rounded-full
-              bg-[#741522]
-              px-1.5
-              text-[9px]
-              font-medium
-              text-white
-            "
-          >
-            {badge > 9
-              ? "9+"
-              : badge}
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#741522] px-1.5 text-[9px] font-medium text-white">
+            {badge > 9 ? "9+" : badge}
           </span>
         )}
 
-        {icon ? (
-          <span
-            className={`
-              transition-colors
-              ${
-                premium
-                  ? "text-[#8A6410]"
-                  : active
-                    ? "text-[#741522]"
-                    : "text-[#9A8982] group-hover:text-[#741522]"
-              }
-            `}
-          >
-            {icon}
-          </span>
-        ) : (
-          <ChevronRight
-            size={17}
-            strokeWidth={1.2}
-            className="
-              text-[#9A8982]
-              transition-all
-              duration-300
-              group-hover:translate-x-1
-              group-hover:text-[#741522]
-            "
-          />
-        )}
+        <span
+          className={`
+            transition-colors
+            ${
+              premium
+                ? "text-[#8A6410]"
+                : active
+                  ? "text-[#741522]"
+                  : "text-[#9A8982] group-hover:text-[#741522]"
+            }
+          `}
+        >
+          {icon || (
+            <ChevronRight
+              size={17}
+              strokeWidth={1.2}
+            />
+          )}
+        </span>
       </div>
     </motion.button>
   );

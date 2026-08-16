@@ -29,12 +29,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import SareesByColor from "./pages/SareesByColor";
 import Wishlist from "./pages/Wishlist.jsx";
 import PremiumSarees from "./pages/PremiumSarees.jsx";
-
-
-
-
-
-
+import ShopByPrice from "./pages/ShopByPrice.jsx";
 
 const App = () => {
   const context = useAppContext();
@@ -61,6 +56,7 @@ const App = () => {
             <Route path="/PaymentOptions" element={<PaymentOptions />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/premium-sarees" element={<PremiumSarees />}/>
+            <Route path="/shop-by-price" element={<ShopByPrice />} />
             <Route
               path="/CancellationandRefund"
               element={<CancellationAndRefund />}

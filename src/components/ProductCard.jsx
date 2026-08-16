@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
+  Crown,
   Heart,
   Sparkles,
 } from "lucide-react";
@@ -326,8 +327,10 @@ const ProductCard = ({
             right-3
             z-30
             flex
-            h-9
-            w-9
+            h-6
+            w-6
+            sm:h-9
+            sm:w-9
             items-center
             justify-center
             rounded-full
@@ -355,7 +358,7 @@ const ProductCard = ({
             transition={{ duration: 0.35 }}
           >
             <Heart
-              size={16}
+              size={14}
               strokeWidth={1.5}
               fill={
                 isWishlisted
@@ -406,7 +409,7 @@ const ProductCard = ({
               backdrop-blur-md
             "
           >
-            <Sparkles
+            <Crown
               size={10}
               className="text-[#C9A24A]"
             />

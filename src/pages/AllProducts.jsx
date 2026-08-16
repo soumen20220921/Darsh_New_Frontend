@@ -13,6 +13,7 @@ import {
   PackageX,
   SlidersHorizontal,
   ArrowUpRight,
+  Crown,
 } from "lucide-react";
 
 
@@ -38,6 +39,44 @@ const ALL_CATEGORIES = [
 
 
 /* =========================================================
+   PRODUCT HELPERS
+========================================================= */
+
+const getProductPrice = (product) => {
+  const price = Number(product?.price);
+  return Number.isFinite(price) ? price : 0;
+};
+
+const isPremiumProduct = (product) => {
+  if (!product) return false;
+
+  const explicitPremium =
+    product.isPremium === true ||
+    product.premium === true ||
+    product.is_premium === true ||
+    String(product.premium || "").toLowerCase() === "true";
+
+  if (explicitPremium) return true;
+
+  const searchable = [
+    product.productName,
+    product.category,
+    product.subCategory,
+    product.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /\bpremium\b|luxury|exclusive|bridal/.test(searchable);
+};
+
+const formatPrice = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+  }).format(Math.max(0, Number(value) || 0));
+
+/* =========================================================
    MAIN COMPONENT
 ========================================================= */
 
@@ -57,6 +96,9 @@ const AllProducts = () => {
 
   const [priceRange, setPriceRange] =
     useState([0, 3000]);
+
+  const [showPremiumOnly, setShowPremiumOnly] =
+    useState(false);
 
   const [stockStatus, setStockStatus] =
     useState("all");
@@ -86,6 +128,31 @@ const AllProducts = () => {
       setIsLoading(false);
     }
   }, [allProduct]);
+
+  /* =======================================================
+     DYNAMIC PRICE BOUNDS
+  ======================================================= */
+
+  const priceBounds = useMemo(() => {
+    const prices = (allProduct || [])
+      .map(getProductPrice)
+      .filter((price) => price > 0);
+
+    if (!prices.length) {
+      return { min: 0, max: 3000 };
+    }
+
+    const min = Math.max(0, Math.floor(Math.min(...prices) / 100) * 100);
+    const max = Math.max(100, Math.ceil(Math.max(...prices) / 100) * 100);
+
+    return { min, max };
+  }, [allProduct]);
+
+  useEffect(() => {
+    if (!allProduct?.length) return;
+
+    setPriceRange([priceBounds.min, priceBounds.max]);
+  }, [allProduct, priceBounds.min, priceBounds.max]);
 
 
   /* =======================================================
@@ -173,6 +240,13 @@ const AllProducts = () => {
     );
 
 
+    /* Premium */
+
+    if (showPremiumOnly) {
+      products = products.filter(isPremiumProduct);
+    }
+
+
     /* Stock */
 
     if (stockStatus === "inStock") {
@@ -219,6 +293,7 @@ const AllProducts = () => {
     allProduct,
     searchQuery,
     priceRange,
+    showPremiumOnly,
     sortBy,
     stockStatus,
     selectedCategory,
@@ -232,7 +307,8 @@ const AllProducts = () => {
 
   const handleResetFilters = () => {
     setSearchQuery("");
-    setPriceRange([0, 3000]);
+    setPriceRange([priceBounds.min, priceBounds.max]);
+    setShowPremiumOnly(false);
     setSortBy("default");
     setStockStatus("all");
     setSelectedCategory("all");
@@ -584,13 +660,9 @@ const AllProducts = () => {
                     key={category}
                     type="button"
                     onClick={() => {
-                      setSelectedCategory(
-                        category
-                      );
-
-                      setSelectedSubCategory(
-                        "all"
-                      );
+                      setShowPremiumOnly(false);
+                      setSelectedCategory(category);
+                      setSelectedSubCategory("all");
                     }}
                     className={`
                       shrink-0
@@ -624,6 +696,7 @@ const AllProducts = () => {
                 );
               }
             )}
+
 
           </motion.div>
 
@@ -844,46 +917,45 @@ const AllProducts = () => {
 
                 <div className="space-y-4">
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      text-[10px]
-                      text-[#806c63]
-                    "
-                  >
-
-                    <span>
-                      ₹{priceRange[0]}
-                    </span>
-
-                    <span>
-                      ₹{priceRange[1]}
-                    </span>
-
+                  <div className="flex items-center justify-between text-[10px] text-[#806c63]">
+                    <span>₹{formatPrice(priceRange[0])}</span>
+                    <span>₹{formatPrice(priceRange[1])}</span>
                   </div>
 
+                  <div className="space-y-3">
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max}
+                      step="100"
+                      value={priceRange[0]}
+                      onChange={(e) => {
+                        const nextMin = Math.min(Number(e.target.value), priceRange[1] - 100);
+                        setPriceRange([Math.max(priceBounds.min, nextMin), priceRange[1]]);
+                      }}
+                      className="w-full accent-[#c9a24a]"
+                      aria-label="Minimum price"
+                    />
 
-                  <input
-                    type="range"
-                    min="0"
-                    max="3000"
-                    step="100"
-                    value={priceRange[1]}
-                    onChange={(e) =>
-                      setPriceRange([
-                        priceRange[0],
-                        Number(
-                          e.target.value
-                        ),
-                      ])
-                    }
-                    className="
-                      w-full
-                      accent-[#741522]
-                    "
-                  />
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max}
+                      step="100"
+                      value={priceRange[1]}
+                      onChange={(e) => {
+                        const nextMax = Math.max(Number(e.target.value), priceRange[0] + 100);
+                        setPriceRange([priceRange[0], Math.min(priceBounds.max, nextMax)]);
+                      }}
+                      className="w-full accent-[#741522]"
+                      aria-label="Maximum price"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[7px] uppercase tracking-[0.15em] text-[#a18b80]">
+                    <span>₹{formatPrice(priceBounds.min)}</span>
+                    <span>₹{formatPrice(priceBounds.max)}+</span>
+                  </div>
 
                 </div>
 
@@ -1168,9 +1240,12 @@ const AllProducts = () => {
                   "
                 >
                   {filteredProducts.length}
-                  {" "}products
+                  {" "}
+                  {showPremiumOnly ? "premium products" : "products"}
                 </p>
 
+
+             
 
                 {/* Mobile Filter */}
 
@@ -1308,6 +1383,7 @@ const AllProducts = () => {
                             group-hover:-translate-y-1
                           "
                         >
+
 
                           <ProductCard
                             product={{
@@ -1602,6 +1678,8 @@ const AllProducts = () => {
 
                 <div className="pt-7">
 
+
+
                   {/* Price */}
 
                   <FilterSection
@@ -1611,47 +1689,45 @@ const AllProducts = () => {
 
                     <div className="space-y-5">
 
-                      <div
-                        className="
-                          flex
-                          justify-between
-                          text-[10px]
-                          text-[#806c63]
-                        "
-                      >
-
-                        <span>
-                          ₹{priceRange[0]}
-                        </span>
-
-                        <span>
-                          ₹{priceRange[1]}
-                        </span>
-
+                      <div className="flex justify-between text-[10px] text-[#806c63]">
+                        <span>₹{formatPrice(priceRange[0])}</span>
+                        <span>₹{formatPrice(priceRange[1])}</span>
                       </div>
 
+                      <div className="space-y-3">
+                        <input
+                          type="range"
+                          min={priceBounds.min}
+                          max={priceBounds.max}
+                          step="100"
+                          value={priceRange[0]}
+                          onChange={(e) => {
+                            const nextMin = Math.min(Number(e.target.value), priceRange[1] - 100);
+                            setPriceRange([Math.max(priceBounds.min, nextMin), priceRange[1]]);
+                          }}
+                          className="w-full accent-[#c9a24a]"
+                          aria-label="Minimum price"
+                        />
 
-                      <input
-                        type="range"
-                        min="0"
-                        max="3000"
-                        step="100"
-                        value={
-                          priceRange[1]
-                        }
-                        onChange={(e) =>
-                          setPriceRange([
-                            priceRange[0],
-                            Number(
-                              e.target.value
-                            ),
-                          ])
-                        }
-                        className="
-                          w-full
-                          accent-[#741522]
-                        "
-                      />
+                        <input
+                          type="range"
+                          min={priceBounds.min}
+                          max={priceBounds.max}
+                          step="100"
+                          value={priceRange[1]}
+                          onChange={(e) => {
+                            const nextMax = Math.max(Number(e.target.value), priceRange[0] + 100);
+                            setPriceRange([priceRange[0], Math.min(priceBounds.max, nextMax)]);
+                          }}
+                          className="w-full accent-[#741522]"
+                          aria-label="Maximum price"
+                        />
+                      </div>
+
+                      <div className="flex justify-between text-[7px] uppercase tracking-[0.15em] text-[#a18b80]">
+                        <span>₹{formatPrice(priceBounds.min)}</span>
+                        <span>₹{formatPrice(priceBounds.max)}+</span>
+                      </div>
 
                     </div>
 

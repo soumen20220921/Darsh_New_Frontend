@@ -27,6 +27,12 @@ import {
   X,
   ChevronDown,
   Sparkles,
+  MapPin,
+  PackageCheck,
+  BadgeCheck,
+  Ruler,
+  Info,
+  ChevronRight,
 } from "lucide-react";
 import { FaWhatsapp, FaTelegram, FaFacebook } from "react-icons/fa";
 import axios from "axios";
@@ -327,6 +333,11 @@ const ProductDetails = () => {
 
   const { allProduct, token, getCart, url } = useAppContext();
 
+  const normalizeText = useCallback(
+    (value) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase(),
+    [],
+  );
+
   /* =========================================================
      PRODUCT
   ========================================================= */
@@ -343,6 +354,83 @@ const ProductDetails = () => {
       (item) => item.category === product.category && item._id !== product._id,
     );
   }, [allProduct, product]);
+
+  /* =========================================================
+     DYNAMIC DISCOVERY SECTIONS
+     - More from this category
+     - Price-nearby recommendations
+     - Recently viewed
+  ========================================================= */
+
+  const moreFromCategory = useMemo(() => {
+    if (!allProduct || !product) return [];
+
+    return allProduct
+      .filter(
+        (item) =>
+          item?._id &&
+          item._id !== product._id &&
+          normalizeText(item.category) === normalizeText(product.category),
+      )
+      .sort((a, b) => {
+        const aDiff = Math.abs(Number(a.price || 0) - Number(product.price || 0));
+        const bDiff = Math.abs(Number(b.price || 0) - Number(product.price || 0));
+        return aDiff - bDiff;
+      });
+  }, [allProduct, product]);
+
+  const priceNearbyProducts = useMemo(() => {
+    if (!allProduct || !product) return [];
+
+    const currentPrice = Number(product.price || 0);
+
+    return allProduct
+      .filter((item) => item?._id && item._id !== product._id)
+      .filter((item) => {
+        const itemPrice = Number(item.price || 0);
+        if (!currentPrice || !itemPrice) return false;
+        return itemPrice >= currentPrice * 0.7 && itemPrice <= currentPrice * 1.3;
+      })
+      .sort(
+        (a, b) =>
+          Math.abs(Number(a.price || 0) - currentPrice) -
+          Math.abs(Number(b.price || 0) - currentPrice),
+      );
+  }, [allProduct, product]);
+
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
+
+  useEffect(() => {
+    if (!product?._id) return;
+
+    try {
+      const key = "darsh_recently_viewed";
+      const raw = localStorage.getItem(key);
+      const current = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(current) ? current : [];
+
+      const withoutCurrent = list.filter(
+        (item) => getWishlistId(item) !== product._id,
+      );
+
+      const next = [
+        {
+          ...product,
+          id: product._id,
+          _id: product._id,
+          name: product.productName,
+          image: product.images?.[0] || "/IMG/saree.png",
+          price: Number(product.price || 0),
+        },
+        ...withoutCurrent,
+      ].slice(0, 8);
+
+      localStorage.setItem(key, JSON.stringify(next));
+      setRecentlyViewed(next.slice(1));
+    } catch {
+      setRecentlyViewed([]);
+    }
+  }, [product]);
 
   /* =========================================================
      SAME PRODUCT / COLOR VARIANTS
@@ -407,6 +495,12 @@ const ProductDetails = () => {
   const [isAdded, setIsAdded] = useState(false);
 
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
 
   useEffect(() => {
     const syncWishlist = () => {
@@ -1060,39 +1154,41 @@ useEffect(() => {
           "
         >
           <button
-            onClick={() => {
-              navigate("/allproducts");
+  type="button"
+  onClick={() => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/allproducts");
+    }
+  }}
+  className="
+    group
+    inline-flex
+    items-center
+    gap-2
+    text-[9px]
+    sm:text-[10px]
+    uppercase
+    tracking-[0.2em]
+    text-[#806c60]
+    hover:text-[#76131d]
+    transition-all
+    duration-300
+  "
+>
+  <ArrowLeft
+    className="
+      h-3.5
+      w-3.5
+      transition-transform
+      duration-300
+      group-hover:-translate-x-1
+    "
+  />
 
-              window.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: "smooth",
-              });
-            }}
-            className="
-              group
-              inline-flex
-              items-center
-              gap-2
-              text-[9px]
-              sm:text-[10px]
-              uppercase
-              tracking-[0.2em]
-              text-[#806c60]
-              hover:text-[#76131d]
-              transition-colors
-            "
-          >
-            <ArrowLeft
-              className="
-                h-3.5
-                w-3.5
-                transition-transform
-                group-hover:-translate-x-1
-              "
-            />
-            Back to shop
-          </button>
+  <span>Back</span>
+</button>
 
           <div className="hidden sm:flex items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-[#8e786c]">
             <span className="flex items-center gap-1">
@@ -1453,15 +1549,12 @@ useEffect(() => {
                 )}
               </div>
 
-              <p
-                className="
-                mt-2
-                text-[10px]
-                text-[#907d71]
-              "
-              >
-                Inclusive of applicable taxes · Shipping calculated at checkout
-              </p>
+             <p className="mt-2 text-[10px] leading-relaxed text-[#907d71]">
+ Quality assured · Secure packaging · 
+  <span className="font-medium text-[#806b5f]">
+    Free shipping on every product
+  </span>
+</p>
             </motion.div>
 
             {/* Description */}
@@ -2450,6 +2543,50 @@ useEffect(() => {
                 </p>
               </div>
             </div>
+
+            {/* Product highlights */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4"
+            >
+              {[
+                {
+                  icon: BadgeCheck,
+                  title: "Authentic",
+                  text: "Handloom focused",
+                },
+                {
+                  icon: PackageCheck,
+                  title: "Packed safe",
+                  text: "Carefully checked",
+                },
+                {
+                  icon: Ruler,
+                  title: "Details",
+                  text: "Clear specifications",
+                },
+                {
+                  icon: MapPin,
+                  title: "India wide",
+                  text: "Shipping available",
+                },
+              ].map(({ icon: Icon, title, text }) => (
+                <div
+                  key={title}
+                  className="rounded-sm border border-[#dfd2c0] bg-[#fffaf2] px-3 py-3"
+                >
+                  <Icon className="h-4 w-4 text-[#ad823a]" />
+                  <p className="mt-2 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#5f4a40]">
+                    {title}
+                  </p>
+                  <p className="mt-1 text-[8px] leading-4 text-[#927d70]">
+                    {text}
+                  </p>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </motion.section>
 
@@ -2457,14 +2594,49 @@ useEffect(() => {
             PRODUCT DETAILS
         =================================================== */}
 
+        {/* Rating + service summary */}
+        <section className="mt-4 sm:mt-16">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-3">
+            <div className="border border-[#dfd2c0] bg-[#fffaf2] p-3">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 fill-[#b48a42] text-[#b48a42]" />
+                <span className="font-serif text-2xl text-[#42151a]">
+                  {Number(rating).toFixed(1)}
+                </span>
+              </div>
+              <p className="mt-2 text-[9px] uppercase tracking-[0.16em] text-[#927d70]">
+                Customer rating
+              </p>
+            </div>
+
+            <div className="border border-[#dfd2c0] bg-[#fffaf2] p-3">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="h-4 w-4 text-[#ad823a]" />
+                <span className="font-serif text-lg text-[#42151a]">
+                  Easy returns
+                </span>
+              </div>
+              <p className="mt-2 text-[9px] uppercase tracking-[0.16em] text-[#927d70]">
+                7-day eligible returns
+              </p>
+            </div>
+
+            <div className="border border-[#dfd2c0] bg-[#fffaf2] p-3">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-[#ad823a]" />
+                <span className="font-serif text-lg text-[#42151a]">
+                  Made with care
+                </span>
+              </div>
+              <p className="mt-2 text-[9px] uppercase tracking-[0.16em] text-[#927d70]">
+                Product information first
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section
-          className="
-          mt-16
-          sm:mt-20
-          border-t
-          border-[#dfd2c0]
-          pt-10
-        "
+          className="mt-4 border-t border-[#dfd2c0] pt-10 sm:mt-8"
         >
           <div
             className="
@@ -2797,204 +2969,313 @@ useEffect(() => {
         {/* ===================================================
             YOU MAY ALSO LIKE
         =================================================== */}
-
         {similarProducts.length > 0 && (
-          <section
-            className="
-            mt-10
-            sm:mt-16
-            pb-10
-          "
-          >
-            <div
-              className="
-              flex
-              items-end
-              justify-between
-              mb-7
-            "
-            >
+          <section className="mt-10 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+            <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <p
-                  className="
-                  text-[9px]
-                  uppercase
-                  tracking-[0.3em]
-                  text-[#a27d5f]
-                  mb-2
-                "
-                >
-                  The collection
+                <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
+                  Curated for you
                 </p>
-
-                <h2
-                  className="
-                  font-serif
-                  text-2xl
-                  sm:text-3xl
-                  text-[#42151a]
-                "
-                >
+                <h2 className="font-serif text-2xl text-[#42151a] sm:text-3xl">
                   You may also like
                 </h2>
+                <p className="mt-2 max-w-xl text-xs leading-5 text-[#927d70]">
+                  Similar sarees from the {product.category || "current"} collection.
+                </p>
               </div>
-
-              <Sparkles
-                className="
-                hidden
-                sm:block
-                h-5
-                w-5
-                text-[#b48a42]
-              "
-              />
+              <Sparkles className="hidden h-5 w-5 text-[#b48a42] sm:block" />
             </div>
 
             <div
-              className="
-              grid
-              grid-cols-2
-              md:grid-cols-4
-              gap-3
-              sm:gap-5
-            "
+              className="flex gap-3 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-5 sm:overflow-visible"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {similarProducts.slice(0, 4).map((item, index) => (
-                <motion.div
+              {similarProducts.slice(0, 8).map((item, index) => (
+                <motion.article
                   key={item._id}
-                  initial={{
-                    opacity: 0,
-                    y: 20,
-                  }}
-                  whileInView={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  viewport={{
-                    once: true,
-                    amount: 0.2,
-                  }}
-                  transition={{
-                    delay: index * 0.08,
-                  }}
-                  whileHover={{
-                    y: -5,
-                  }}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ delay: Math.min(index * 0.06, 0.3) }}
+                  whileHover={{ y: -5 }}
                   onClick={() => {
                     navigate(`/productDetails/${item._id}`);
-
-                    window.scrollTo({
-                      top: 0,
-                      left: 0,
-                      behavior: "smooth",
-                    });
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
                   }}
-                  className="
-                        group
-                        cursor-pointer
-                      "
+                  className="group w-[180px] shrink-0 cursor-pointer sm:w-auto"
                 >
-                  <div
-                    className="
-                        relative
-                        aspect-[4/5]
-                        overflow-hidden
-                        bg-[#eee4d3]
-                        border
-                        border-[#dfd2c0]
-                      "
-                  >
+                  <div className="relative aspect-[4/5] overflow-hidden border border-[#dfd2c0] bg-[#eee4d3]">
                     <img
                       src={
                         item.images?.[0]
                           ? `${url}/img/${item.images[0]}`
                           : "https://placehold.co/400x500"
                       }
-                      alt={item.productName}
-                      className="
-                            w-full
-                            h-full
-                            object-cover
-                            transition-transform
-                            duration-700
-                            group-hover:scale-105
-                          "
+                      alt={item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-
-                    {item.originalPrice && item.price < item.originalPrice && (
-                      <span
-                        className="
-                              absolute
-                              top-3
-                              left-3
-                              bg-[#d0a34b]
-                              text-[#42151a]
-                              px-2
-                              py-1
-                              text-[7px]
-                              uppercase
-                              tracking-[0.15em]
-                            "
-                      >
+                    <DarshWishlistButton product={item} />
+                    {item.hotSell && (
+                      <span className="absolute bottom-3 left-3 bg-[#76131d] px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.14em] text-white">
+                        Hot sell
+                      </span>
+                    )}
+                    {item.originalPrice && Number(item.price) < Number(item.originalPrice) && (
+                      <span className="absolute left-3 top-3 bg-[#e8d6aa] px-2 py-1 text-[7px] font-semibold uppercase tracking-[0.14em] text-[#6e511b]">
                         Sale
                       </span>
                     )}
-
-                    <div
-                      className="
-                          absolute
-                          inset-x-0
-                          bottom-0
-                          p-3
-                          bg-gradient-to-t
-                          from-black/30
-                          to-transparent
-                          opacity-0
-                          group-hover:opacity-100
-                          transition-opacity
-                        "
-                    >
-                      <span
-                        className="
-                            text-white
-                            text-[8px]
-                            uppercase
-                            tracking-[0.2em]
-                          "
-                      >
-                        View saree
-                      </span>
+                  </div>
+                  <div className="pt-3">
+                    <h3 className="truncate font-serif text-base text-[#42151a]">
+                      {item.productName || "Darsh Saree"}
+                    </h3>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="text-xs text-[#6f594e]">
+                        ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                      </p>
+                      <ChevronRight className="h-3.5 w-3.5 text-[#a27d5f] transition-transform group-hover:translate-x-1" />
                     </div>
                   </div>
-
-                  <div className="pt-3">
-                    <h3
-                      className="
-                          font-serif
-                          text-base
-                          sm:text-lg
-                          text-[#42151a]
-                          truncate
-                        "
-                    >
-                      {item.productName}
-                    </h3>
-
-                    <p
-                      className="
-                          mt-1
-                          text-xs
-                          text-[#6f594e]
-                        "
-                    >
-                      ₹{Number(item.price).toLocaleString("en-IN")}
-                    </p>
-                  </div>
-                </motion.div>
+                </motion.article>
               ))}
             </div>
           </section>
         )}
+
+        {/* ===================================================
+            MORE PRODUCTS — PRICE NEARBY
+        =================================================== */}
+        {priceNearbyProducts.length > 0 && (
+          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+            <div className="mb-6">
+              <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
+                More to explore
+              </p>
+              <h2 className="font-serif text-2xl text-[#42151a] sm:text-3xl">
+                More products in your range
+              </h2>
+              <p className="mt-2 text-xs leading-5 text-[#927d70]">
+                Handpicked pieces around this saree's price point.
+              </p>
+            </div>
+
+            <div
+              className="flex gap-3 overflow-x-auto pb-4 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-4 sm:overflow-visible"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {priceNearbyProducts.slice(0, 10).map((item) => (
+                <motion.article
+                  key={item._id}
+                  whileHover={{ y: -4 }}
+                  onClick={() => {
+                    navigate(`/productDetails/${item._id}`);
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+                  }}
+                  className="group w-[155px] shrink-0 cursor-pointer sm:w-auto"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden border border-[#dfd2c0] bg-[#eee4d3]">
+                    <img
+                      src={
+                        item.images?.[0]
+                          ? `${url}/img/${item.images[0]}`
+                          : "https://placehold.co/300x375"
+                      }
+                      alt={item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <DarshWishlistButton product={item} />
+                  </div>
+                  <h3 className="mt-2 truncate font-serif text-sm text-[#42151a]">
+                    {item.productName || "Darsh Saree"}
+                  </h3>
+                  <p className="mt-1 text-[11px] text-[#6f594e]">
+                    ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                  </p>
+                </motion.article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ===================================================
+            MORE FROM THIS COLLECTION
+        =================================================== */}
+        {moreFromCategory.length > 0 && (
+          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
+                  Keep browsing
+                </p>
+                <h2 className="font-serif text-2xl text-[#42151a] sm:text-3xl">
+                  More from this collection
+                </h2>
+              </div>
+              <Link
+                to="/allproducts"
+                className="inline-flex w-fit items-center gap-2 border border-[#76131d]/25 bg-[#fffaf2] px-4 py-2 text-[8px] uppercase tracking-[0.16em] text-[#76131d] transition hover:border-[#76131d] hover:bg-[#76131d] hover:text-white"
+              >
+                View all
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 sm:gap-4">
+              {moreFromCategory.slice(0, 6).map((item, index) => (
+                <motion.article
+                  key={item._id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ delay: index * 0.04 }}
+                  whileHover={{ y: -3 }}
+                  onClick={() => {
+                    navigate(`/productDetails/${item._id}`);
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+                  }}
+                  className="group cursor-pointer"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden border border-[#dfd2c0] bg-[#eee4d3]">
+                    <img
+                      src={
+                        item.images?.[0]
+                          ? `${url}/img/${item.images[0]}`
+                          : "https://placehold.co/240x300"
+                      }
+                      alt={item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <DarshWishlistButton product={item} />
+                  </div>
+                  <h3 className="mt-2 truncate text-[11px] font-medium text-[#42151a]">
+                    {item.productName || "Darsh Saree"}
+                  </h3>
+                  <p className="mt-1 text-[10px] text-[#6f594e]">
+                    ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                  </p>
+                </motion.article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ===================================================
+            RECENTLY VIEWED
+        =================================================== */}
+        {recentlyViewed.length > 0 && (
+          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div>
+                <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
+                  Your journey
+                </p>
+                <h2 className="font-serif text-2xl text-[#42151a] sm:text-3xl">
+                  Recently viewed
+                </h2>
+              </div>
+              <Clock className="h-5 w-5 text-[#b48a42]" />
+            </div>
+
+            <div
+              className="flex gap-3 overflow-x-auto pb-4"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {recentlyViewed.slice(0, 6).map((item) => (
+                <motion.article
+                  key={item._id || item.id}
+                  whileHover={{ y: -4 }}
+                  onClick={() => {
+                    navigate(`/productDetails/${item._id || item.id}`);
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+                  }}
+                  className="group w-[150px] shrink-0 cursor-pointer"
+                >
+                  <div className="relative aspect-[4/5] overflow-hidden border border-[#dfd2c0] bg-[#eee4d3]">
+                    <img
+                      src={
+                        item.image
+                          ? (String(item.image).startsWith("http")
+                              ? item.image
+                              : `${url}/img/${item.image}`)
+                          : "https://placehold.co/300x375"
+                      }
+                      alt={item.name || item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <p className="mt-2 truncate font-serif text-sm text-[#42151a]">
+                    {item.name || item.productName || "Darsh Saree"}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#6f594e]">
+                    ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                  </p>
+                </motion.article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ===================================================
+            WHY DARSH — FINAL CONVERSION STRIP
+        =================================================== */}
+        <section className="mt-12 border-y border-[#dfd2c0] bg-[#f1e7d8] py-10 sm:mt-16">
+          <div className="mx-auto max-w-5xl px-1 sm:px-4">
+            <div className="text-center">
+              <p className="text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
+                Before you leave
+              </p>
+              <h2 className="mt-2 font-serif text-2xl text-[#42151a] sm:text-3xl">
+                A saree worth keeping
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-xs leading-6 text-[#735f55]">
+                Thoughtful product information, secure checkout, careful packing
+                and a simple shopping experience — designed around every Darsh weave.
+              </p>
+            </div>
+
+            <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                [Truck, "Free shipping", "Across India"],
+                [ShieldCheck, "Secure shopping", "Protected checkout"],
+                [PackageCheck, "Careful packing", "Ready for dispatch"],
+                [RotateCcw, "7-day returns", "Eligible products"],
+              ].map(([Icon, title, text]) => (
+                <div
+                  key={title}
+                  className="border border-[#dfd2c0] bg-[#fffaf2] px-4 py-5 text-center"
+                >
+                  <Icon className="mx-auto h-5 w-5 text-[#ad823a]" />
+                  <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5f4a40]">
+                    {title}
+                  </p>
+                  <p className="mt-1 text-[9px] text-[#927d70]">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-7 flex flex-col items-center justify-center gap-2 sm:flex-row">
+              <Link
+                to="/allproducts"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 bg-[#76131d] px-6 text-[9px] uppercase tracking-[0.18em] text-white transition hover:bg-[#5e0e16] sm:w-auto"
+              >
+                Continue shopping
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/cart"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 border border-[#76131d]/30 bg-[#fffaf2] px-6 text-[9px] uppercase tracking-[0.18em] text-[#76131d] transition hover:border-[#76131d] sm:w-auto"
+              >
+                View bag
+                <ShoppingBag className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* =====================================================
@@ -3197,14 +3478,12 @@ useEffect(() => {
               justify-center
               p-4
             "
-            onClick={toggleZoomMode}
-
-             onClick={(event) => {
-        // Only close when clicking the backdrop
-        if (event.target === event.currentTarget) {
-          toggleZoomMode();
-        }
-      }}
+            onClick={(event) => {
+              // Only close when clicking the backdrop.
+              if (event.target === event.currentTarget) {
+                toggleZoomMode();
+              }
+            }}
           >
             <button
               onClick={toggleZoomMode}

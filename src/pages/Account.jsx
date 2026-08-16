@@ -10,6 +10,10 @@ import {
   ShoppingBag,
   Sparkles,
   ShieldCheck,
+  Heart,
+  Clock3,
+  ArrowRight,
+  Edit3,
 } from "lucide-react";
 
 import AccountInfo from "../components/AccountInfo";
@@ -202,7 +206,7 @@ const Account = () => {
      APP CONTEXT
   ======================================================= */
 
-  const { login } = useAppContext();
+  const { login, totalItems, orderCount, url } = useAppContext();
 
 
   /* =======================================================
@@ -377,6 +381,55 @@ const Account = () => {
       ? userName.split(" ")[0]
       : "Dear Customer";
 
+
+  /* =======================================================
+     DYNAMIC ACCOUNT DASHBOARD DATA
+  ======================================================= */
+
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  const readWishlistCount = () => {
+    try {
+      const raw =
+        localStorage.getItem("darshWishlist") ||
+        localStorage.getItem("wishlist") ||
+        "[]";
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  useEffect(() => {
+    const syncAccountData = () => {
+      setWishlistCount(readWishlistCount());
+      try {
+        const raw = localStorage.getItem("darsh_recently_viewed");
+        const viewed = raw ? JSON.parse(raw) : [];
+        setRecentActivity(Array.isArray(viewed) ? viewed.slice(0, 3) : []);
+      } catch {
+        setRecentActivity([]);
+      }
+    };
+
+    syncAccountData();
+    window.addEventListener("storage", syncAccountData);
+    window.addEventListener("darsh:wishlist-updated", syncAccountData);
+
+    return () => {
+      window.removeEventListener("storage", syncAccountData);
+      window.removeEventListener("darsh:wishlist-updated", syncAccountData);
+    };
+  }, []);
+
+  const accountStats = [
+    { label: "Orders", value: Number(orderCount || 0), icon: Package, tab: 3 },
+    { label: "Wishlist", value: wishlistCount, icon: Heart, path: "/wishlist" },
+    { label: "Bag items", value: Number(totalItems || 0), icon: ShoppingBag, path: "/cart" },
+    { label: "Addresses", value: "—", icon: MapPin, tab: 2 },
+  ];
 
   /* =======================================================
      CURRENT TAB
@@ -1046,9 +1099,160 @@ const Account = () => {
                         lg:p-8
                       "
                     >
-
                       {comp === 1 && (
-                        <AccountInfo />
+                        <>
+                          <section className="mb-8">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                              <div>
+                                <p className="text-[8px] font-semibold uppercase tracking-[0.28em] text-[#9b7429]">Your Darsh space</p>
+                                <h2 className="mt-1 font-serif text-2xl font-semibold text-[#5a1820] sm:text-3xl">
+                                  Welcome back, {displayName}
+                                </h2>
+                                <p className="mt-2 max-w-2xl text-xs leading-5 text-[#806c63]">
+                                  Everything you need for your profile, shopping journey and orders — in one place.
+                                </p>
+                              </div>
+                              <motion.button
+                                whileHover={{ y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate("/allproducts")}
+                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#5a1018] sm:w-auto"
+                              >
+                                Explore collection <ArrowRight className="h-4 w-4" />
+                              </motion.button>
+                            </div>
+
+                            <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                              {accountStats.map((stat, index) => {
+                                const Icon = stat.icon;
+                                return (
+                                  <motion.button
+                                    key={stat.label}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.06 }}
+                                    whileHover={{ y: -3 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                      if (stat.tab) handleTabChange(stat.tab);
+                                      else if (stat.path) navigate(stat.path);
+                                    }}
+                                    className="group rounded-2xl border border-[#d4ad54]/20 bg-gradient-to-br from-[#fffdf8] to-[#f8f1e5] p-4 text-left shadow-sm transition hover:border-[#d4ad54]/50 hover:shadow-md"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#741522] text-white">
+                                        <Icon className="h-4 w-4" />
+                                      </div>
+                                      <ArrowRight className="h-3.5 w-3.5 text-[#b08a4d] transition-transform group-hover:translate-x-1" />
+                                    </div>
+                                    <p className="mt-4 font-serif text-2xl font-semibold text-[#5a1820]">{stat.value}</p>
+                                    <p className="mt-1 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#9b806d]">{stat.label}</p>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+                          </section>
+
+                          <section className="mb-8">
+                            <div className="mb-4 flex items-center justify-between">
+                              <div>
+                                <p className="text-[8px] uppercase tracking-[0.25em] text-[#9b7429]">Quick access</p>
+                                <h3 className="mt-1 font-serif text-xl font-semibold text-[#5a1820]">Make yourself at home</h3>
+                              </div>
+                              <Edit3 className="h-4 w-4 text-[#d4ad54]" />
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                              {[
+                                ["Edit profile", "Update your personal details.", Edit3, () => setComp(1)],
+                                ["Manage addresses", "Update delivery locations.", MapPin, () => handleTabChange(2)],
+                                ["Track orders", "View your order journey.", Package, () => handleTabChange(3)],
+                              ].map(([title, text, Icon, action]) => (
+                                <motion.button
+                                  key={title}
+                                  whileHover={{ y: -2 }}
+                                  whileTap={{ scale: 0.985 }}
+                                  onClick={action}
+                                  className="flex items-start gap-3 rounded-2xl border border-[#d4ad54]/20 bg-[#fffdf8] p-4 text-left transition hover:border-[#d4ad54]/45 hover:bg-[#fdf8ef]"
+                                >
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3e8d2] text-[#741522]">
+                                    <Icon className="h-4 w-4" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-[#4a1815]">{title}</p>
+                                    <p className="mt-1 text-[10px] leading-4 text-[#9b806d]">{text}</p>
+                                  </div>
+                                </motion.button>
+                              ))}
+                            </div>
+                          </section>
+
+                          <section className="mb-8 overflow-hidden rounded-2xl border border-[#d4ad54]/25 bg-gradient-to-r from-[#741522] to-[#8f2a32] p-5 text-white sm:p-6">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="h-4 w-4 text-[#f2d994]" />
+                                  <span className="text-[8px] font-semibold uppercase tracking-[0.25em] text-[#f2d994]">Darsh collection</span>
+                                </div>
+                                <h3 className="mt-2 font-serif text-xl sm:text-2xl">Discover your next timeless weave</h3>
+                                <p className="mt-2 max-w-xl text-[10px] leading-5 text-white/70">Explore new arrivals, premium sarees and handcrafted collections.</p>
+                              </div>
+                              <button
+                                onClick={() => navigate("/allproducts")}
+                                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#fffdf8] px-5 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#741522] transition hover:bg-[#f3e8d2]"
+                              >
+                                Shop now <ArrowRight className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </section>
+
+                          {recentActivity.length > 0 && (
+                            <section className="mb-8">
+                              <div className="mb-4 flex items-end justify-between">
+                                <div>
+                                  <p className="text-[8px] uppercase tracking-[0.25em] text-[#9b7429]">Continue browsing</p>
+                                  <h3 className="mt-1 font-serif text-xl font-semibold text-[#5a1820]">Recently viewed</h3>
+                                </div>
+                                <Clock3 className="h-4 w-4 text-[#b08a4d]" />
+                              </div>
+                              <div className="grid grid-cols-3 gap-3">
+                                {recentActivity.map((item) => {
+                                  const itemId = item._id || item.id;
+                                  const image = item.image || item.images?.[0];
+                                  const imageUrl = image
+                                    ? String(image).startsWith("http") ? image : `/img/${image}`
+                                    : "https://placehold.co/300x375";
+                                  return (
+                                    <button
+                                      key={itemId}
+                                      onClick={() => itemId && navigate(`/productDetails/${itemId}`)}
+                                      className="group overflow-hidden rounded-2xl border border-[#d4ad54]/20 bg-[#fffdf8] text-left transition hover:-translate-y-1 hover:shadow-md"
+                                    >
+                                      <div className="aspect-[4/5] overflow-hidden bg-[#f3e8d2]">
+<img
+                      src={
+                        item.image
+                          ? (String(item.image).startsWith("http")
+                              ? item.image
+                              : `${url}/img/${item.image}`)
+                          : "https://placehold.co/300x375"
+                      }
+                      alt={item.name || item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />                                      </div>
+                                      <div className="p-3">
+                                        <p className="truncate text-[10px] font-semibold text-[#4a1815]">{item.name || item.productName || "Darsh Saree"}</p>
+                                        <p className="mt-1 text-[10px] text-[#806c63]">{item.price ? `₹${Number(item.price).toLocaleString("en-IN")}` : "View product"}</p>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          )}
+
+                          <AccountInfo />
+                        </>
                       )}
 
                       {comp === 2 && (
@@ -1462,9 +1666,97 @@ const Account = () => {
                         sm:p-6
                       "
                     >
-
                       {comp === 1 && (
-                        <AccountInfo />
+                        <>
+                          <div className="mb-5">
+                            <p className="text-[8px] uppercase tracking-[0.25em] text-[#9b7429]">Account overview</p>
+                            <h2 className="mt-1 font-serif text-xl font-semibold text-[#5a1820]">Your Darsh space</h2>
+                          </div>
+
+                          <div className="mb-5 grid grid-cols-2 gap-2">
+                            {accountStats.map((stat) => {
+                              const Icon = stat.icon;
+                              return (
+                                <button
+                                  key={stat.label}
+                                  onClick={() => {
+                                    if (stat.tab) handleTabChange(stat.tab);
+                                    else if (stat.path) navigate(stat.path);
+                                  }}
+                                  className="rounded-xl border border-[#d4ad54]/20 bg-[#fdf8ef] p-3 text-left"
+                                >
+                                  <Icon className="h-4 w-4 text-[#741522]" />
+                                  <p className="mt-2 font-serif text-lg font-semibold text-[#5a1820]">{stat.value}</p>
+                                  <p className="text-[8px] uppercase tracking-[0.12em] text-[#9b806d]">{stat.label}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <button
+                            onClick={() => navigate("/wishlist")}
+                            className="mb-2 flex w-full items-center justify-between rounded-xl border border-[#d4ad54]/20 bg-[#fffdf8] p-3 text-left"
+                          >
+                            <span className="flex items-center gap-3">
+                              <Heart className="h-4 w-4 text-[#741522]" />
+                              <span>
+                                <span className="block text-xs font-semibold text-[#4a1815]">My Wishlist</span>
+                                <span className="block text-[9px] text-[#9b806d]">{wishlistCount} saved items</span>
+                              </span>
+                            </span>
+                            <ArrowRight className="h-4 w-4 text-[#b08a4d]" />
+                          </button>
+
+                          <button
+                            onClick={() => navigate("/allproducts")}
+                            className="mb-5 flex w-full items-center justify-between rounded-xl bg-[#741522] p-3 text-left text-white"
+                          >
+                            <span className="flex items-center gap-3">
+                              <Sparkles className="h-4 w-4 text-[#f2d994]" />
+                              <span>
+                                <span className="block text-xs font-semibold">Explore Darsh</span>
+                                <span className="block text-[9px] text-white/70">Discover more timeless weaves</span>
+                              </span>
+                            </span>
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+
+                          {recentActivity.length > 0 && (
+                            <div className="mb-5">
+                              <div className="mb-3 flex items-center justify-between">
+                                <h3 className="font-serif text-lg font-semibold text-[#5a1820]">Recently viewed</h3>
+                                <Clock3 className="h-4 w-4 text-[#b08a4d]" />
+                              </div>
+                              <div className="flex gap-2 overflow-x-auto pb-2">
+                                {recentActivity.map((item) => {
+                                  const itemId = item._id || item.id;
+                                  const image = item.image || item.images?.[0];
+                                
+                                  return (
+                                    <button key={itemId} onClick={() => itemId && navigate(`/productDetails/${itemId}`)} className="w-[120px] shrink-0 overflow-hidden rounded-xl border border-[#d4ad54]/20 bg-[#fffdf8] text-left">
+                                      <div className="aspect-[4/5] overflow-hidden bg-[#f3e8d2]">
+<img
+                      src={
+                        item.image
+                          ? (String(item.image).startsWith("http")
+                              ? item.image
+                              : `${url}/img/${item.image}`)
+                          : "https://placehold.co/300x375"
+                      }
+                      alt={item.name || item.productName || "Darsh saree"}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />                                      </div>
+                                      <p className="truncate p-2 text-[9px] font-semibold text-[#4a1815]">{item.name || item.productName || "Darsh Saree"}</p>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          <AccountInfo />
+                        </>
                       )}
 
                       {comp === 2 && (

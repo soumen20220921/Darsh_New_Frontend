@@ -470,7 +470,7 @@ const HotSalesPage = () => {
           />
         </div>
 
-        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 lg:px-0 py-16 sm:py-20 lg:py-24">
+        <div className="relative max-w-[1100px] mx-auto px-5 sm:px-8 lg:px-0 py-4 sm:py-15 lg:py-18">
 
           {/* Breadcrumb */}
 
@@ -531,13 +531,6 @@ const HotSalesPage = () => {
             <span className="w-10 h-px bg-[#d4ad54]/60" />
 
           </div>
-
-          <p className="max-w-[600px] mx-auto mt-6 text-center text-[12px] sm:text-[13px] leading-6 sm:leading-7 text-[#806c63]">
-            Discover our most-loved sarees at
-            exceptional prices. Handpicked
-            treasures, limited opportunities,
-            timeless elegance.
-          </p>
 
           {/* Features */}
 

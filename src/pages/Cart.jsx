@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   Truck,
   Sparkles,
+  Heart,
+  Clock3,
+  BadgeCheck,
+  Gift,
 } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import axios from "axios";
@@ -45,6 +49,13 @@ const OrderConfirmationModal = ({
 }) => {
   const isMobile = useMediaQuery({ maxWidth: 640 });
   const { url } = useAppContext();
+  
+  const getCartImage = (item) => {
+    if (!item?.imgSrc) return "https://placehold.co/500x625?text=Darsh";
+    return String(item.imgSrc).startsWith("http")
+      ? item.imgSrc
+      : `${url}/img/${item.imgSrc}`;
+  };
 
   return (
     <motion.div
@@ -117,7 +128,10 @@ const OrderConfirmationModal = ({
                   className="flex items-center gap-3 p-2.5 border border-[#e6dccd] bg-white/60"
                 >
                   <img
-                    src={`${url}/img/${item.imgSrc}`}
+                    src={getCartImage(item)}
+                      onError={(event) => {
+                        event.currentTarget.src = "https://placehold.co/500x625?text=Darsh";
+                      }}
                     alt={item.title}
                     className="w-14 h-14 sm:w-16 sm:h-16 object-cover"
                   />
@@ -395,6 +409,23 @@ const Cart = () => {
     subtotal + platformCharge + shippingCharge - discount;
 
   const productCount = cart.length;
+  const productUnitCount = cart.reduce(
+    (sum, item) => sum + Number(item.qty || 1),
+    0
+  );
+
+  const freeShippingTarget = 0;
+  const shippingProgress = 100;
+  const amountToFreeShipping = 0;
+  const shippingFee = 0;
+
+  const getCartImage = (item) => {
+    if (!item?.imgSrc) return "https://placehold.co/500x625?text=Darsh";
+    return String(item.imgSrc).startsWith("http")
+      ? item.imgSrc
+      : `${url}/img/${item.imgSrc}`;
+  };
+
 
   /* -------------------------------------------------------
      Check stock
@@ -610,58 +641,54 @@ const Cart = () => {
 
   if (cart.length === 0) {
     return (
-      <section className="min-h-[85vh] bg-[#f8f3e9] flex items-center justify-center px-4 py-16">
+      <section className="min-h-[85vh] bg-[#f8f3e9] px-4 py-12 sm:py-16 flex items-center justify-center">
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 30,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.7,
-          }}
-          className="w-full max-w-xl text-center"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className="w-full max-w-2xl"
         >
-          <motion.div
-            animate={{
-              y: [0, -8, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center border border-[#dfd2c1] bg-[#fcfaf5] shadow-[0_15px_40px_rgba(89,50,40,0.08)]"
-          >
-            <ShoppingBag
-              className="w-10 h-10 sm:w-12 sm:h-12 text-[#76131d]"
-              strokeWidth={1.2}
-            />
-          </motion.div>
+          <div className="relative overflow-hidden border border-[#dfd2c1] bg-[#fcfaf5] px-5 py-10 text-center shadow-[0_20px_55px_rgba(89,50,40,0.08)] sm:px-10 sm:py-14">
+            <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-[#76131d] via-[#c9a24a] to-[#76131d]" />
 
-          <p className="mt-8 text-[9px] tracking-[0.35em] uppercase text-[#977e73]">
-            Your collection
-          </p>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-[#dfd2c1] bg-[#f8f0e4] sm:h-28 sm:w-28"
+            >
+              <ShoppingBag className="h-10 w-10 text-[#76131d] sm:h-12 sm:w-12" strokeWidth={1.2} />
+            </motion.div>
 
-          <h1 className="font-serif text-3xl sm:text-5xl text-[#351216] mt-2">
-            Your cart is empty
-          </h1>
+            <p className="mt-8 text-[9px] uppercase tracking-[0.35em] text-[#977e73]">Your collection</p>
+            <h1 className="mt-2 font-serif text-3xl text-[#351216] sm:text-5xl">Your cart is waiting</h1>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-[#765c52]">
+              Discover handpicked sarees, premium weaves and timeless pieces made to become part of your collection.
+            </p>
 
-          <p className="text-sm sm:text-base text-[#765c52] leading-7 max-w-md mx-auto mt-4">
-            Your handpicked sarees will appear here once you find something
-            special.
-          </p>
+            <div className="mt-7 grid grid-cols-1 gap-2 text-left sm:grid-cols-3">
+              {[
+                [ShieldCheck, "Authentic", "Curated handloom collection"],
+                [Truck, "Safe delivery", "Carefully packed orders"],
+                [Gift, "Gift worthy", "Beautifully selected pieces"],
+              ].map(([Icon, title, text]) => (
+                <div key={title} className="flex items-center gap-3 border border-[#e3d8c8] bg-[#fffdf8] p-3">
+                  <Icon className="h-4 w-4 shrink-0 text-[#c9a24a]" />
+                  <div>
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#351216]">{title}</p>
+                    <p className="mt-1 text-[9px] text-[#977e73]">{text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-          <Link
-            to="/allproducts"
-            className="inline-flex items-center justify-center gap-2 mt-7 px-7 py-3.5 bg-[#76131d] text-white text-xs tracking-[0.2em] uppercase hover:bg-[#5d0e16] hover:-translate-y-0.5 shadow-lg transition-all duration-300"
-          >
-            Explore sarees
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+            <Link
+              to="/allproducts"
+              className="mt-7 inline-flex w-full items-center justify-center gap-2 bg-[#76131d] px-7 py-3.5 text-xs uppercase tracking-[0.2em] text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#5d0e16] sm:w-auto"
+            >
+              Explore sarees
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </motion.div>
       </section>
     );
@@ -672,7 +699,7 @@ const Cart = () => {
   ======================================================= */
 
   return (
-    <div className="min-h-screen bg-[#f8f3e9] text-[#351216] py-8 sm:py-12">
+    <div className="min-h-screen bg-[#f8f3e9] text-[#351216] py-5 sm:py-12">
       {/* ---------------------------------------------------
           Notification
       --------------------------------------------------- */}
@@ -759,7 +786,7 @@ const Cart = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
         {/* -------------------------------------------------
             Header
         ------------------------------------------------- */}
@@ -786,11 +813,8 @@ const Cart = () => {
               </h1>
 
               <p className="text-sm text-[#765c52] mt-2">
-                {productCount}{" "}
-                {productCount === 1
-                  ? "saree"
-                  : "sarees"}{" "}
-                selected for you.
+                {productCount} {productCount === 1 ? "saree" : "sarees"} · {productUnitCount}{" "}
+                {productUnitCount === 1 ? "piece" : "pieces"} selected for you.
               </p>
             </div>
 
@@ -804,6 +828,36 @@ const Cart = () => {
           </div>
 
           <div className="w-full h-px bg-[#dfd2c1] mt-7" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mt-5 border border-[#e3d8c8] bg-[#fcfaf5] px-4 py-3.5 sm:px-5"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Truck className="mt-0.5 h-4 w-4 shrink-0 text-[#c9a24a]" />
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#351216]">
+                    Free shipping on every product
+                  </p>
+                  <p className="mt-1 text-[9px] text-[#977e73]">Every Darsh product in your cart qualifies for free shipping.</p>
+                </div>
+              </div>
+              <div className="w-full sm:w-44">
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#eadfce]">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${shippingProgress}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full bg-[#c9a24a]"
+                  />
+                </div>
+                <p className="mt-1 text-right text-[8px] text-[#977e73]">Free shipping • 100%</p>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* -------------------------------------------------
@@ -831,14 +885,10 @@ const Cart = () => {
                   delay: index * 0.08,
                   duration: 0.45,
                 }}
-                className="group relative bg-[#fcfaf5] border border-[#dfd2c1] p-3 sm:p-5 shadow-[0_10px_35px_rgba(89,50,40,0.05)] hover:shadow-[0_18px_45px_rgba(89,50,40,0.1)] transition-all duration-500"
+                className="group relative bg-[#fcfaf5] border border-[#dfd2c1] p-2.5 sm:p-5 shadow-[0_10px_35px_rgba(89,50,40,0.05)] hover:shadow-[0_18px_45px_rgba(89,50,40,0.1)] transition-all duration-500"
               >
                 <div
-                  className={`flex gap-4 sm:gap-6 ${
-                    isMobile
-                      ? "flex-col"
-                      : "flex-row items-center"
-                  }`}
+                  className="flex flex-row items-start gap-3 sm:gap-5 md:gap-6"
                 >
                   {/* Image */}
 
@@ -851,14 +901,13 @@ const Cart = () => {
                         behavior: "smooth",
                       })
                     }
-                    className={`relative flex-shrink-0 overflow-hidden bg-[#f3eadc] ${
-                      isMobile
-                        ? "w-full aspect-[4/3]"
-                        : "w-32 h-36 sm:w-40 sm:h-44"
-                    }`}
+                    className="relative w-[88px] h-[112px] xs:w-[96px] xs:h-[122px] sm:w-32 sm:h-36 md:w-36 md:h-40 flex-shrink-0 overflow-hidden bg-[#f3eadc]"
                   >
                     <img
-                      src={`${url}/img/${item.imgSrc}`}
+                      src={getCartImage(item)}
+                      onError={(event) => {
+                        event.currentTarget.src = "https://placehold.co/500x625?text=Darsh";
+                      }}
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
@@ -869,9 +918,7 @@ const Cart = () => {
                   {/* Information */}
 
                   <div
-                    className={`flex-1 min-w-0 ${
-                      isMobile ? "text-center" : ""
-                    }`}
+                    className="flex-1 min-w-0 pt-0.5"
                   >
                     <p className="text-[9px] tracking-[0.25em] uppercase text-[#977e73] mb-2">
                       Handloom collection
@@ -886,17 +933,13 @@ const Cart = () => {
                           behavior: "smooth",
                         })
                       }
-                      className="font-serif text-xl sm:text-2xl text-[#351216] hover:text-[#76131d] transition-colors line-clamp-2"
+                      className="font-serif text-base sm:text-xl md:text-2xl leading-snug text-[#351216] hover:text-[#76131d] transition-colors line-clamp-2"
                     >
                       {item.title}
                     </Link>
 
                     <div
-                      className={`flex flex-wrap items-center gap-2 mt-3 ${
-                        isMobile
-                          ? "justify-center"
-                          : ""
-                      }`}
+                      className="flex flex-wrap items-center gap-1.5 mt-2.5"
                     >
                       <span className="px-3 py-1 bg-[#f5ede1] border border-[#e1d5c4] text-[10px] tracking-[0.08em] text-[#765c52]">
                         Qty:{" "}
@@ -915,7 +958,15 @@ const Cart = () => {
                       )}
                     </div>
 
-                    <p className="text-xs text-[#977e73] mt-3">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] text-[#977e73]">
+                        <BadgeCheck className="h-3.5 w-3.5 text-[#c9a24a]" />
+                        Selected for you
+                      </span>
+                      <span className="text-[9px] text-[#c8b8aa]">•</span>
+                      <span className="text-[9px] text-[#977e73]">Secure checkout</span>
+                    </div>
+                    <p className="text-xs text-[#977e73] mt-2">
                       ₹
                       {Number(item.price || 0) /
                         Number(item.qty || 1)}{" "}
@@ -926,13 +977,9 @@ const Cart = () => {
                   {/* Price + Actions */}
 
                   <div
-                    className={`flex ${
-                      isMobile
-                        ? "items-center justify-between"
-                        : "flex-col items-end"
-                    } gap-4`}
+                    className="flex flex-col items-end justify-between gap-2 shrink-0 min-w-[76px]"
                   >
-                    <p className="font-serif text-xl sm:text-2xl text-[#76131d]">
+                    <p className="font-serif text-base sm:text-xl md:text-2xl text-[#76131d]">
                       ₹{item.price}
                     </p>
 
@@ -947,7 +994,7 @@ const Cart = () => {
                           })
                         }
                         aria-label={`Edit ${item.title}`}
-                        className="w-10 h-10 flex items-center justify-center border border-[#dfd2c1] text-[#765c52] hover:border-[#76131d] hover:text-[#76131d] hover:bg-[#f8f0e4] transition-all duration-300"
+                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-[#dfd2c1] text-[#765c52] hover:border-[#76131d] hover:text-[#76131d] hover:bg-[#f8f0e4] transition-all duration-300"
                       >
                         <SquarePen className="w-4 h-4" />
                       </Link>
@@ -958,7 +1005,7 @@ const Cart = () => {
                           removeFromCart(item.productId)
                         }
                         aria-label={`Remove ${item.title}`}
-                        className="w-10 h-10 flex items-center justify-center border border-[#e1caca] text-[#8f3038] hover:bg-[#f8eaea] hover:border-[#8f3038] transition-all duration-300"
+                        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-[#e1caca] text-[#8f3038] hover:bg-[#f8eaea] hover:border-[#8f3038] transition-all duration-300"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -966,66 +1013,77 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* Hover gold line */}
+                {/* Compact product assurance */}
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[#eee4d7] pt-2.5">
+                  <span className="inline-flex items-center gap-1 text-[8px] uppercase tracking-[0.08em] text-[#977e73]">
+                    <Truck className="h-3 w-3 text-[#c9a24a]" />
+                    Free shipping
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[8px] uppercase tracking-[0.08em] text-[#977e73]">
+                    <ShieldCheck className="h-3 w-3 text-[#c9a24a]" />
+                    Secure order
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[8px] uppercase tracking-[0.08em] text-[#977e73]">
+                    <BadgeCheck className="h-3 w-3 text-[#c9a24a]" />
+                    Darsh assured
+                  </span>
+                </div>
 
+                {/* Hover gold line */}
                 <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-[#c9a24a] group-hover:w-full transition-all duration-700" />
               </motion.div>
             ))}
 
-            {/* Trust information */}
+            <div className="border border-[#dfd2c1] bg-[#f8f0e4] px-3 py-2.5 sm:px-4">
+              <p className="text-[9px] leading-4 text-[#765c52]">
+                <span className="font-semibold text-[#351216]">Almost yours.</span>{" "}
+                Check your Product, quantity and address before checkout. Free shipping is already included.
+              </p>
+            </div>
+
+            {/* Small shopping benefits */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1"
+            >
+              {[
+                [Truck, "Free shipping", "Every product"],
+                [ShieldCheck, "Secure checkout", "Protected payment"],
+                [BadgeCheck, "Darsh assured", "Quality checked"],
+                [Gift, "Gift ready", "Carefully packed"],
+              ].map(([Icon, title, text]) => (
+                <div
+                  key={title}
+                  className="min-w-0 border border-[#e3d8c8] bg-[#fffdf8] px-3 py-3"
+                >
+                  <Icon className="h-4 w-4 text-[#c9a24a]" />
+                  <p className="mt-2 truncate text-[8px] font-semibold uppercase tracking-[0.09em] text-[#351216]">
+                    {title}
+                  </p>
+                  <p className="mt-0.5 truncate text-[8px] text-[#977e73]">
+                    {text}
+                  </p>
+                </div>
+              ))}
+            </motion.div>
+
 
             <motion.div
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.4,
-              }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4 border border-[#d4ad54]/25 bg-[#f8f0e4] p-4 sm:p-5"
             >
-              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
-                <Truck className="w-5 h-5 text-[#c9a24a]" />
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
-                    Shipping
-                  </p>
-
-                  <p className="text-[10px] text-[#977e73] mt-1">
-                    Safe delivery
-                  </p>
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#76131d] text-white">
+                  <Heart className="h-4 w-4" />
                 </div>
-              </div>
-
-              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#c9a24a]" />
-
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
-                    Authentic
-                  </p>
-
-                  <p className="text-[10px] text-[#977e73] mt-1">
-                    Handloom collection
-                  </p>
-                </div>
-              </div>
-
-              <div className="border border-[#dfd2c1] bg-[#fcfaf5] p-4 flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-[#c9a24a]" />
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.12em] text-[#351216]">
-                    Curated
-                  </p>
-
-                  <p className="text-[10px] text-[#977e73] mt-1">
-                    Selected with care
+                  <p className="font-serif text-base text-[#351216]">Your pieces are reserved in this cart</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[#977e73]">
+                    Review your selection before checkout. You can continue browsing and return here anytime.
                   </p>
                 </div>
               </div>
@@ -1036,7 +1094,7 @@ const Cart = () => {
               CHECKOUT SIDEBAR
           ================================================= */}
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 lg:sticky lg:top-24 lg:self-start">
             {/* Address */}
 
             {!address || !address.FullName ? (
@@ -1288,8 +1346,38 @@ const Cart = () => {
               }}
               className="mt-5"
             >
+              <div className="mb-3 border border-[#d4ad54]/30 bg-[#f8f0e4] px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Truck className="h-4 w-4 shrink-0 text-[#76131d]" />
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#351216]">
+                      FREE SHIPPING ON EVERY PRODUCT
+                    </p>
+                    <p className="mt-1 text-[9px] leading-4 text-[#977e73]">
+                      No minimum order value. No shipping charge at checkout.
+                    </p>
+                  </div>
+                </div>
+              </div>
               <ImportantNotice />
             </motion.div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 border border-[#dfd2c1] bg-[#fcfaf5] p-3">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-[#c9a24a]" />
+                <div>
+                  <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#351216]">Secure payment</p>
+                  <p className="mt-0.5 text-[8px] text-[#977e73]">Protected checkout</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 border border-[#dfd2c1] bg-[#fcfaf5] p-3">
+                <Clock3 className="h-4 w-4 shrink-0 text-[#c9a24a]" />
+                <div>
+                  <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[#351216]">Quick checkout</p>
+                  <p className="mt-0.5 text-[8px] text-[#977e73]">Fast order flow</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -14,16 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppContext } from "../context/AppContext.jsx";
 
-/* =========================================================
-   NEW ARRIVALS PAGE
-========================================================= */
 
-
-/* ============================================================
-   SHARED DARSH WISHLIST BUTTON
-   Source of truth: localStorage "wishlist"
-   Compatible with the existing Wishlist page.
-============================================================ */
 
 const DARSH_WISHLIST_KEY = "wishlist";
 
@@ -441,11 +432,11 @@ const NewArrivalsPage = () => {
             mx-auto
             max-w-[1180px]
             px-5
-            py-16
+            py-6
             sm:px-8
-            sm:py-20
+            sm:py-15
             lg:px-0
-            lg:py-24
+            lg:py-18
           "
         >
 
@@ -583,26 +574,7 @@ const NewArrivalsPage = () => {
             />
           </div>
 
-          {/* Description */}
-
-          <p
-            className="
-              mx-auto
-              mt-6
-              max-w-[590px]
-              text-center
-              text-[12px]
-              leading-6
-              text-[#806c63]
-              sm:text-[13px]
-              sm:leading-7
-            "
-          >
-            Discover the newest additions to
-            the Darsh collection — handpicked
-            sarees celebrating India's timeless
-            weaving traditions.
-          </p>
+         
 
           {/* Bottom note */}
 

@@ -15,6 +15,9 @@ import {
   Flame,
   Heart,
   Crown,
+  ShoppingBag,
+  ArrowUpRight,
+  Truck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -125,6 +128,33 @@ const fallbackProducts = [
    LUXURY PRODUCT CARD
 ========================================================= */
 
+const getHomeProductImage = (product, url) => {
+  if (!product) return "/IMG/saree.png";
+
+  if (product?.images?.[0]) {
+    const imageName = String(product.images[0]);
+    return imageName.startsWith("http")
+      ? imageName
+      : `${url}/img/${imageName}`;
+  }
+
+  return (
+    product?.image ||
+    product?.img ||
+    product?.thumbnail ||
+    "/IMG/saree.png"
+  );
+};
+
+const getHomeProductId = (product) =>
+  product?._id || product?.id || product?.productId || null;
+
+const getHomeProductName = (product) =>
+  product?.productName ||
+  product?.name ||
+  product?.title ||
+  "Handwoven Saree";
+
 const LuxuryProductCard = ({
   product,
   url,
@@ -135,11 +165,7 @@ const LuxuryProductCard = ({
   const productId =
     product?._id || product?.id;
 
-  const image =
-    product?.images?.[0]
-      ? `${url}/img/${product.images[0]}`
-      : product?.image ||
-        "/IMG/saree.png";
+  const image = getHomeProductImage(product, url);
 
   const name =
     product?.productName ||
@@ -199,6 +225,9 @@ const LuxuryProductCard = ({
         <img
           src={image}
           alt={`${name} - Darsh Saree`}
+          onError={(event) => {
+            event.currentTarget.src = "/IMG/saree.png";
+          }}
           loading={
             index > 2
               ? "lazy"
@@ -387,6 +416,11 @@ const LuxuryProductCard = ({
               </p>
             )}
           </div>
+        </div>
+
+        <div className="mt-3 inline-flex items-center gap-1.5 border border-[#741522]/10 bg-[#f3eadb] px-2.5 py-1.5 text-[7px] uppercase tracking-[0.16em] text-[#741522]">
+          <Truck size={11} strokeWidth={1.4} />
+          Free shipping on every product
         </div>
 
         {/* Product meta */}
@@ -854,11 +888,10 @@ const DarshWishlistButton = ({
               product?.price || 0
             ),
             image:
-      product?.image ||
-      product?.images?.[0] ||
-      product?.img ||
-      "/IMG/placeholder.jpg",
-    price: Number(product?.price || 0),
+              product?.image ||
+              product?.images?.[0] ||
+              product?.img ||
+              "/IMG/placeholder.jpg",
           },
         ];
 
@@ -984,6 +1017,36 @@ const DarshWishlistButton = ({
     </motion.button>
   );
 };
+const PRICE_RANGES = [
+  {
+    id: "under-2000",
+    shortLabel: "Under ₹2,000",
+    min: 0,
+    max: 1999,
+    note: "Easy everyday picks",
+  },
+  {
+    id: "2000-5000",
+    shortLabel: "₹2,000 – ₹5,000",
+    min: 2000,
+    max: 5000,
+    note: "Handloom favourites",
+  },
+  {
+    id: "5001-10000",
+    shortLabel: "₹5,001 – ₹10,000",
+    min: 5001,
+    max: 10000,
+    note: "Premium occasions",
+  },
+  {
+    id: "above-10000",
+    shortLabel: "Above ₹10,000",
+    min: 10001,
+    max: Infinity,
+    note: "Heirloom edit",
+  },
+];
 
 const Home = () => {
   const {
@@ -1039,7 +1102,8 @@ const Home = () => {
     return allProduct;
   }, [allProduct]);
 
-  /* =================================================
+
+/* =================================================
      NEW ARRIVALS
   ================================================= */
 
@@ -1543,6 +1607,8 @@ const Home = () => {
 
       <SignatureWeaves />
 
+     
+
       {/* =================================================
           FIND YOUR WEAVE
       ================================================= */}
@@ -1819,9 +1885,7 @@ const Home = () => {
             <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
               {premiumSarees.map((product, index) => {
                 const id = product?._id || product?.id;
-                const image = product?.images?.[0]
-                  ? `${url}/img/${product.images[0]}`
-                  : product?.image || "/IMG/saree.png";
+                const image = getHomeProductImage(product, url);
                 const name = product?.productName || product?.name || "Premium Saree";
                 const price = Number(product?.price || 0);
 
@@ -1837,6 +1901,9 @@ const Home = () => {
                       <img
                         src={image}
                         alt={`${name} - Darsh Premium Saree`}
+                        onError={(event) => {
+                          event.currentTarget.src = "/IMG/saree.png";
+                        }}
                         loading="lazy"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.05]"
                       />
@@ -1860,9 +1927,12 @@ const Home = () => {
         </section>
       )}
 
+      
+
       {/* =========================================================
           NEW ARRIVALS
       ========================================================= */}
+
 
       <section
         className="
@@ -2865,6 +2935,101 @@ const Home = () => {
         </section>
       )}
 
+
+      {/* =========================================================
+          SHOP BY PRICE — COMPACT HOME PREVIEW
+      ========================================================= */}
+      <section
+        id="shop-by-price"
+        className="border-b border-[#741522]/10 bg-[#fffaf2] py-9 sm:py-12"
+      >
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[7px] uppercase tracking-[0.3em] text-[#977e73] sm:text-[8px]">
+                CURATED FOR EVERY BUDGET
+              </p>
+              <h2 className="mt-1.5 font-serif text-[27px] leading-none text-[#3f1616] sm:text-[34px]">
+                Shop by price
+              </h2>
+            </div>
+
+            <Link
+              to="/shop-by-price"
+              onClick={scrollTop}
+              className="group inline-flex shrink-0 items-center gap-1.5 border border-[#741522]/25 px-3 py-2 text-[7px] uppercase tracking-[0.14em] text-[#741522] transition-all duration-300 hover:bg-[#741522] hover:text-white sm:px-4"
+            >
+              View more
+              <ArrowRight
+                size={11}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </Link>
+          </div>
+
+          {/* Mobile: horizontal x-scroll. Desktop: compact 4-column row. */}
+          <div
+            className="mt-5 -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {PRICE_RANGES.map((range) => {
+              const count = products.filter((product) => {
+                const price = Number(product?.price || 0);
+                return price >= range.min && price <= range.max;
+              }).length;
+
+              return (
+                <Link
+                  key={range.id}
+                  to={`/shop-by-price?range=${range.id}`}
+                  onClick={scrollTop}
+                  className="group relative min-w-[148px] shrink-0 overflow-hidden border border-[#741522]/10 bg-[#f8f4eb] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#741522]/25 hover:shadow-md sm:min-w-0 sm:p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f3eadb] text-[#741522]">
+                      <ShoppingBag size={12} strokeWidth={1.25} />
+                    </span>
+                    <span className="text-[6px] uppercase tracking-[0.1em] text-[#977e73]">
+                      {count} {count === 1 ? "item" : "items"}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-4 whitespace-nowrap font-serif text-[17px] leading-none text-[#3f1616] sm:text-[19px]">
+                    {range.shortLabel}
+                  </h3>
+
+                  <p className="mt-1.5 truncate text-[7px] uppercase tracking-[0.1em] text-[#977e73]">
+                    {range.note}
+                  </p>
+
+                  <div className="mt-3 flex items-center justify-between border-t border-[#741522]/10 pt-2.5">
+                    <span className="text-[6px] uppercase tracking-[0.12em] text-[#741522]">
+                      Explore
+                    </span>
+                    <ArrowUpRight
+                      size={12}
+                      className="text-[#741522] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex items-center justify-center gap-2 text-[6px] uppercase tracking-[0.12em] text-[#a18b7f] sm:hidden">
+            <span className="h-px w-5 bg-[#d9c9b9]" />
+            Swipe to explore
+            <span className="h-px w-5 bg-[#d9c9b9]" />
+          </div>
+        </div>
+      </section>
+
+      
+
       {/* =========================================================
           SAREES IN THE SHOP
       ========================================================= */}
@@ -3012,7 +3177,45 @@ const Home = () => {
           border-[#741522]/10
         "
       >
-        <Reels />
+        {/* =========================================================
+          MORE FROM DARSH
+      ========================================================= */}
+      {products.length > 0 && (
+        <section className="border-b border-[#741522]/10 bg-[#f8f4eb] py-14 sm:py-18">
+          <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[8px] uppercase tracking-[0.35em] text-[#977e73]">KEEP EXPLORING</p>
+                <h2 className="mt-2 font-serif text-[32px] text-[#3f1616] sm:text-[42px]">More from Darsh</h2>
+                <p className="mt-2 max-w-xl text-[10px] leading-5 text-[#806c63] sm:text-[11px]">
+                  More beautiful pieces from our live collection, selected from your latest product data.
+                </p>
+              </div>
+              <Link
+                to="/allproducts"
+                onClick={scrollTop}
+                className="group inline-flex w-fit items-center gap-2 border border-[#741522]/35 px-5 py-2.5 text-[7px] uppercase tracking-[0.22em] text-[#741522] transition hover:bg-[#741522] hover:text-white"
+              >
+                Explore all products
+                <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {products.slice(0, 8).map((product, index) => (
+                <LuxuryProductCard
+                  key={getHomeProductId(product) || index}
+                  product={product}
+                  url={url}
+                  index={index}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <Reels />
       </section>
 
       {/* =========================================================

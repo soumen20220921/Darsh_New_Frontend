@@ -6,20 +6,86 @@ import ProductCard from "../components/ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
-  Search,
-  Filter,
   X,
   ChevronDown,
   RotateCcw,
-  CheckCircle,
   PackageCheck,
   PackageX,
   Sparkles,
   Blocks,
   SlidersHorizontal,
   Gem,
+  Crown,
+  Heart,
+  ArrowUpRight,
+  Truck,
+  ShieldCheck,
+  Gift,
 } from "lucide-react";
 
+
+const isPremiumProduct = (product) => {
+  if (!product) return false;
+
+  const explicitPremium =
+    product.isPremium === true ||
+    product.premium === true ||
+    product.is_premium === true ||
+    product.isPremium === "true" ||
+    product.premium === "true";
+
+  if (explicitPremium) return true;
+
+  const searchable = [
+    product.productName,
+    product.category,
+    product.subCategory,
+    product.description,
+    product.collection,
+    product.tag,
+    product.label,
+    product.badge,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /(premium|luxury|exclusive|bridal|royal|silk mark|handcrafted)/i.test(
+    searchable
+  );
+};
+
+const formatPrice = (value) =>
+  `₹${Number(value || 0).toLocaleString("en-IN")}`;
+
+const normalizeText = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ");
+
+const getProductId = (product) =>
+  product?._id || product?.id || product?.productId || null;
+
+const getProductName = (product) =>
+  product?.productName || product?.name || product?.title || "Saree";
+
+const matchesCategory = (product, categoryName) => {
+  const target = normalizeText(categoryName);
+  const values = [
+    product?.category,
+    product?.categoryName,
+    product?.subCategory,
+    product?.collection,
+    product?.type,
+  ]
+    .filter(Boolean)
+    .map(normalizeText);
+
+  if (values.includes(target)) return true;
+  return values.some((value) => value.includes(target) || target.includes(value));
+};
 
 const Categories = () => {
   const { name } = useParams();
@@ -39,6 +105,13 @@ const Categories = () => {
     3000,
   ]);
 
+  const [priceBounds, setPriceBounds] = useState([
+    0,
+    3000,
+  ]);
+
+  const [premiumOnly, setPremiumOnly] = useState(false);
+
   const [stockStatus, setStockStatus] =
     useState("all");
 
@@ -56,6 +129,8 @@ const Categories = () => {
 
   const [openSection, setOpenSection] =
     useState("price");
+
+  const [quickPrice, setQuickPrice] = useState("all");
    
 
   /* ============================================================
@@ -107,23 +182,54 @@ const Categories = () => {
 
     setIsLoading(false);
 
+    const categoryProducts = allProduct.filter(
+      (product) => matchesCategory(product, name)
+    );
+
     const subCats = new Set();
 
-    allProduct.forEach((product) => {
-      if (
-        product.category?.toLowerCase() ===
-          name?.toLowerCase() &&
-        product.subCategory
-      ) {
-        subCats.add(
-          product.subCategory.toLowerCase()
-        );
+    categoryProducts.forEach((product) => {
+      if (product.subCategory) {
+        subCats.add(product.subCategory);
       }
     });
 
     setAvailableSubcategories(
       Array.from(subCats)
     );
+
+    const prices = categoryProducts
+      .map((product) => Number(product.price))
+      .filter((price) => Number.isFinite(price) && price >= 0);
+
+    const minPrice = prices.length
+      ? Math.floor(Math.min(...prices) / 100) * 100
+      : 0;
+
+    const maxPrice = prices.length
+      ? Math.ceil(Math.max(...prices) / 100) * 100
+      : 3000;
+
+    const safeMax = Math.max(maxPrice, minPrice + 100);
+
+    setPriceBounds([minPrice, safeMax]);
+
+    setPriceRange((current) => {
+      const currentMin = Number(current[0]);
+      const currentMax = Number(current[1]);
+
+      if (
+        currentMin < minPrice ||
+        currentMin > safeMax ||
+        currentMax < minPrice ||
+        currentMax > safeMax ||
+        currentMax <= currentMin
+      ) {
+        return [minPrice, safeMax];
+      }
+
+      return current;
+    });
 
   }, [allProduct, name]);
 
@@ -135,9 +241,7 @@ const Categories = () => {
   const filteredProducts = useMemo(() => {
     let products =
       allProduct?.filter(
-        (product) =>
-          product.category?.toLowerCase() ===
-          name?.toLowerCase()
+        (product) => matchesCategory(product, name)
       ) || [];
 
 
@@ -150,6 +254,13 @@ const Categories = () => {
             ?.toLowerCase() ===
           selectedSubCategory.toLowerCase()
       );
+    }
+
+
+    /* Premium */
+
+    if (premiumOnly) {
+      products = products.filter(isPremiumProduct);
     }
 
 
@@ -196,13 +307,13 @@ const Categories = () => {
 
     if (sortBy === "priceLowHigh") {
       products.sort(
-        (a, b) => a.price - b.price
+        (a, b) => Number(a.price || 0) - Number(b.price || 0)
       );
     }
 
     if (sortBy === "priceHighLow") {
       products.sort(
-        (a, b) => b.price - a.price
+        (a, b) => Number(b.price || 0) - Number(a.price || 0)
       );
     }
 
@@ -220,6 +331,7 @@ const Categories = () => {
     allProduct,
     name,
     selectedSubCategory,
+    premiumOnly,
     searchQuery,
     priceRange,
     sortBy,
@@ -227,16 +339,59 @@ const Categories = () => {
   ]);
 
 
+  const premiumProductCount = useMemo(
+    () =>
+      (allProduct || []).filter((product) =>
+        matchesCategory(product, name)
+      ).filter(isPremiumProduct).length,
+    [allProduct, name]
+  );
+
+  const categoryProductCount = useMemo(
+    () =>
+      (allProduct || []).filter((product) =>
+        matchesCategory(product, name)
+      ).length,
+    [allProduct, name]
+  );
+
+  const inStockCount = useMemo(
+    () =>
+      (allProduct || []).filter((product) =>
+        matchesCategory(product, name)
+      ).filter((product) => Number(product?.stock || 0) > 0).length,
+    [allProduct, name]
+  );
+
+  const averagePrice = useMemo(() => {
+    const list = (allProduct || []).filter((product) => matchesCategory(product, name));
+    if (!list.length) return 0;
+    return Math.round(
+      list.reduce((sum, product) => sum + Number(product?.price || 0), 0) / list.length
+    );
+  }, [allProduct, name]);
+
+  const activeFilterCount = [
+    premiumOnly,
+    selectedSubCategory !== "all",
+    searchQuery.trim(),
+    stockStatus !== "all",
+    priceRange[0] !== priceBounds[0] || priceRange[1] !== priceBounds[1],
+    sortBy !== "default",
+  ].filter(Boolean).length;
+
   /* ============================================================
      RESET
   ============================================================ */
 
   const handleResetFilters = () => {
-    setPriceRange([0, 3000]);
+    setPriceRange(priceBounds);
+    setPremiumOnly(false);
     setSortBy("default");
     setStockStatus("all");
     setSelectedSubCategory("all");
     setSearchQuery("");
+    setQuickPrice("all");
     setShowFilters(false);
   };
 
@@ -244,6 +399,28 @@ const Categories = () => {
   const handleApplyFilters = () => {
     setShowFilters(false);
   };
+
+  const applyQuickPrice = (key) => {
+    setQuickPrice(key);
+    if (key === "all") {
+      setPriceRange(priceBounds);
+      return;
+    }
+
+    const presets = {
+      under1500: [priceBounds[0], Math.min(priceBounds[1], 1500)],
+      under3000: [priceBounds[0], Math.min(priceBounds[1], 3000)],
+      premium: [Math.max(priceBounds[0], 5000), priceBounds[1]],
+    };
+
+    const next = presets[key];
+    if (next) {
+      const min = Math.min(next[0], next[1]);
+      const max = Math.max(next[0], next[1]);
+      setPriceRange([min, max]);
+    }
+  };
+
 
 
   /* ============================================================
@@ -467,6 +644,9 @@ const Categories = () => {
               w-full
               object-cover
             "
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
           />
         ) : (
           <div
@@ -653,455 +833,41 @@ const Categories = () => {
       >
 
         {/* ======================================================
-            MOBILE FILTER OVERLAY
+            COLLECTION SNAPSHOT + QUICK PRICE
         ====================================================== */}
+        <motion.section
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-7  overflow-hidden rounded-[1.5rem] border border-[#d4ad54]/20 bg-[#fffdf8] shadow-[0_10px_40px_rgba(74,24,21,0.06)]"
+        >
 
-        <AnimatePresence>
-
-          {showFilters && (
-
-            <>
-              <motion.div
-                initial={{
-                  opacity: 0,
-                }}
-                animate={{
-                  opacity: 1,
-                }}
-                exit={{
-                  opacity: 0,
-                }}
-                onClick={() =>
-                  setShowFilters(false)
-                }
-                className="
-                  fixed
-                  inset-0
-                  z-40
-                  bg-[#2b0d10]/60
-                  backdrop-blur-sm
-                  md:hidden
-                "
-              />
-
-
-              <motion.aside
-                initial={{
-                  x: "-100%",
-                }}
-                animate={{
-                  x: 0,
-                }}
-                exit={{
-                  x: "-100%",
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 280,
-                  damping: 30,
-                }}
-                className="
-                  fixed
-                  left-0
-                  top-0
-                  z-50
-                  h-full
-                  w-[88%]
-                  max-w-sm
-                  overflow-y-auto
-                  bg-[#fffdf8]
-                  p-5
-                  shadow-2xl
-                  md:hidden
-                "
-              >
-
-                <div
-                  className="
-                    mb-7
-                    flex
-                    items-center
-                    justify-between
-                  "
+          <div className="flex flex-col gap-3 border-t border-[#741522]/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div>
+              <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#741522]">Shop by budget</p>
+              <p className="mt-1 text-[10px] text-[#806c63]">Quickly discover a price point without opening filters.</p>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {[
+                ["all", "All prices"],
+                ["under1500", "Under ₹1,500"],
+                ["under3000", "Under ₹3,000"],
+                ["premium", "₹5,000+"] ,
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => applyQuickPrice(key)}
+                  className={`flex-shrink-0 rounded-full border px-4 py-2 text-[8px] font-bold transition-all ${quickPrice === key ? "border-[#741522] bg-[#741522] text-white" : "border-[#d4ad54]/30 bg-[#faf3e5] text-[#741522] hover:border-[#741522]/40"}`}
                 >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.section>
 
-                  <div>
-
-                    <p
-                      className="
-                        text-[9px]
-                        font-bold
-                        uppercase
-                        tracking-[0.25em]
-                        text-[#b88732]
-                      "
-                    >
-                      Refine
-                    </p>
-
-                    <h3
-                      className="
-                        mt-1
-                        font-serif
-                        text-2xl
-                        font-bold
-                        text-[#4a1815]
-                      "
-                    >
-                      Filters
-                    </h3>
-
-                  </div>
-
-
-                  <button
-                    onClick={() =>
-                      setShowFilters(false)
-                    }
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-[#f3e8d2]
-                      text-[#741522]
-                    "
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-
-                </div>
-
-
-                {/* Price */}
-
-                <FilterSection
-                  id="price"
-                  title="Price Range"
-                  icon={
-                    <span className="text-[#b88732]">
-                      ₹
-                    </span>
-                  }
-                >
-
-                  <div className="space-y-4">
-
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-2
-                      "
-                    >
-
-                      <input
-                        type="number"
-                        min="0"
-                        max="3000"
-                        step="100"
-                        value={priceRange[0]}
-                        onChange={(e) =>
-                          setPriceRange([
-                            Number(
-                              e.target.value
-                            ),
-                            priceRange[1],
-                          ])
-                        }
-                        className="
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#d8cabe]
-                          bg-white
-                          px-3
-                          py-2
-                          text-sm
-                          outline-none
-                          focus:border-[#741522]
-                          focus:ring-2
-                          focus:ring-[#741522]/10
-                        "
-                      />
-
-                      <span className="text-[#a99082]">
-                        —
-                      </span>
-
-                      <input
-                        type="number"
-                        min="0"
-                        max="3000"
-                        step="100"
-                        value={priceRange[1]}
-                        onChange={(e) =>
-                          setPriceRange([
-                            priceRange[0],
-                            Number(
-                              e.target.value
-                            ),
-                          ])
-                        }
-                        className="
-                          w-full
-                          rounded-xl
-                          border
-                          border-[#d8cabe]
-                          bg-white
-                          px-3
-                          py-2
-                          text-sm
-                          outline-none
-                          focus:border-[#741522]
-                          focus:ring-2
-                          focus:ring-[#741522]/10
-                        "
-                      />
-
-                    </div>
-
-
-                    <input
-                      type="range"
-                      min="0"
-                      max="3000"
-                      step="100"
-                      value={priceRange[1]}
-                      onChange={(e) =>
-                        setPriceRange([
-                          priceRange[0],
-                          Number(
-                            e.target.value
-                          ),
-                        ])
-                      }
-                      className="
-                        w-full
-                        accent-[#741522]
-                      "
-                    />
-
-
-                    <div
-                      className="
-                        flex
-                        justify-between
-                        text-xs
-                        font-semibold
-                        text-[#806c63]
-                      "
-                    >
-                      <span>
-                        ₹{priceRange[0]}
-                      </span>
-
-                      <span>
-                        ₹{priceRange[1]}
-                      </span>
-                    </div>
-
-                  </div>
-
-                </FilterSection>
-
-
-                {/* Availability */}
-
-                <FilterSection
-                  id="stock"
-                  title="Availability"
-                  icon={
-                    <PackageCheck className="h-4 w-4 text-[#b88732]" />
-                  }
-                >
-
-                  <div className="space-y-3">
-
-                    {[
-                      {
-                        value: "all",
-                        label: "All Products",
-                      },
-                      {
-                        value: "inStock",
-                        label: "In Stock",
-                        icon: (
-                          <PackageCheck className="h-4 w-4 text-green-600" />
-                        ),
-                      },
-                      {
-                        value: "outOfStock",
-                        label: "Out of Stock",
-                        icon: (
-                          <PackageX className="h-4 w-4 text-red-500" />
-                        ),
-                      },
-                    ].map((item) => (
-
-                      <label
-                        key={item.value}
-                        className="
-                          flex
-                          cursor-pointer
-                          items-center
-                          gap-3
-                          rounded-xl
-                          p-2
-                          transition
-                          hover:bg-[#faf3e5]
-                        "
-                      >
-
-                        <input
-                          type="radio"
-                          name="mobileStock"
-                          value={item.value}
-                          checked={
-                            stockStatus ===
-                            item.value
-                          }
-                          onChange={() =>
-                            setStockStatus(
-                              item.value
-                            )
-                          }
-                          className="accent-[#741522]"
-                        />
-
-                        {item.icon}
-
-                        <span
-                          className="
-                            text-sm
-                            text-[#5f4b44]
-                          "
-                        >
-                          {item.label}
-                        </span>
-
-                      </label>
-
-                    ))}
-
-                  </div>
-
-                </FilterSection>
-
-
-                {/* Sort */}
-
-                <FilterSection
-                  id="sort"
-                  title="Sort By"
-                  icon={
-                    <SlidersHorizontal className="h-4 w-4 text-[#b88732]" />
-                  }
-                >
-
-                  <select
-                    value={sortBy}
-                    onChange={(e) =>
-                      setSortBy(e.target.value)
-                    }
-                    className="
-                      w-full
-                      rounded-xl
-                      border
-                      border-[#d8cabe]
-                      bg-white
-                      px-3
-                      py-3
-                      text-sm
-                      text-[#4a1815]
-                      outline-none
-                      focus:border-[#741522]
-                      focus:ring-2
-                      focus:ring-[#741522]/10
-                    "
-                  >
-
-                    <option value="default">
-                      Recommended
-                    </option>
-
-                    <option value="priceLowHigh">
-                      Price: Low to High
-                    </option>
-
-                    <option value="priceHighLow">
-                      Price: High to Low
-                    </option>
-
-                    <option value="newest">
-                      Newest First
-                    </option>
-
-                  </select>
-
-                </FilterSection>
-
-
-                <div className="flex gap-3">
-
-                  <button
-                    onClick={handleResetFilters}
-                    className="
-                      flex
-                      flex-1
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      border
-                      border-[#d4ad54]/30
-                      bg-white
-                      px-4
-                      py-3
-                      text-sm
-                      font-bold
-                      text-[#741522]
-                      transition
-                      hover:bg-[#faf3e5]
-                    "
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset
-                  </button>
-
-
-                  <button
-                    onClick={handleApplyFilters}
-                    className="
-                      flex
-                      flex-1
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-[#741522]
-                      px-4
-                      py-3
-                      text-sm
-                      font-bold
-                      text-white
-                      shadow-lg
-                    "
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    Apply
-                  </button>
-
-                </div>
-
-              </motion.aside>
-            </>
-
-          )}
-
-        </AnimatePresence>
+        
 
 
         {/* ======================================================
@@ -1199,8 +965,8 @@ const Categories = () => {
 
               <input
                 type="range"
-                min="0"
-                max="3000"
+                min={priceBounds[0]}
+                max={priceBounds[1]}
                 step="100"
                 value={priceRange[1]}
                 onChange={(e) =>
@@ -1235,6 +1001,8 @@ const Categories = () => {
               </div>
 
             </FilterSection>
+
+
 
 
             {/* Stock */}
@@ -1436,105 +1204,6 @@ const Categories = () => {
 
           <main className="min-w-0">
 
-            {/* Search + Mobile Filter */}
-
-            <div
-              className="
-                mb-6
-                flex
-                flex-col
-                gap-3
-                sm:flex-row
-              "
-            >
-
-              <div
-                className="
-                  group
-                  relative
-                  flex-1
-                "
-              >
-
-                <Search
-                  className="
-                    absolute
-                    left-4
-                    top-1/2
-                    h-4
-                    w-4
-                    -translate-y-1/2
-                    text-[#a99082]
-                    transition
-                    group-focus-within:text-[#741522]
-                  "
-                />
-
-                <input
-                  type="text"
-                  placeholder={`Search ${name}...`}
-                  value={searchQuery}
-                  onChange={(e) =>
-                    setSearchQuery(
-                      e.target.value
-                    )
-                  }
-                  className="
-                    h-12
-                    w-full
-                    rounded-xl
-                    border
-                    border-[#d8cabe]
-                    bg-white
-                    pl-11
-                    pr-4
-                    text-sm
-                    text-[#4a1815]
-                    shadow-sm
-                    outline-none
-                    transition-all
-                    duration-300
-                    placeholder:text-[#a99082]
-                    focus:border-[#741522]
-                    focus:ring-4
-                    focus:ring-[#741522]/10
-                  "
-                />
-
-              </div>
-
-
-              <button
-                onClick={() =>
-                  setShowFilters(true)
-                }
-                className="
-                  flex
-                  h-12
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[#741522]
-                  px-5
-                  text-sm
-                  font-bold
-                  text-white
-                  shadow-lg
-                  transition
-                  hover:bg-[#5f111b]
-                  lg:hidden
-                "
-              >
-
-                <Filter className="h-4 w-4" />
-
-                Filters
-
-              </button>
-
-            </div>
-
 
             {/* ==================================================
                 SUBCATEGORY TABS
@@ -1562,6 +1231,37 @@ const Categories = () => {
                   [&::-webkit-scrollbar]:hidden
                 "
               >
+
+                {/* PREMIUM QUICK FILTER */}
+
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() =>
+                    setPremiumOnly((value) => !value)
+                  }
+                  className={`
+                    flex-shrink-0
+                    rounded-full
+                    border
+                    px-5
+                    py-2.5
+                    text-xs
+                    font-bold
+                    transition-all
+                    duration-300
+                    ${
+                      premiumOnly
+                        ? "border-[#d4ad54] bg-gradient-to-r from-[#741522] to-[#9b2432] text-white shadow-md"
+                        : "border-[#d4ad54]/40 bg-[#faf3e5] text-[#741522] hover:border-[#741522]/40"
+                    }
+                  `}
+                >
+                  <span className="flex items-center gap-2">
+                    <Crown className="h-3.5 w-3.5" />
+                    Premium
+                  </span>
+                </motion.button>
+
 
                 {/* ALL */}
 
@@ -1686,6 +1386,29 @@ const Categories = () => {
                   products
                 </p>
 
+                {premiumOnly && (
+                  <div
+                    className="
+                      mt-2
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-full
+                      bg-[#faf3e5]
+                      px-2.5
+                      py-1
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.12em]
+                      text-[#741522]
+                    "
+                  >
+                    <Crown className="h-3 w-3 text-[#b88732]" />
+                    Premium Collection
+                  </div>
+                )}
+
               </div>
 
 
@@ -1743,7 +1466,7 @@ const Categories = () => {
 
                       <motion.div
                         layout
-                        key={product._id}
+                        key={getProductId(product) || `${getProductName(product)}-${index}`}
                         initial={{
                           opacity: 0,
                           y: 25,
@@ -1766,11 +1489,44 @@ const Categories = () => {
                         whileHover={{
                           y: -5,
                         }}
+                        className="relative min-w-0"
                       >
+
+                        {isPremiumProduct(product) && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="
+                              pointer-events-none
+                              absolute
+                              left-2
+                              top-2
+                              z-20
+                              inline-flex
+                              items-center
+                              gap-1.5
+                              rounded-full
+                              border
+                              border-[#f5d98a]/70
+                              bg-[#741522]/95
+                              px-2.5
+                              py-1.5
+                              text-[9px]
+                              font-bold
+                              uppercase
+                              tracking-[0.12em]
+                              text-[#f5d98a]
+                              shadow-lg
+                            "
+                          >
+                            <Crown className="h-3 w-3" />
+                            Premium
+                          </motion.div>
+                        )}
 
                         <ProductCard
                           product={{
-                            id: product._id,
+                            id: getProductId(product),
                             name:
                               product.productName,
                             image:
@@ -1909,6 +1665,41 @@ const Categories = () => {
 
             </motion.div>
 
+
+            {/* ==================================================
+                SHOPPING PROMISE + WISHLIST CTA
+            ================================================== */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className="mt-10 grid gap-3 sm:grid-cols-3"
+            >
+              {[
+                [Truck, "Free shipping", "On every product"],
+                [ShieldCheck, "Secure checkout", "Safe & protected"],
+                [Gift, "Gift ready", "Packed with care"],
+              ].map(([Icon, title, text]) => (
+                <div key={title} className="flex items-center gap-3 rounded-2xl border border-[#741522]/10 bg-white px-4 py-4">
+                  <Icon className="h-5 w-5 shrink-0 text-[#741522]" strokeWidth={1.25} />
+                  <div>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-[#4a1815]">{title}</p>
+                    <p className="mt-1 text-[9px] text-[#977e73]">{text}</p>
+                  </div>
+                </div>
+              ))}
+            </motion.section>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <a href="/wishlist" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#741522]/20 bg-white px-5 py-3 text-[8px] font-bold uppercase tracking-[0.16em] text-[#741522] transition hover:bg-[#faf3e5]">
+                <Heart className="h-4 w-4" />
+                View Wishlist
+              </a>
+              <a href="/allproducts" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#741522] px-5 py-3 text-[8px] font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#5f111b]">
+                Explore All Sarees
+                <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </div>
 
             {/* ==================================================
                 BOTTOM BRAND BANNER
