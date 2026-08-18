@@ -17,7 +17,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Truck,
-  Sparkles,
   Heart,
   Clock3,
   BadgeCheck,

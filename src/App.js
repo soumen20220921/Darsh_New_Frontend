@@ -53,6 +53,7 @@ const App = () => {
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/Categories/:name" element={<Categories />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/ShippingAndDelivery" element={<ShippingAndDelivery />} />
             <Route path="/PaymentOptions" element={<PaymentOptions />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/premium-sarees" element={<PremiumSarees />}/>

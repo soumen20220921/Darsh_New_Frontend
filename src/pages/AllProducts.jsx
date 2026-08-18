@@ -13,7 +13,6 @@ import {
   PackageX,
   SlidersHorizontal,
   ArrowUpRight,
-  Crown,
 } from "lucide-react";
 
 

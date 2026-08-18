@@ -268,7 +268,6 @@ const OrderDetails = ({ order, onClose }) => {
           items-center
           justify-center
           bg-[#fffdf8]
-          px-4
         "
       >
 
@@ -397,9 +396,6 @@ const OrderDetails = ({ order, onClose }) => {
             max-w-7xl
             items-center
             justify-between
-            px-4
-            sm:px-6
-            lg:px-8
           "
         >
 
@@ -591,12 +587,6 @@ const OrderDetails = ({ order, onClose }) => {
           mx-auto
           max-w-7xl
           space-y-5
-          px-4
-          py-5
-          sm:space-y-6
-          sm:px-6
-          sm:py-7
-          lg:px-8
         "
       >
 
@@ -624,7 +614,6 @@ const OrderDetails = ({ order, onClose }) => {
             to-[#5f111b]
             p-5
             shadow-xl
-            sm:p-7
           "
         >
 

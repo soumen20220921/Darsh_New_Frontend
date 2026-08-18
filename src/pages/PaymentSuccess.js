@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
@@ -19,6 +19,8 @@ const PaymentConfirmationPage = () => {
 
   const [rating, setRating] = useState(0);
   const [clearingCart, setClearingCart] = useState(true);
+  const [clearError, setClearError] = useState(false);
+  const clearStartedRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -27,40 +29,47 @@ const PaymentConfirmationPage = () => {
   ------------------------------------------------------- */
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    if (clearStartedRef.current) return;
+    clearStartedRef.current = true;
+
+    let cancelled = false;
 
     const clearCart = async () => {
-      if (!token) {
-        setClearingCart(false);
+      if (!token || !url) {
+        if (!cancelled) setClearingCart(false);
         return;
       }
 
       try {
-        await axios.delete(
-          `${url}/api/cart/clearCart`,
-          {
-            headers: {
-              Auth: token,
-            },
-          }
-        );
+        await axios.delete(`${url}/api/cart/clearCart`, {
+          headers: { Auth: token },
+        });
 
-        await getCart();
+        if (!cancelled && typeof getCart === "function") {
+          await getCart();
+        }
       } catch (error) {
-        console.error(
-          "Unable to clear cart:",
-          error?.message || error
-        );
+        if (!cancelled) {
+          setClearError(true);
+          console.error(
+            "Unable to clear cart:",
+            error?.response?.data || error?.message || error
+          );
+        }
       } finally {
-        setClearingCart(false);
+        if (!cancelled) setClearingCart(false);
       }
     };
 
     clearCart();
+
+    return () => {
+      cancelled = true;
+    };
   }, [token, url, getCart]);
 
   /* -------------------------------------------------------
@@ -68,32 +77,17 @@ const PaymentConfirmationPage = () => {
   ------------------------------------------------------- */
 
   const goToHome = () => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
-
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     navigate("/");
   };
 
   const viewOrders = () => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
-
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     navigate("/account?tab=3");
   };
 
   const continueShopping = () => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "smooth",
-    });
-
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     navigate("/allproducts");
   };
 
@@ -182,7 +176,7 @@ const PaymentConfirmationPage = () => {
   };
 
   return (
-    <main className="relative min-h-[85vh] overflow-hidden bg-[#f8f3e9] flex items-center justify-center px-4 py-12 sm:py-20">
+    <main className="relative flex min-h-[calc(100svh-1px)] w-full items-center justify-center overflow-hidden bg-[#f8f3e9] px-3 py-6 sm:px-5 sm:py-10 md:py-14">
 
       {/* =====================================================
           BACKGROUND DECORATION
@@ -201,7 +195,7 @@ const PaymentConfirmationPage = () => {
         <motion.div
           variants={floatingLeft}
           animate="animate"
-          className="absolute top-16 left-5 sm:left-14 lg:left-24"
+          className="absolute left-3 top-20 sm:left-10 lg:left-20"
         >
           <ShoppingBag
             className="w-7 h-7 sm:w-10 sm:h-10 text-[#c9a24a]/45"
@@ -214,7 +208,7 @@ const PaymentConfirmationPage = () => {
         <motion.div
           variants={floatingRight}
           animate="animate"
-          className="absolute bottom-20 right-5 sm:right-14 lg:right-24"
+          className="absolute bottom-16 right-3 sm:right-10 lg:right-20"
         >
           <Sparkles
             className="w-8 h-8 sm:w-11 sm:h-11 text-[#c9a24a]/40"
@@ -249,9 +243,9 @@ const PaymentConfirmationPage = () => {
         variants={cardVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 w-full max-w-lg"
+        className="relative z-10 w-full max-w-xl"
       >
-        <div className="relative bg-[#fcfaf5] border border-[#dfd2c1] shadow-[0_25px_70px_rgba(89,50,40,0.12)] px-6 py-9 sm:px-10 sm:py-11 text-center">
+        <div className="relative max-h-[calc(100svh-2rem)] overflow-y-auto rounded-[1.5rem] bg-[#fcfaf5] px-4 py-7 text-center shadow-[0_25px_70px_rgba(89,50,40,0.12)] sm:max-h-none sm:rounded-none sm:px-8 sm:py-10 md:px-10 md:py-11">
 
           {/* Top maroon line */}
 
@@ -303,7 +297,7 @@ const PaymentConfirmationPage = () => {
               SUCCESS ICON
           ================================================= */}
 
-          <div className="flex justify-center mt-8 mb-7">
+          <div className="flex justify-center mt-6 mb-6 sm:mt-8 sm:mb-7">
             <motion.div
               variants={successIconVariants}
               initial="hidden"
@@ -327,7 +321,7 @@ const PaymentConfirmationPage = () => {
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center rounded-full bg-[#f5eedf] border border-[#d8c59a]"
+                className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center sm:h-24 sm:w-24 rounded-full bg-[#f5eedf] border border-[#d8c59a]"
               >
                 <CheckCircle2
                   className="w-11 h-11 sm:w-14 sm:h-14 text-[#9a741d]"
@@ -373,11 +367,11 @@ const PaymentConfirmationPage = () => {
               Order confirmed
             </p>
 
-            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#351216] leading-tight">
+            <h1 className="font-serif text-[1.7rem] leading-tight sm:text-4xl md:text-5xl text-[#351216] leading-tight">
               Thank you for your order
             </h1>
 
-            <p className="text-sm sm:text-base text-[#765c52] leading-7 max-w-md mx-auto mt-5">
+            <p className="mx-auto mt-4 max-w-md text-xs leading-6 text-[#765c52] sm:mt-5 sm:text-base sm:leading-7">
               Your purchase has been confirmed successfully.
               We are delighted to prepare your beautiful handloom
               collection for you.
@@ -401,7 +395,7 @@ const PaymentConfirmationPage = () => {
               delay: 0.65,
               duration: 0.5,
             }}
-            className="mt-7 border border-[#dfd2c1] bg-[#f8f0e4] p-4"
+            className="mt-6 border border-[#dfd2c1] bg-[#f8f0e4] p-3.5 sm:mt-7 sm:p-4"
           >
             <div className="flex items-center justify-center gap-3">
               <ShieldCheck
@@ -438,7 +432,7 @@ const PaymentConfirmationPage = () => {
               delay: 0.8,
               duration: 0.5,
             }}
-            className="mt-7 pt-6 border-t border-dashed border-[#dfd2c1]"
+            className="mt-6 border-t border-dashed border-[#dfd2c1] pt-5 sm:mt-7 sm:pt-6"
           >
             <p className="text-[9px] tracking-[0.25em] uppercase text-[#977e73] mb-2">
               Your experience
@@ -510,7 +504,7 @@ const PaymentConfirmationPage = () => {
               delay: 0.95,
               duration: 0.5,
             }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-7"
+            className="mt-6 grid grid-cols-1 gap-2.5 sm:mt-7 sm:grid-cols-2 sm:gap-3"
           >
             {/* View Orders */}
 
@@ -565,7 +559,7 @@ const PaymentConfirmationPage = () => {
             transition={{
               delay: 1.1,
             }}
-            className="inline-flex items-center gap-2 mt-6 text-[9px] tracking-[0.2em] uppercase text-[#977e73] hover:text-[#76131d] transition-colors"
+            className="mt-5 inline-flex min-h-9 items-center gap-2 px-2 text-[9px] tracking-[0.2em] uppercase text-[#977e73] hover:text-[#76131d] transition-colors"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
 
@@ -578,7 +572,7 @@ const PaymentConfirmationPage = () => {
               CART CLEAR STATUS
           ================================================= */}
 
-          <div className="mt-6 pt-5 border-t border-[#e3d8c8]">
+          <div className="mt-5 border-t border-[#e3d8c8] pt-4">
             <div className="flex items-center justify-center gap-2">
               <div
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -591,6 +585,8 @@ const PaymentConfirmationPage = () => {
               <p className="text-[9px] tracking-[0.2em] uppercase text-[#b09b8c]">
                 {clearingCart
                   ? "Updating your shopping bag"
+                  : clearError
+                  ? "Shopping bag will refresh shortly"
                   : "Shopping bag updated"}
               </p>
             </div>

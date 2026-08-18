@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   User,
   MapPin,
@@ -24,6 +24,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import LogoutModal from "./LogoutModal";
 
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import { useAppContext } from "../context/AppContext";
 
 
@@ -206,7 +207,118 @@ const Account = () => {
      APP CONTEXT
   ======================================================= */
 
-  const { login, totalItems, orderCount, url } = useAppContext();
+  const { login, totalItems, url } = useAppContext();
+
+  /* =======================================================
+     PAID ORDER COUNT
+     Only orders with a confirmed paid payment are counted.
+     ======================================================= */
+  const [paidOrderCount, setPaidOrderCount] = useState(0);
+  const [paidOrdersLoading, setPaidOrdersLoading] = useState(true);
+
+  const isPaidOrder = (order) => {
+    if (!order || typeof order !== "object") return false;
+
+    const paymentStatus = String(
+      order.payStatus ??
+      order.paymentStatus ??
+      order.payment_status ??
+      order.payment?.status ??
+      order.payment?.paymentStatus ??
+      order.payment?.payment_status ??
+      order.payment?.state ??
+      order.status ??
+      ""
+    ).trim().toLowerCase();
+
+    const booleanPaid =
+      order.isPaid === true ||
+      order.paid === true ||
+      order.payment?.paid === true ||
+      order.payment?.amount_paid === true;
+
+    return (
+      booleanPaid ||
+      ["paid", "success", "successful", "completed", "captured"].includes(
+        paymentStatus
+      )
+    );
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPaidOrderCount = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token || !url) {
+        if (!cancelled) {
+          setPaidOrderCount(0);
+          setPaidOrdersLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setPaidOrdersLoading(true);
+
+        const response = await axios.get(
+          `${url}/api/payment/getOrderById`,
+          {
+            headers: {
+              Auth: token,
+            },
+          }
+        );
+
+        const rawOrders =
+          response?.data?.orders ??
+          response?.data?.data?.orders ??
+          response?.data?.data ??
+          response?.data ??
+          [];
+
+        const orders = Array.isArray(rawOrders)
+          ? rawOrders
+          : Array.isArray(rawOrders?.orders)
+          ? rawOrders.orders
+          : [];
+
+        const paidCount = orders.filter(isPaidOrder).length;
+
+        if (!cancelled) {
+          setPaidOrderCount(paidCount);
+        }
+      } catch (error) {
+        console.error("Failed to fetch paid order count:", error);
+
+        if (!cancelled) {
+          setPaidOrderCount(0);
+        }
+      } finally {
+        if (!cancelled) {
+          setPaidOrdersLoading(false);
+        }
+      }
+    };
+
+    fetchPaidOrderCount();
+
+    const refreshPaidOrders = () => {
+      fetchPaidOrderCount();
+    };
+
+    window.addEventListener("storage", refreshPaidOrders);
+    window.addEventListener("darsh:orders-updated", refreshPaidOrders);
+    window.addEventListener("darsh:payment-updated", refreshPaidOrders);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("storage", refreshPaidOrders);
+      window.removeEventListener("darsh:orders-updated", refreshPaidOrders);
+      window.removeEventListener("darsh:payment-updated", refreshPaidOrders);
+    };
+  }, [url, login]);
 
 
   /* =======================================================
@@ -424,12 +536,35 @@ const Account = () => {
     };
   }, []);
 
-  const accountStats = [
-    { label: "Orders", value: Number(orderCount || 0), icon: Package, tab: 3 },
-    { label: "Wishlist", value: wishlistCount, icon: Heart, path: "/wishlist" },
-    { label: "Bag items", value: Number(totalItems || 0), icon: ShoppingBag, path: "/cart" },
-    { label: "Addresses", value: "—", icon: MapPin, tab: 2 },
-  ];
+  const accountStats = useMemo(
+    () => [
+      {
+        label: "Paid Orders",
+        value: paidOrdersLoading ? "…" : paidOrderCount,
+        icon: Package,
+        tab: 3,
+      },
+      {
+        label: "Wishlist",
+        value: wishlistCount,
+        icon: Heart,
+        path: "/wishlist",
+      },
+      {
+        label: "Bag items",
+        value: Number(totalItems || 0),
+        icon: ShoppingBag,
+        path: "/cart",
+      },
+      {
+        label: "Addresses",
+        value: "—",
+        icon: MapPin,
+        tab: 2,
+      },
+    ],
+    [paidOrderCount, paidOrdersLoading, wishlistCount, totalItems]
+  );
 
   /* =======================================================
      CURRENT TAB
@@ -525,10 +660,6 @@ const Account = () => {
               max-w-7xl
               px-3
               py-5
-              sm:px-5
-              sm:py-7
-              lg:px-7
-              lg:py-9
             "
           >
 
@@ -1281,123 +1412,7 @@ const Account = () => {
                   "
                 >
 
-                  {/* =================================================
-                      MOBILE PROFILE
-                  ================================================= */}
-
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: -20,
-                    }}
-
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-
-                    className="
-                      overflow-hidden
-                      rounded-3xl
-                      border
-                      border-[#d4ad54]/25
-                      bg-[#fffdf8]
-                      p-5
-                      text-center
-                      shadow-[0_15px_40px_rgba(63,22,22,0.07)]
-                    "
-                  >
-
-                    <div
-                      className="
-                        relative
-                        mx-auto
-                        mb-3
-                        h-20
-                        w-20
-                      "
-                    >
-
-                      <div
-                        className="
-                          absolute
-                          inset-0
-                          rounded-full
-                          bg-[#d4ad54]/25
-                          blur-lg
-                          animate-pulse
-                        "
-                      />
-
-                      <div
-                        className="
-                          relative
-                          flex
-                          h-full
-                          w-full
-                          items-center
-                          justify-center
-                          rounded-full
-                          border-4
-                          border-[#fffdf8]
-                          bg-gradient-to-br
-                          from-[#f3e4d0]
-                          to-[#ead9b7]
-                          text-[#741522]
-                          shadow-lg
-                        "
-                      >
-                        <User className="h-8 w-8" />
-                      </div>
-
-                    </div>
-
-
-                    <h3
-                      className="
-                        truncate
-                        text-lg
-                        font-bold
-                        text-[#4a1815]
-                      "
-                    >
-                      {userName || "Darsh Customer"}
-                    </h3>
-
-
-                    <p
-                      className="
-                        mt-1
-                        truncate
-                        text-xs
-                        text-[#806c63]
-                      "
-                    >
-                      {userEmail ||
-                        "customer@darsh.com"}
-                    </p>
-
-
-                    <span
-                      className="
-                        mt-3
-                        inline-flex
-                        items-center
-                        gap-1
-                        rounded-full
-                        bg-[#f3e8d2]
-                        px-3
-                        py-1
-                        text-[9px]
-                        font-semibold
-                        text-[#741522]
-                      "
-                    >
-                      <ShoppingBag className="h-3 w-3" />
-                      Active Account
-                    </span>
-
-                  </motion.div>
+                 
 
 
                   {/* =================================================
@@ -1657,12 +1672,12 @@ const Account = () => {
                       className="
                         min-h-[400px]
                         overflow-hidden
-                        rounded-3xl
-                        border
-                        border-[#d4ad54]/20
-                        bg-[#fffdf8]
-                        p-4
-                        shadow-lg
+                        sm:rounded-3xl
+                        sm:border
+                        sm:border-[#d4ad54]/20
+                        sm:bg-[#fffdf8]
+                        p-1
+                        sm:shadow-lg
                         sm:p-6
                       "
                     >

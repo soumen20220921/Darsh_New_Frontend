@@ -7,7 +7,6 @@ import React, {
 
 import {
   ShoppingBag,
-  Loader2,
   ArrowRight,
   ChevronUp,
   Package,
@@ -16,13 +15,10 @@ import {
   LayoutDashboard,
   Filter,
   Search,
-  Calendar,
   RefreshCw,
   AlertCircle,
   XCircle,
   Sparkles,
-  Crown,
-  Clock3,
   ShieldCheck,
 } from "lucide-react";
 
@@ -80,8 +76,6 @@ const OrderSummaryCard = ({
         className={`
           pointer-events-none
           absolute
-          -right-8
-          -top-8
           h-20
           w-20
           rounded-full
@@ -909,13 +903,8 @@ const MyOrders = () => {
           z-10
           mx-auto
           max-w-7xl
-          space-y-5
-          px-4
-          py-5
+          space-y-3
           sm:space-y-7
-          sm:px-6
-          sm:py-7
-          lg:px-8
         "
       >
 
@@ -945,9 +934,8 @@ const MyOrders = () => {
             from-[#741522]
             via-[#851c28]
             to-[#5f111b]
-            p-5
+            p-3
             shadow-lg
-            sm:p-7
           "
         >
 
@@ -1492,6 +1480,7 @@ const MyOrders = () => {
               <h3
                 className="
                   font-serif
+                  pl-3
                   text-xl
                   font-bold
                   text-[#4a1815]
@@ -1502,6 +1491,7 @@ const MyOrders = () => {
 
               <p
                 className="
+                pl-3
                   mt-1
                   text-[10px]
                   text-[#9b806d]

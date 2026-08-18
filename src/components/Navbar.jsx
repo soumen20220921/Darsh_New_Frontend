@@ -747,7 +747,6 @@ const Navbar = () => {
                   ? "My account"
                   : "Login / Account"
               }
-              className="hidden lg:flex"
               active={isActive("/account")}
               onClick={() =>
                 goTo(
