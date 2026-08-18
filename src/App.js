@@ -62,7 +62,7 @@ const App = () => {
               path="/CancellationandRefund"
               element={<CancellationAndRefund />}
             />
-            <Route path="/track-order" element={<ShippingAndDelivery />} />
+            <Route path="/ShippingAndDelivery" element={<ShippingAndDelivery />} />
             <Route
               path="/terms-and-conditions"
               element={<TermsAndConditions />}

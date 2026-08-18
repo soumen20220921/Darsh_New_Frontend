@@ -38,8 +38,8 @@ export default function Footer() {
         path: "/terms-and-conditions",
       },
       {
-        name: "Track Order",
-        path: "/track-order",
+        name: "Shipping & Delivery",
+        path: "/ShippingAndDelivery",
       },
     ],
 
