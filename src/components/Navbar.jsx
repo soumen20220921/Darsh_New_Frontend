@@ -27,6 +27,7 @@ import {
   Grid3X3,
   LogIn,
   MapPin,
+  Copy,
 } from "lucide-react";
 import {
   motion,
@@ -42,11 +43,15 @@ import { toast } from "react-toastify";
 
 const WISHLIST_KEY = "wishlist";
 const LOGO_SRC = "/IMG/Logo.jpg";
-const DELHIVERY_TRACKING_URL = "https://www.delhivery.com/tracking";
+const COURIER_PARTNERS = ["DTDC", "India Post"];
 
-/* ============================================================
-   HELPERS
-============================================================ */
+const COURIER_TRACKING_URLS = {
+  "DTDC": "https://www.dtdc.com/track-your-shipment/",
+  "India Post": "https://www.tracktry.com/couriers/india-post",
+};
+
+const DEFAULT_COURIER = "DTDC";
+const DEFAULT_TRACKING_LABEL = "Tracking ID not assigned";
 
 const cleanCategory = (value) => {
   if (value === null || value === undefined) return "";
@@ -78,25 +83,43 @@ const getOrderAwb = (orderItem) => {
   );
 };
 
+const getOrderCourier = (orderItem) => {
+  if (!orderItem) return "";
+
+  return (
+    orderItem?.courierPartner ||
+    orderItem?.courier ||
+    orderItem?.shipment?.courierPartner ||
+    orderItem?.shipment?.courier ||
+    orderItem?.shipping?.courierPartner ||
+    orderItem?.shipping?.courier ||
+    ""
+  );
+};
+
+const normalizeCourier = (courier) => {
+  const key = String(courier || "").trim().toLowerCase();
+  if (key.includes("dtdc")) return "DTDC";
+  if (key.includes("india post") || key.includes("indiapost")) return "India Post";
+  return "";
+};
+
+const getCourierLabel = (courier) =>
+  normalizeCourier(courier) || DEFAULT_COURIER;
+
 const isValidAwb = (awb) => {
   if (!awb) return false;
-
   const value = String(awb).trim();
   if (!value) return false;
-
   const invalidValues = new Set([
-    "pending",
-    "null",
-    "undefined",
-    "n/a",
-    "na",
-    "-",
-    "not assigned",
-    "not available",
+    "pending", "null", "undefined", "n/a", "na", "-",
+    "not assigned", "not available", "tracking id not assigned",
   ]);
-
   return !invalidValues.has(value.toLowerCase());
 };
+
+
+
 
 /* ============================================================
    NAVBAR
@@ -155,21 +178,65 @@ const Navbar = () => {
      CUSTOMER AWB
   ---------------------------------------------------------- */
 
-  const customerAwbs = useMemo(() => {
+  const customerShipments = useMemo(() => {
     if (!Array.isArray(order)) return [];
 
+    const seen = new Set();
+
     return order
-      .map(getOrderAwb)
-      .filter(isValidAwb)
-      .map((awb) => String(awb).trim())
-      .filter(
-        (awb, index, array) =>
-          array.indexOf(awb) === index
-      );
+      .map((item) => {
+        const awb = getOrderAwb(item);
+        const trackingId = String(awb || "").trim();
+        const courier = normalizeCourier(getOrderCourier(item));
+
+        if (!isValidAwb(trackingId)) return null;
+        if (!COURIER_PARTNERS.includes(courier)) return null;
+
+        const key = `${courier}::${trackingId}`;
+        if (seen.has(key)) return null;
+        seen.add(key);
+
+        return {
+          awb: trackingId,
+          courier,
+          trackingUrl: COURIER_TRACKING_URLS[courier],
+          hasDirectLink: Boolean(COURIER_TRACKING_URLS[courier]),
+          orderId: item?._id || item?.orderId || "",
+          order: item,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        const aDate = new Date(
+          a.order?.orderDate ||
+          a.order?.createdAt ||
+          a.order?.date ||
+          0
+        ).getTime();
+
+        const bDate = new Date(
+          b.order?.orderDate ||
+          b.order?.createdAt ||
+          b.order?.date ||
+          0
+        ).getTime();
+
+        return bDate - aDate;
+      });
   }, [order]);
 
-  const latestAwb = customerAwbs[0] || "";
-  const hasTrackableOrder = customerAwbs.length > 0;
+  const latestShipment = customerShipments[0] || {
+    awb: "",
+    courier: DEFAULT_COURIER,
+    trackingUrl: COURIER_TRACKING_URLS[DEFAULT_COURIER],
+    hasDirectLink: false,
+    orderId: "",
+    order: null,
+    isDefault: true,
+  };
+
+  const latestAwb = latestShipment.awb || "";
+  const hasTrackableOrder = customerShipments.length > 0;
 
   /* ----------------------------------------------------------
      WISHLIST COUNT
@@ -379,49 +446,80 @@ const Navbar = () => {
      TRACKING
   ---------------------------------------------------------- */
 
-  const openDelhivery = useCallback(
-    (awb) => {
-      const value = String(awb || "").trim();
+  const openCourierTracking = useCallback((shipmentOrCourier, awbValue) => {
+    const courier =
+      typeof shipmentOrCourier === "object"
+        ? normalizeCourier(shipmentOrCourier?.courier)
+        : normalizeCourier(shipmentOrCourier);
 
-      if (!value) {
-        toast.info(
-          "Please enter your AWB / Tracking Number",
-          { theme: "dark" }
-        );
-        return;
-      }
+    const awb =
+      typeof shipmentOrCourier === "object"
+        ? String(shipmentOrCourier?.awb || "").trim()
+        : String(awbValue || "").trim();
 
-      const url =
-        `${DELHIVERY_TRACKING_URL}?awb=` +
-        encodeURIComponent(value);
+    const baseUrl = COURIER_TRACKING_URLS[courier];
 
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    },
-    []
-  );
+    if (!awb) {
+      toast.info("Tracking ID is not assigned yet", { theme: "dark" });
+      return;
+    }
+
+    if (!baseUrl) {
+      toast.info("Courier tracking is not available yet", { theme: "dark" });
+      return;
+    }
+
+    window.open(baseUrl, "_blank", "noopener,noreferrer");
+  }, []);
+
+  const copyTrackingId = useCallback(async (value) => {
+    if (!value) {
+      toast.info("Tracking ID is not assigned yet", { theme: "dark" });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(String(value));
+      toast.success("Tracking ID copied", { theme: "dark" });
+    } catch {
+      toast.error("Could not copy Tracking ID", { theme: "dark" });
+    }
+  }, []);
 
   const handleTrackSubmit = (event) => {
     event.preventDefault();
 
     const value = trackingNumber.trim();
 
-    if (!value) return;
+    if (!value) {
+      if (hasTrackableOrder) {
+        setTrackingNumber(latestAwb);
+        openCourierTracking(latestShipment);
+      } else {
+        toast.info("No tracking ID is assigned yet", { theme: "dark" });
+      }
+      return;
+    }
+
+    const matched = customerShipments.find(
+      (item) => String(item.awb).trim().toLowerCase() === value.toLowerCase()
+    );
+
+    if (!matched) {
+      toast.info("Tracking ID not found in your dispatched orders", {
+        theme: "dark",
+      });
+      return;
+    }
 
     setTrackingOpen(false);
     setMobileMenu(false);
-    openDelhivery(value);
+    openCourierTracking(matched);
   };
 
   const useLatestAwb = () => {
-    if (!latestAwb) {
-      toast.info(
-        "No AWB is available yet",
-        { theme: "dark" }
-      );
+    if (!hasTrackableOrder) {
+      toast.info("No tracking ID is assigned yet", { theme: "dark" });
       return;
     }
 
@@ -1522,62 +1620,106 @@ const Navbar = () => {
                   Enter your AWB /
                   tracking number
                   and continue to
-                  Delhivery tracking.
+                  Courier tracking.
                 </p>
               </div>
 
               <div className="mt-6 rounded-2xl border border-[#741522]/10 bg-[#F8F5ED] p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[7px] font-semibold tracking-[0.2em] text-[#C9A24A]">
-                      YOUR SHIPMENTS
+                      ACTIVE SHIPMENT
                     </p>
 
                     <p className="mt-1 text-xs text-[#5C4942]">
                       {hasTrackableOrder
-                        ? `${customerAwbs.length} shipment${
-                            customerAwbs.length >
-                            1
-                              ? "s"
-                              : ""
-                          } with AWB`
-                        : "No AWB assigned yet"}
+                        ? "Your latest dispatched order"
+                        : "Default courier selected — tracking pending"}
                     </p>
                   </div>
 
-                  <Package
+                  <Truck
                     size={18}
                     className="shrink-0 text-[#741522]"
                   />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    goTo(
-                      "/account?tab=3"
-                    )
-                  }
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#741522]/15 bg-white px-4 py-2.5 text-[8px] font-semibold tracking-[0.17em] text-[#741522] transition hover:bg-[#741522] hover:text-white"
-                >
-                  VIEW MY ORDERS
-                  <ArrowUpRight
-                    size={13}
-                  />
-                </button>
+                {latestShipment ? (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[#741522]/10 bg-white">
+                    <div className="flex items-center justify-between gap-3 border-b border-[#741522]/10 px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#9A8982]">
+                          Courier partner
+                        </p>
+                        <p className="mt-0.5 truncate text-sm font-bold text-[#741522]">
+                          {latestShipment.courier}
+                        </p>
+                      </div>
+
+                      <span className="shrink-0 rounded-full bg-[#741522]/5 px-2 py-1 text-[7px] font-semibold text-[#741522]">
+                        1 courier
+                      </span>
+                    </div>
+
+                    <div className="px-3 py-3">
+                      <p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#9A8982]">
+                        Tracking ID
+                      </p>
+
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate font-mono text-sm font-bold tracking-wide text-[#3F302B]">
+                          {latestShipment.awb || DEFAULT_TRACKING_LABEL}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => copyTrackingId(latestShipment.awb)}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#741522]/10 bg-[#F8F5ED] text-[#741522] transition hover:bg-[#741522] hover:text-white"
+                          aria-label="Copy tracking ID"
+                          title="Copy tracking ID"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => openCourierTracking(latestShipment)}
+                        disabled={!latestShipment.hasDirectLink}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-4 py-3 text-[8px] font-bold tracking-[0.16em] text-white transition hover:bg-[#5E101C] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {latestShipment.awb
+                          ? `TRACK WITH ${latestShipment.courier.toUpperCase()}`
+                          : `WAITING FOR ${latestShipment.courier.toUpperCase()} TRACKING`}
+                        <ArrowUpRight size={13} />
+                      </button>
+
+                      {!latestShipment.hasDirectLink && (
+                        <p className="mt-2 text-center text-[8px] leading-relaxed text-[#9A8982]">
+                          Tracking link for this courier is not configured yet.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-dashed border-[#741522]/15 bg-white px-4 py-5 text-center">
+                    <Package size={20} className="mx-auto text-[#C9A24A]" />
+                    <p className="mt-2 text-xs font-semibold text-[#5C4942]">
+                      Courier partner is ready. Tracking ID will appear here after dispatch.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="relative mt-4">
                 <input
                   value={trackingNumber}
                   onChange={(event) =>
-                    setTrackingNumber(
-                      event.target.value
-                    )
+                    setTrackingNumber(event.target.value)
                   }
-                  placeholder="AWB / Tracking Number"
+                  placeholder="Paste tracking ID"
                   autoComplete="off"
-                  aria-label="AWB or tracking number"
+                  aria-label="Tracking number"
                   className="w-full rounded-xl border border-[#741522]/15 bg-[#F8F5ED] px-4 py-3.5 pr-11 text-sm text-[#3F302B] outline-none transition placeholder:text-[#A79A94] focus:border-[#C9A24A] focus:ring-4 focus:ring-[#C9A24A]/10"
                 />
 
@@ -1590,42 +1732,26 @@ const Navbar = () => {
               <button
                 type="submit"
                 disabled={!trackingNumber.trim()}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-5 py-3.5 text-[9px] font-semibold tracking-[0.2em] text-white transition hover:bg-[#5E101C] disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#741522]/15 bg-white px-5 py-3 text-[8px] font-semibold tracking-[0.18em] text-[#741522] transition hover:bg-[#741522] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
-                TRACK ON DELHIVERY
-                <ArrowUpRight
-                  size={14}
-                />
+                OPEN TRACKING
+                <ArrowUpRight size={14} />
               </button>
 
-              {hasTrackableOrder && (
+              {latestShipment && (
                 <button
                   type="button"
                   onClick={useLatestAwb}
                   className="mt-3 flex w-full items-center justify-center gap-2 text-[8px] font-semibold tracking-[0.13em] text-[#741522] transition hover:text-[#C9A24A]"
                 >
-                  USE LATEST AWB
-                  <ChevronRight
-                    size={12}
-                  />
+                  USE CURRENT TRACKING ID
+                  <ChevronRight size={12} />
                 </button>
               )}
 
               <p className="mt-4 text-center text-[8px] leading-relaxed tracking-[0.03em] text-[#9A8982]">
-                Find your AWB:
-                <button
-                  type="button"
-                  onClick={() =>
-                    goTo(
-                      "/account?tab=3"
-                    )
-                  }
-                  className="mx-1 font-semibold text-[#741522] underline underline-offset-2"
-                >
-                  My Orders
-                </button>
-                → View Order Details
-                → Copy AWB
+                Your courier partner is selected by Darsh when the order is dispatched.
+                Copy the tracking ID or open the courier tracking link directly.
               </p>
             </motion.form>
           </motion.div>

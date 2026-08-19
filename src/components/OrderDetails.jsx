@@ -31,6 +31,49 @@ import { motion } from "framer-motion";
 import DeliveryEstimateSection from "./DeliveryEstimateSection";
 import { useAppContext } from "../context/AppContext";
 
+const COURIER_PARTNERS = ["DTDC", "India Post"];
+
+const COURIER_TRACKING_URLS = {
+  "DTDC": "https://www.dtdc.com/track-your-shipment/",
+  "India Post": "https://www.tracktry.com/couriers/india-post",
+};
+
+const normalizeCourier = (value) => {
+  const key = String(value || "").trim().toLowerCase();
+  if (key.includes("dtdc")) return "DTDC";
+  if (key.includes("india post") || key.includes("indiapost")) return "India Post";
+  return "";
+};
+
+const getCourierFromOrder = (order) =>
+  normalizeCourier(
+    order?.courierPartner ||
+    order?.courier ||
+    order?.shipment?.courierPartner ||
+    order?.shipment?.courier ||
+    order?.shipping?.courierPartner ||
+    order?.shipping?.courier
+  );
+
+const getTrackingIdFromOrder = (order) =>
+  String(
+    order?.trackingId ||
+    order?.trackingID ||
+    order?.trackingNumber ||
+    order?.tracking_number ||
+    order?.awb ||
+    order?.AWB ||
+    order?.awbNumber ||
+    order?.waybill ||
+    order?.shipment?.trackingId ||
+    order?.shipment?.awb ||
+    ""
+  ).trim();
+
+const DEFAULT_COURIER = "DTDC";
+const DEFAULT_TRACKING_LABEL = "Tracking ID not assigned";
+
+
 
 const OrderDetails = ({ order, onClose }) => {
 
@@ -72,7 +115,7 @@ const OrderDetails = ({ order, onClose }) => {
       };
     }
 
-    if (order?.trackingId) {
+    if (getTrackingIdFromOrder(order)) {
       return {
         status: "Shipped & On The Way",
         step: 3,
@@ -138,34 +181,30 @@ const OrderDetails = ({ order, onClose }) => {
 
 
   /* ============================================================
-     COPY TRACKING ID
+     TRACKING / COURIER
   ============================================================ */
 
-  const handleCopy = async () => {
+  const courierPartner = getCourierFromOrder(order) || DEFAULT_COURIER;
+  const trackingId = getTrackingIdFromOrder(order);
+  const hasTrackingId = Boolean(trackingId);
+  const trackingUrl = COURIER_TRACKING_URLS[courierPartner];
 
-    if (!order?.trackingId) return;
+  const handleCopy = async () => {
+    if (!hasTrackingId) return;
 
     try {
-
-      await navigator.clipboard.writeText(
-        order.trackingId
-      );
-
+      await navigator.clipboard.writeText(trackingId);
       setCopied(true);
-
-      setTimeout(
-        () => setCopied(false),
-        2000
-      );
-
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error(
-        "Copy failed:",
-        error
-      );
+      console.error("Copy failed:", error);
     }
   };
 
+  const handleTrackPackage = () => {
+    if (!hasTrackingId || !trackingUrl) return;
+    window.open(trackingUrl, "_blank", "noopener,noreferrer");
+  };
 
   /* ============================================================
      IMAGE ERROR
@@ -247,7 +286,7 @@ const OrderDetails = ({ order, onClose }) => {
       description:
         "Package dispatched with tracking",
       mobileDesc: "Shipped",
-      time: order.trackingId
+      time: getTrackingIdFromOrder(order)
         ? "Dispatched"
         : "Pending",
     },
@@ -995,212 +1034,119 @@ const OrderDetails = ({ order, onClose }) => {
             TRACKING
         ==================================================== */}
 
-        {order.trackingId &&
-          !order.orderReject && (
-
-            <motion.section
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              className="
-                overflow-hidden
-                rounded-2xl
-                border
-                border-[#d4ad54]/25
-                bg-[#fffdf8]
-                shadow-sm
-              "
-            >
-
-              <div
-                className="
-                  bg-gradient-to-r
-                  from-[#faf3e5]
-                  to-[#f3e8d2]
-                  p-4
-                  sm:p-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-3
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      h-10
-                      w-10
-                      items-center
-                      justify-center
-                      rounded-xl
-                      bg-[#741522]
-                      text-[#f5d98a]
-                    "
-                  >
+        {!order.orderReject && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="overflow-hidden rounded-2xl border border-[#d4ad54]/25 bg-[#fffdf8] shadow-sm"
+          >
+            <div className="bg-gradient-to-r from-[#faf3e5] to-[#f3e8d2] p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#741522] text-[#f5d98a]">
                     <Truck className="h-5 w-5" />
                   </div>
-
-                  <div>
-
-                    <h2
-                      className="
-                        font-serif
-                        text-base
-                        font-bold
-                        text-[#4a1815]
-                        sm:text-lg
-                      "
-                    >
+                  <div className="min-w-0">
+                    <h2 className="font-serif text-base font-bold text-[#4a1815] sm:text-lg">
                       Tracking Information
                     </h2>
-
-                    <p
-                      className="
-                        text-[10px]
-                        text-[#9b806d]
-                      "
-                    >
-                      Your package is on its way
+                    <p className="text-[10px] text-[#9b806d]">
+                      Courier partner and shipment tracking
                     </p>
-
                   </div>
-
                 </div>
 
+                <span className="inline-flex w-fit items-center rounded-full border border-[#d4ad54]/25 bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-[#741522]">
+                  {courierPartner}
+                </span>
               </div>
+            </div>
 
-
-              <div className="p-4 sm:p-5">
-
-                <p
-                  className="
-                    text-[9px]
-                    font-bold
-                    uppercase
-                    tracking-wider
-                    text-[#9b806d]
-                  "
-                >
-                  Tracking ID
-                </p>
-
-                <div
-                  className="
-                    mt-2
-                    flex
-                    flex-col
-                    gap-3
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                  "
-                >
-
-                  <div
-                    className="
-                      flex-1
-                      break-all
-                      rounded-xl
-                      border
-                      border-[#d4ad54]/20
-                      bg-[#faf6ee]
-                      p-3
-                      font-mono
-                      text-xs
-                      font-bold
-                      text-[#741522]
-                      sm:text-sm
-                    "
-                  >
-                    {order.trackingId}
+            <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div className="min-w-0">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-[#d4ad54]/20 bg-[#faf6ee] p-3">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[#9b806d]">
+                      Courier Partner
+                    </p>
+                    <p className="mt-1 text-sm font-bold text-[#741522]">
+                      {courierPartner}
+                    </p>
+                    <p className="mt-1 text-[9px] text-[#9b806d]">
+                      {COURIER_PARTNERS.includes(courierPartner)
+                        ? "Supported courier"
+                        : "Default courier"}
+                    </p>
                   </div>
 
-                  <motion.button
-                    whileHover={{
-                      scale: 1.04,
-                    }}
-                    whileTap={{
-                      scale: 0.96,
-                    }}
-                    onClick={handleCopy}
-                    className="
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-[#741522]
-                      px-4
-                      py-3
-                      text-xs
-                      font-bold
-                      text-white
-                      shadow-sm
-                    "
-                  >
-
-                    {copied ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        Copy ID
-                      </>
-                    )}
-
-                  </motion.button>
-
+                  <div className="rounded-xl border border-[#d4ad54]/20 bg-[#faf6ee] p-3">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[#9b806d]">
+                      Tracking ID
+                    </p>
+                    <div className="mt-1 flex min-w-0 items-center gap-2">
+                      <p className="min-w-0 flex-1 break-all font-mono text-sm font-bold text-[#741522]">
+                        {hasTrackingId ? trackingId : DEFAULT_TRACKING_LABEL}
+                      </p>
+                      {hasTrackingId && (
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.94 }}
+                          onClick={handleCopy}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#741522] shadow-sm transition hover:bg-[#741522] hover:text-white"
+                          aria-label="Copy tracking ID"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-
-                <a
-                  href={`https://www.delhivery.com/tracking`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="
-                    mt-3
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-[#741522]
-                    py-2.5
-                    text-xs
-                    font-bold
-                    text-[#741522]
-                    transition
-                    hover:bg-[#741522]
-                    hover:text-white
-                  "
-                >
-
-                  <ExternalLink className="h-4 w-4" />
-
-                  Track Package
-
-                </a>
-
+                <div className="mt-3 rounded-xl border border-dashed border-[#d4ad54]/25 bg-white p-3">
+                  <p className="text-[9px] leading-relaxed text-[#806c63]">
+                    {hasTrackingId
+                      ? `Your order is assigned to ${courierPartner}. Use the button to open the ${courierPartner} tracking page.`
+                      : `Your order is ready for shipment. ${courierPartner} is selected as the default courier partner; tracking will appear here after dispatch.`}
+                  </p>
+                </div>
               </div>
 
-            </motion.section>
+              <button
+                type="button"
+                onClick={handleTrackPackage}
+                disabled={!hasTrackingId}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#5f111b] disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto lg:min-w-[190px]"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Track with {courierPartner}
+              </button>
+            </div>
 
-          )}
-
+            <div className="border-t border-[#d4ad54]/15 px-4 py-3 sm:px-5">
+              <div className="flex flex-wrap items-center gap-2 text-[9px] text-[#9b806d]">
+                {COURIER_PARTNERS.map((partner) => (
+                  <span
+                    key={partner}
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      courierPartner === partner
+                        ? "bg-[#741522] text-white"
+                        : "bg-[#f3e8d2] text-[#806c63]"
+                    }`}
+                  >
+                    {partner}
+                  </span>
+                ))}
+                <span className="ml-auto">
+                  Only these two courier partners are supported.
+                </span>
+              </div>
+            </div>
+          </motion.section>
+        )}
 
         {/* ====================================================
             CONTENT GRID
