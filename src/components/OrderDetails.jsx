@@ -102,15 +102,34 @@ const OrderDetails = ({ order, onClose }) => {
      ORDER STATUS
   ============================================================ */
 
-  const getStatusInfo = () => {
+  const isRejected = Boolean(
+    order?.orderReject ||
+    order?.rejected ||
+    order?.isRejected ||
+    String(order?.orderStatus || "").trim().toLowerCase() === "rejected"
+  );
 
-    if (order?.orderReject) {
+  const isPaid = String(
+    order?.payStatus ||
+    order?.paymentStatus ||
+    order?.payment?.status ||
+    ""
+  ).trim().toLowerCase() === "paid";
+
+  const isAccepted = Boolean(
+    order?.orderAccept ||
+    order?.accepted ||
+    order?.isAccepted
+  );
+
+  const getStatusInfo = () => {
+    if (isRejected) {
       return {
         status: "Order Rejected",
+        shortStatus: "Rejected",
         step: 0,
         icon: XCircle,
-        gradient:
-          "from-[#8f2431] to-[#5f111b]",
+        gradient: "from-[#8f2431] via-[#741522] to-[#4d0d15]",
         color: "red",
       };
     }
@@ -118,31 +137,31 @@ const OrderDetails = ({ order, onClose }) => {
     if (getTrackingIdFromOrder(order)) {
       return {
         status: "Shipped & On The Way",
+        shortStatus: "Shipped",
         step: 3,
         icon: Truck,
-        gradient:
-          "from-[#741522] to-[#a57924]",
+        gradient: "from-[#741522] via-[#8c2632] to-[#a57924]",
         color: "gold",
       };
     }
 
-    if (order?.orderAccept) {
+    if (isAccepted) {
       return {
         status: "Accepted & Processing",
+        shortStatus: "Accepted",
         step: 2,
         icon: Package,
-        gradient:
-          "from-[#741522] to-[#b88732]",
+        gradient: "from-[#741522] via-[#8b2330] to-[#b88732]",
         color: "maroon",
       };
     }
 
     return {
       status: "Order Placed",
+      shortStatus: "Placed",
       step: 1,
       icon: CheckCircle,
-      gradient:
-        "from-[#741522] to-[#b88732]",
+      gradient: "from-[#741522] via-[#861d29] to-[#b88732]",
       color: "gold",
     };
   };
@@ -165,19 +184,17 @@ const OrderDetails = ({ order, onClose }) => {
 
     const timer = setTimeout(() => {
 
-      if (step <= 0) {
+      if (isRejected || step <= 0) {
         setProgressWidth(0);
       } else {
-        setProgressWidth(
-          (step - 1) * 50
-        );
+        setProgressWidth((step - 1) * 50);
       }
 
     }, 300);
 
     return () => clearTimeout(timer);
 
-  }, [step]);
+  }, [step, isRejected]);
 
 
   /* ============================================================
@@ -263,8 +280,7 @@ const OrderDetails = ({ order, onClose }) => {
       label: "Placed",
       icon: CheckCircle,
       index: 1,
-      description:
-        "Order received and confirmed",
+      description: "Order received and confirmed",
       mobileDesc: "Confirmed",
       time: order.orderDate,
     },
@@ -272,8 +288,7 @@ const OrderDetails = ({ order, onClose }) => {
       label: "Accepted",
       icon: Package,
       index: 2,
-      description:
-        "Order accepted and being prepared",
+      description: "Order accepted and being prepared",
       mobileDesc: "Processing",
       time: order.orderAccept
         ? order.orderDate
@@ -283,14 +298,79 @@ const OrderDetails = ({ order, onClose }) => {
       label: "Shipped",
       icon: Truck,
       index: 3,
-      description:
-        "Package dispatched with tracking",
+      description: "Package dispatched with tracking",
       mobileDesc: "Shipped",
       time: getTrackingIdFromOrder(order)
         ? "Dispatched"
         : "Pending",
     },
   ];
+
+  const rejectionReason =
+    order?.rejectReason ||
+    order?.rejectionReason ||
+    order?.rejectedReason ||
+    order?.reason ||
+    order?.orderRejectReason ||
+    "The order could not be accepted and has been rejected.";
+
+  const rejectionDate =
+    order?.rejectedAt ||
+    order?.rejectDate ||
+    order?.orderRejectDate ||
+    order?.updatedAt ||
+    null;
+
+  const activityItems = isRejected
+    ? [
+        {
+          title: "Order placed",
+          description: "Your order was received successfully.",
+          icon: CheckCircle,
+          active: true,
+          tone: "success",
+          time: order?.orderDate,
+        },
+        {
+          title: "Order rejected",
+          description: rejectionReason,
+          icon: XCircle,
+          active: true,
+          tone: "danger",
+          time: rejectionDate,
+        },
+      ]
+    : [
+        {
+          title: "Order placed",
+          description: "Your order has been received successfully.",
+          icon: CheckCircle,
+          active: true,
+          tone: "success",
+          time: order?.orderDate,
+        },
+        {
+          title: isAccepted ? "Order accepted" : "Waiting for confirmation",
+          description: isAccepted
+            ? "Darsh has accepted your order and started processing it."
+            : "We are waiting for the order to be accepted.",
+          icon: Package,
+          active: isAccepted,
+          tone: isAccepted ? "success" : "pending",
+          time: isAccepted ? order?.orderDate : null,
+        },
+        {
+          title: hasTrackingId ? "Shipment dispatched" : "Shipment pending",
+          description: hasTrackingId
+            ? `${courierPartner} tracking is now available for this order.`
+            : "Tracking will appear here after the order is dispatched.",
+          icon: Truck,
+          active: hasTrackingId,
+          tone: hasTrackingId ? "success" : "pending",
+          time: hasTrackingId ? "Dispatched" : null,
+        },
+      ];
+
 
 
   /* ============================================================
@@ -552,7 +632,7 @@ const OrderDetails = ({ order, onClose }) => {
             </motion.button>
 
 
-            {!order.orderReject && (
+            {!isRejected && (
 
               <div
                 className="
@@ -785,8 +865,8 @@ const OrderDetails = ({ order, onClose }) => {
                     text-white/65
                   "
                 >
-                  {order.orderReject
-                    ? "Please contact our support team for assistance."
+                  {isRejected
+                    ? "This order has been stopped. Review the rejection details below."
                     : `Step ${step} of ${statusSteps.length} completed`}
                 </p>
 
@@ -795,7 +875,7 @@ const OrderDetails = ({ order, onClose }) => {
             </div>
 
 
-            {!order.orderReject && (
+            {!isRejected && (
 
               <div
                 className="
@@ -1031,6 +1111,90 @@ const OrderDetails = ({ order, onClose }) => {
 
 
         {/* ====================================================
+            REJECTION DETAILS
+        ==================================================== */}
+        {isRejected && (
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl border border-[#d66b76]/25 bg-white shadow-sm"
+          >
+            <div className="h-1 bg-gradient-to-r from-[#8f2431] via-[#c24d5c] to-[#8f2431]" />
+
+            <div className="relative p-4 sm:p-5">
+              <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#8f2431]/5 blur-2xl" />
+
+              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fff0f2] text-[#8f2431] ring-1 ring-[#d66b76]/20">
+                  <XCircle className="h-6 w-6" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#a34752]">
+                      Action required
+                    </p>
+                    <span className="rounded-full bg-[#8f2431] px-2.5 py-1 text-[8px] font-black uppercase tracking-wide text-white">
+                      Rejected
+                    </span>
+                  </div>
+
+                  <h2 className="mt-1 font-serif text-lg font-bold text-[#4a1815] sm:text-xl">
+                    We couldn't process this order
+                  </h2>
+
+                  <p className="mt-1.5 max-w-2xl text-[11px] leading-5 text-[#806c63]">
+                    Your order has been rejected and will not move to
+                    Accepted or Shipped. If you believe this is a mistake,
+                    please contact Darsh support with your order number.
+                  </p>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-[#d66b76]/15 bg-[#fff8f8] p-3">
+                      <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-[#a34752]">
+                        Reason
+                      </p>
+                      <p className="mt-1 text-[10px] font-semibold leading-5 text-[#4a1815]">
+                        {rejectionReason}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#d66b76]/15 bg-[#fff8f8] p-3">
+                      <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-[#a34752]">
+                        What happens next?
+                      </p>
+                      <p className="mt-1 text-[10px] leading-5 text-[#806c63]">
+                        No shipment will be created for this order. Contact
+                        support if you need clarification or assistance.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <a
+                      href="tel:+919907804710"
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#8f2431] px-4 py-2.5 text-[10px] font-bold text-white transition hover:bg-[#741522]"
+                    >
+                      <PhoneCall className="h-3.5 w-3.5" />
+                      Contact Darsh Support
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={handleShareOrder}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#8f2431]/15 bg-white px-4 py-2.5 text-[10px] font-bold text-[#8f2431] transition hover:bg-[#fff0f2]"
+                    >
+                      <Share2 className="h-3.5 w-3.5" />
+                      Share Order Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+
+        {/* ====================================================
             TRACKING
         ==================================================== */}
 
@@ -1147,6 +1311,120 @@ const OrderDetails = ({ order, onClose }) => {
             </div>
           </motion.section>
         )}
+
+        {/* ====================================================
+            ORDER ACTIVITY + QUICK HELP
+        ==================================================== */}
+        <div className="grid gap-5 lg:grid-cols-[1.5fr_0.5fr]">
+          <motion.section
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-[#d4ad54]/20 bg-[#fffdf8] p-4 shadow-sm sm:p-5"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-[#d4ad54]/15 pb-4">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#b88732]">
+                  Order activity
+                </p>
+                <h2 className="mt-1 font-serif text-lg font-bold text-[#4a1815]">
+                  Everything in one place
+                </h2>
+              </div>
+              <span className="rounded-full bg-[#faf3e5] px-2.5 py-1 text-[9px] font-bold text-[#741522]">
+                Live status
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              {activityItems.map((item, index) => {
+                const ActivityIcon = item.icon;
+                return (
+                  <div key={item.title} className="flex gap-3">
+                    <div className="relative flex w-9 shrink-0 justify-center">
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl border ${
+                        item.tone === "danger"
+                          ? "border-[#d66b76]/30 bg-[#fff0f2] text-[#8f2431]"
+                          : item.active
+                            ? "border-[#d4ad54]/40 bg-[#741522] text-[#f5d98a]"
+                            : "border-[#d4ad54]/20 bg-[#faf6ee] text-[#b7a89d]"
+                      }`}>
+                        <ActivityIcon className="h-4 w-4" />
+                      </div>
+                      {index < activityItems.length - 1 && (
+                        <span className="absolute left-1/2 top-10 h-7 w-px -translate-x-1/2 bg-[#d4ad54]/20" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1 pb-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className={`text-xs font-bold ${
+                          item.tone === "danger"
+                            ? "text-[#8f2431]"
+                            : item.active
+                              ? "text-[#4a1815]"
+                              : "text-[#9b806d]"
+                        }`}>
+                          {item.title}
+                        </p>
+                        {item.time && (
+                          <span className="text-[9px] text-[#9b806d]">
+                            {item.time === "Dispatched"
+                              ? item.time
+                              : new Date(item.time).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-[10px] leading-5 text-[#806c63]">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="rounded-2xl border border-[#d4ad54]/20 bg-gradient-to-br from-[#faf3e5] to-[#fffdf8] p-4 shadow-sm sm:p-5"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#741522] text-[#f5d98a]">
+              <HelpCircle className="h-5 w-5" />
+            </div>
+            <h2 className="mt-4 font-serif text-base font-bold text-[#4a1815]">
+              Need help?
+            </h2>
+            <p className="mt-1 text-[10px] leading-5 text-[#806c63]">
+              Have a question about this order, delivery or payment?
+            </p>
+
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => window.open("tel:+919999999999", "_self")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#741522]/10 bg-white px-3 py-2.5 text-[10px] font-bold text-[#741522] hover:bg-[#f3e8d2]"
+              >
+                <PhoneCall className="h-3.5 w-3.5" />
+                Contact Support
+              </button>
+              {hasTrackingId && (
+                <button
+                  type="button"
+                  onClick={handleTrackPackage}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-3 py-2.5 text-[10px] font-bold text-white hover:bg-[#5f111b]"
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                  Track Shipment
+                </button>
+              )}
+            </div>
+          </motion.section>
+        </div>
 
         {/* ====================================================
             CONTENT GRID
@@ -1942,7 +2220,7 @@ const OrderDetails = ({ order, onClose }) => {
                     "
                   >
                     <CheckCircle className="h-3.5 w-3.5" />
-                    {order.payStatus}
+                    {order.payStatus || "Paid"}
                   </span>
 
                 </div>

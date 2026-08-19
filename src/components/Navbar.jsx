@@ -27,6 +27,7 @@ import {
   Grid3X3,
   LogIn,
   MapPin,
+  Clock,
   Copy,
 } from "lucide-react";
 import {
@@ -107,6 +108,93 @@ const normalizeCourier = (courier) => {
 const getCourierLabel = (courier) =>
   normalizeCourier(courier) || DEFAULT_COURIER;
 
+const isPaidOrder = (orderItem) => {
+  if (!orderItem) return false;
+  return String(orderItem?.payStatus || "").trim().toLowerCase() === "paid";
+};
+
+const isRejectedOrder = (orderItem) => {
+  if (!orderItem) return false;
+
+  const explicitReject =
+    orderItem?.orderReject === true ||
+    orderItem?.rejected === true ||
+    orderItem?.isRejected === true;
+
+  const status = String(
+    orderItem?.orderStatus ||
+    orderItem?.status ||
+    ""
+  ).trim().toLowerCase();
+
+  return (
+    explicitReject ||
+    ["rejected", "cancelled", "canceled", "declined"].includes(status)
+  );
+};
+
+const getOrderRejectReason = (orderItem) =>
+  orderItem?.rejectReason ||
+  orderItem?.rejectionReason ||
+  orderItem?.rejectedReason ||
+  orderItem?.orderRejectReason ||
+  orderItem?.reason ||
+  "This order could not be accepted.";
+
+const getCustomerOrderStatus = (orderItem) => {
+  if (!orderItem) {
+    return {
+      label: "Order Placed",
+      tone: "neutral",
+      step: 1,
+      rejected: false,
+    };
+  }
+
+  if (isRejectedOrder(orderItem)) {
+    return {
+      label: "Rejected",
+      tone: "danger",
+      step: 0,
+      rejected: true,
+    };
+  }
+
+  const tracking = getOrderAwb(orderItem);
+
+  // Customer-facing flow:
+  // Order Placed -> Accepted -> Shipped
+  if (isValidAwb(tracking)) {
+    return {
+      label: "Shipped",
+      tone: "shipping",
+      step: 3,
+      rejected: false,
+    };
+  }
+
+  if (
+    orderItem?.orderAccept === true ||
+    ["accepted", "processing", "confirmed", "packed"].includes(
+      String(orderItem?.status || "").toLowerCase()
+    )
+  ) {
+    return {
+      label: "Accepted",
+      tone: "processing",
+      step: 2,
+      rejected: false,
+    };
+  }
+
+  return {
+    label: "Order Placed",
+    tone: "neutral",
+    step: 1,
+    rejected: false,
+  };
+};
+
 const isValidAwb = (awb) => {
   if (!awb) return false;
   const value = String(awb).trim();
@@ -143,6 +231,7 @@ const Navbar = () => {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [copiedTrackingId, setCopiedTrackingId] = useState("");
   const [wishlistCount, setWishlistCount] = useState(0);
 
   const userName =
@@ -185,6 +274,11 @@ const Navbar = () => {
 
     return order
       .map((item) => {
+        if (!isPaidOrder(item)) return null;
+
+        // Rejected orders must never appear as active shipments.
+        if (isRejectedOrder(item)) return null;
+
         const awb = getOrderAwb(item);
         const trackingId = String(awb || "").trim();
         const courier = normalizeCourier(getOrderCourier(item));
@@ -224,6 +318,28 @@ const Navbar = () => {
         return bDate - aDate;
       });
   }, [order]);
+
+  const rejectedOrders = useMemo(() => {
+    if (!Array.isArray(order)) return [];
+
+    return order
+      .filter(
+        (item) => isPaidOrder(item) && isRejectedOrder(item)
+      )
+      .sort((a, b) => {
+        const aDate = new Date(
+          a?.orderDate || a?.createdAt || a?.date || 0
+        ).getTime();
+
+        const bDate = new Date(
+          b?.orderDate || b?.createdAt || b?.date || 0
+        ).getTime();
+
+        return bDate - aDate;
+      });
+  }, [order]);
+
+  const rejectedOrderCount = rejectedOrders.length;
 
   const latestShipment = customerShipments[0] || {
     awb: "",
@@ -479,52 +595,27 @@ const Navbar = () => {
     }
 
     try {
-      await navigator.clipboard.writeText(String(value));
-      toast.success("Tracking ID copied", { theme: "dark" });
+      const trackingValue = String(value);
+      await navigator.clipboard.writeText(trackingValue);
+      setCopiedTrackingId(trackingValue);
+      toast.success("Tracking ID copied successfully", { theme: "dark" });
+      window.setTimeout(() => setCopiedTrackingId(""), 1800);
     } catch {
       toast.error("Could not copy Tracking ID", { theme: "dark" });
     }
   }, []);
 
-  const handleTrackSubmit = (event) => {
-    event.preventDefault();
-
-    const value = trackingNumber.trim();
-
-    if (!value) {
-      if (hasTrackableOrder) {
-        setTrackingNumber(latestAwb);
-        openCourierTracking(latestShipment);
-      } else {
-        toast.info("No tracking ID is assigned yet", { theme: "dark" });
-      }
-      return;
-    }
-
-    const matched = customerShipments.find(
-      (item) => String(item.awb).trim().toLowerCase() === value.toLowerCase()
-    );
-
-    if (!matched) {
-      toast.info("Tracking ID not found in your dispatched orders", {
-        theme: "dark",
-      });
+  const handleTrackSubmit = (shipment) => {
+    if (!shipment?.awb) {
+      toast.info("Tracking ID is not assigned yet", { theme: "dark" });
       return;
     }
 
     setTrackingOpen(false);
     setMobileMenu(false);
-    openCourierTracking(matched);
+    openCourierTracking(shipment);
   };
 
-  const useLatestAwb = () => {
-    if (!hasTrackableOrder) {
-      toast.info("No tracking ID is assigned yet", { theme: "dark" });
-      return;
-    }
-
-    setTrackingNumber(latestAwb);
-  };
 
   /* ----------------------------------------------------------
      RENDER
@@ -790,18 +881,7 @@ const Navbar = () => {
           ================================================== */}
 
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-            <IconAction
-              label="Search products"
-              active={isActive("/allproducts")}
-              onClick={() =>
-                goTo("/allproducts")
-              }
-            >
-              <Search
-                size={18}
-                strokeWidth={1.6}
-              />
-            </IconAction>
+           
 
             <IconAction
               label="Wishlist"
@@ -826,9 +906,27 @@ const Navbar = () => {
               />
             </IconAction>
 
+            {rejectedOrderCount > 0 && (
+              <IconAction
+                label={`${rejectedOrderCount} rejected order${rejectedOrderCount !== 1 ? "s" : ""}`}
+                active={trackingOpen}
+                badge={rejectedOrderCount}
+                onClick={() => setTrackingOpen(true)}
+                className="hidden md:flex"
+              >
+                <X
+                  size={18}
+                  strokeWidth={1.8}
+                />
+              </IconAction>
+            )}
+
             <IconAction
-              label="Track your order"
-              className="hidden md:flex"
+              label={
+                rejectedOrderCount > 0
+                  ? `Track orders · ${rejectedOrderCount} rejected`
+                  : "Track your order"
+              }
               onClick={() =>
                 setTrackingOpen(true)
               }
@@ -1088,7 +1186,11 @@ const Navbar = () => {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className={`mt-4 grid gap-2 ${
+                      rejectedOrderCount > 0
+                        ? "grid-cols-4"
+                        : "grid-cols-3"
+                    }`}>
                     <QuickMobileAction
                       icon={
                         <Search
@@ -1137,6 +1239,15 @@ const Navbar = () => {
                         goTo("/cart")
                       }
                     />
+
+                    {rejectedOrderCount > 0 && (
+                      <QuickMobileAction
+                        icon={<X size={15} />}
+                        label="Rejected"
+                        badge={rejectedOrderCount}
+                        onClick={() => setTrackingOpen(true)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1405,6 +1516,17 @@ const Navbar = () => {
                     }
                   />
 
+                  {rejectedOrderCount > 0 && (
+                    <MobileNavItem
+                      number="10"
+                      label={`REJECTED ORDERS${rejectedOrderCount > 1 ? ` (${rejectedOrderCount})` : ""}`}
+                      active={trackingOpen && rejectedOrderCount > 0}
+                      badge={rejectedOrderCount}
+                      icon={<X size={17} />}
+                      onClick={() => setTrackingOpen(true)}
+                    />
+                  )}
+
                   <MobileNavItem
                     number="08"
                     label={
@@ -1530,233 +1652,368 @@ const Navbar = () => {
 
       <AnimatePresence>
         {trackingOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-[#351B18]/45 p-3 backdrop-blur-sm sm:p-5"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setTrackingOpen(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Track your orders"
+        >
           <motion.div
-            className="fixed inset-0 z-[130] flex items-center justify-center bg-[#351B18]/55 px-4 py-6 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={() =>
-              setTrackingOpen(false)
-            }
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22 }}
+            className="w-full max-w-lg overflow-hidden rounded-[28px] border border-[#741522]/10 bg-[#FFFDF8] shadow-[0_30px_90px_rgba(53,27,24,.25)]"
           >
-            <motion.form
-              onSubmit={handleTrackSubmit}
-              onMouseDown={(event) =>
-                event.stopPropagation()
-              }
-              initial={
-                reduceMotion
-                  ? undefined
-                  : {
-                      opacity: 0,
-                      y: 22,
-                      scale: 0.97,
-                    }
-              }
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
-              exit={
-                reduceMotion
-                  ? undefined
-                  : {
-                      opacity: 0,
-                      y: 18,
-                      scale: 0.97,
-                    }
-              }
-              transition={{
-                duration: reduceMotion
-                  ? 0
-                  : 0.28,
-              }}
-              className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[26px] border border-[#C9A24A]/30 bg-[#FFFDF8] p-5 shadow-[0_30px_100px_rgba(35,15,12,0.28)] sm:p-7"
-            >
+            <div className="h-1 bg-gradient-to-r from-[#741522] via-[#C9A24A] to-[#741522]" />
+
+            <div className="flex items-center justify-between border-b border-[#741522]/10 px-4 py-4 sm:px-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#741522] text-[#f5d98a]">
+                  <Truck className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-sm font-bold text-[#4a1815] sm:text-base">
+                    Track Your Orders
+                  </h2>
+                  <p className="mt-0.5 text-[10px] text-[#9b806d]">
+                    {Array.isArray(order)
+                      ? `${order.filter(isPaidOrder).length} paid order${order.filter(isPaidOrder).length !== 1 ? "s" : ""} · ${rejectedOrderCount} rejected`
+                      : "Your paid order updates appear here"}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() =>
-                  setTrackingOpen(
-                    false
-                  )
-                }
-                aria-label="Close tracking dialog"
-                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#741522]/10 text-[#806B63] transition hover:bg-[#741522] hover:text-white sm:right-4 sm:top-4"
+                onClick={() => setTrackingOpen(false)}
+                className="rounded-xl border border-[#741522]/10 bg-white p-2 text-[#806c63] transition hover:bg-[#f3e8d2] hover:text-[#741522]"
+                aria-label="Close tracking"
               >
-                <X size={17} />
+                <X className="h-4 w-4" />
               </button>
+            </div>
 
-              <div className="pr-10">
-                <motion.div
-                  animate={
-                    reduceMotion
-                      ? undefined
-                      : {
-                          y: [0, -3, 0],
-                        }
-                  }
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                  }}
-                  className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#741522]/5 text-[#741522]"
-                >
-                  <Truck
-                    size={20}
-                    strokeWidth={1.5}
-                  />
-                </motion.div>
-
-                <p className="text-[8px] font-semibold tracking-[0.28em] text-[#C9A24A]">
-                  DARSH DELIVERY
-                </p>
-
-                <h3 className="mt-1 font-serif text-2xl text-[#3F302B]">
-                  Track Your Order
-                </h3>
-
-                <p className="mt-2 text-xs leading-relaxed text-[#806B63]">
-                  Enter your AWB /
-                  tracking number
-                  and continue to
-                  Courier tracking.
-                </p>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-[#741522]/10 bg-[#F8F5ED] p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[7px] font-semibold tracking-[0.2em] text-[#C9A24A]">
-                      ACTIVE SHIPMENT
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#5C4942]">
-                      {hasTrackableOrder
-                        ? "Your latest dispatched order"
-                        : "Default courier selected — tracking pending"}
-                    </p>
-                  </div>
-
-                  <Truck
-                    size={18}
-                    className="shrink-0 text-[#741522]"
-                  />
-                </div>
-
-                {latestShipment ? (
-                  <div className="mt-3 overflow-hidden rounded-xl border border-[#741522]/10 bg-white">
-                    <div className="flex items-center justify-between gap-3 border-b border-[#741522]/10 px-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#9A8982]">
-                          Courier partner
+            <div className="max-h-[70vh] overflow-y-auto p-4 sm:p-5">
+              {Array.isArray(order) && order.filter(isPaidOrder).length > 0 ? (
+                <div className="space-y-3">
+                  {rejectedOrderCount > 0 && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-[#d66b76]/20 bg-[#fff5f6] p-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8f2431] text-white">
+                        <X className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-black uppercase tracking-[0.15em] text-[#8f2431]">
+                          Rejected order{rejectedOrderCount !== 1 ? "s" : ""}
                         </p>
-                        <p className="mt-0.5 truncate text-sm font-bold text-[#741522]">
-                          {latestShipment.courier}
+                        <p className="mt-0.5 text-[9px] leading-4 text-[#806c63]">
+                          {rejectedOrderCount} paid order{rejectedOrderCount !== 1 ? "s were" : " was"} rejected and will not be shipped.
                         </p>
                       </div>
-
-                      <span className="shrink-0 rounded-full bg-[#741522]/5 px-2 py-1 text-[7px] font-semibold text-[#741522]">
-                        1 courier
-                      </span>
                     </div>
+                  )}
 
-                    <div className="px-3 py-3">
-                      <p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-[#9A8982]">
-                        Tracking ID
-                      </p>
+                  {order.filter(isPaidOrder).map((orderItem, index) => {
+                    const statusInfo = getCustomerOrderStatus(orderItem);
+                    const rejected = statusInfo.rejected;
+                    const rejectReason = getOrderRejectReason(orderItem);
+                    const awb = getOrderAwb(orderItem);
+                    const courier = normalizeCourier(getOrderCourier(orderItem)) || DEFAULT_COURIER;
+                    const canTrack =
+                      !rejected &&
+                      isValidAwb(awb) &&
+                      COURIER_TRACKING_URLS[courier];
 
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <span className="min-w-0 flex-1 truncate font-mono text-sm font-bold tracking-wide text-[#3F302B]">
-                          {latestShipment.awb || DEFAULT_TRACKING_LABEL}
-                        </span>
+                    const dateValue =
+                      orderItem?.orderDate ||
+                      orderItem?.createdAt ||
+                      orderItem?.date;
 
-                        <button
-                          type="button"
-                          onClick={() => copyTrackingId(latestShipment.awb)}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#741522]/10 bg-[#F8F5ED] text-[#741522] transition hover:bg-[#741522] hover:text-white"
-                          aria-label="Copy tracking ID"
-                          title="Copy tracking ID"
-                        >
-                          <Copy size={14} />
-                        </button>
-                      </div>
+                    const orderId =
+                      orderItem?._id ||
+                      orderItem?.orderId ||
+                      `order-${index}`;
 
-                      <button
-                        type="button"
-                        onClick={() => openCourierTracking(latestShipment)}
-                        disabled={!latestShipment.hasDirectLink}
-                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#741522] px-4 py-3 text-[8px] font-bold tracking-[0.16em] text-white transition hover:bg-[#5E101C] disabled:cursor-not-allowed disabled:opacity-40"
+                    const itemCount = Array.isArray(orderItem?.items)
+                      ? orderItem.items.reduce(
+                          (sum, item) =>
+                            sum +
+                            Number(
+                              item?.quantity ||
+                              item?.qty ||
+                              item?.count ||
+                              1
+                            ),
+                          0
+                        )
+                      : Array.isArray(orderItem?.products)
+                        ? orderItem.products.length
+                        : 0;
+
+                    const toneClasses = {
+                      danger: "bg-[#fff0f2] text-[#8f2431] border-[#d66b76]/25",
+                      shipping: "bg-blue-50 text-blue-700 border-blue-200",
+                      success: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                      processing: "bg-amber-50 text-amber-700 border-amber-200",
+                      neutral: "bg-[#f3e8d2] text-[#741522] border-[#d4ad54]/20",
+                    };
+
+                    return (
+                      <div
+                        key={`${orderId}-${index}`}
+                        className="overflow-hidden rounded-2xl border border-[#d4ad54]/20 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                       >
-                        {latestShipment.awb
-                          ? `TRACK WITH ${latestShipment.courier.toUpperCase()}`
-                          : `WAITING FOR ${latestShipment.courier.toUpperCase()} TRACKING`}
-                        <ArrowUpRight size={13} />
-                      </button>
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-[#741522] px-2.5 py-1 text-[9px] font-bold text-white">
+                                  ORDER #{String(orderId).slice(-8).toUpperCase()}
+                                </span>
+                                <span
+                                  className={`rounded-full border px-2.5 py-1 text-[9px] font-bold ${toneClasses[statusInfo.tone]}`}
+                                >
+                                  {statusInfo.label}
+                                </span>
+                              </div>
 
-                      {!latestShipment.hasDirectLink && (
-                        <p className="mt-2 text-center text-[8px] leading-relaxed text-[#9A8982]">
-                          Tracking link for this courier is not configured yet.
-                        </p>
-                      )}
-                    </div>
+                              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[#806c63]">
+                                {dateValue && (
+                                  <span>
+                                    {new Date(dateValue).toLocaleDateString("en-IN", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                )}
+                                {itemCount > 0 && (
+                                  <span>
+                                    {itemCount} item{itemCount !== 1 ? "s" : ""}
+                                  </span>
+                                )}
+                                {orderItem?.payStatus && (
+                                  <span className="font-semibold">
+                                    Payment: Paid
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#faf3e5] text-[#C9A24A]">
+                              {statusInfo.step === 3 ? (
+                                <Truck className="h-5 w-5" />
+                              ) : statusInfo.step === 2 ? (
+                                <Package className="h-5 w-5" />
+                              ) : statusInfo.rejected ? (
+                                <X className="h-5 w-5 text-[#8f2431]" />
+                              ) : (
+                                <ShoppingBag className="h-5 w-5" />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Customer status */}
+                          {rejected ? (
+                            <div className="mt-5 overflow-hidden rounded-2xl border border-[#d66b76]/25 bg-gradient-to-br from-[#fff7f8] to-[#fffdf8]">
+                              <div className="h-1 bg-gradient-to-r from-[#8f2431] via-[#c24d5c] to-[#8f2431]" />
+
+                              <div className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8f2431] text-white shadow-sm">
+                                    <X className="h-5 w-5" />
+                                  </div>
+
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#a34752]">
+                                        Order update
+                                      </p>
+                                      <span className="rounded-full bg-[#8f2431] px-2.5 py-1 text-[8px] font-black uppercase tracking-wide text-white">
+                                        Rejected
+                                      </span>
+                                    </div>
+
+                                    <h3 className="mt-1 font-serif text-base font-bold text-[#4a1815]">
+                                      This order was rejected
+                                    </h3>
+
+                                    <p className="mt-1.5 text-[10px] leading-5 text-[#806c63]">
+                                      The order will not move to accepted or shipped.
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="mt-4 rounded-xl border border-[#d66b76]/15 bg-white p-3">
+                                  <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#a34752]">
+                                    Rejection reason
+                                  </p>
+                                  <p className="mt-1 text-[10px] font-semibold leading-5 text-[#4a1815]">
+                                    {rejectReason}
+                                  </p>
+                                </div>
+
+                                <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#8f2431]/5 p-3">
+                                  <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8f2431]" />
+                                  <p className="text-[9px] leading-4 text-[#806c63]">
+                                    No tracking ID will be shown for a rejected order.
+                                    Contact support if you believe this was incorrect.
+                                  </p>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-2 gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setTrackingOpen(false);
+                                      goTo("/contactus");
+                                    }}
+                                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#8f2431] px-3 py-2 text-[9px] font-bold text-white transition hover:bg-[#741522]"
+                                  >
+                                    Contact Support
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => copyTrackingId(orderId)}
+                                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[#8f2431]/15 bg-white px-3 py-2 text-[9px] font-bold text-[#8f2431] transition hover:bg-[#fff0f2]"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                    Copy Order ID
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-5 grid grid-cols-3 gap-2">
+                              {[
+                                ["Order Placed", 1],
+                                ["Accepted", 2],
+                                ["Shipped", 3],
+                              ].map(([label, step]) => {
+                                const completed = statusInfo.step >= step;
+                                return (
+                                  <div key={label} className="min-w-0">
+                                    <div
+                                      className={`h-1.5 rounded-full ${
+                                        completed
+                                          ? "bg-[#741522]"
+                                          : "bg-[#eadfce]"
+                                      }`}
+                                    />
+                                    <p
+                                      className={`mt-1 truncate text-[8px] font-semibold ${
+                                        completed
+                                          ? "text-[#741522]"
+                                          : "text-[#b2a096]"
+                                      }`}
+                                    >
+                                      {label}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {canTrack ? (
+                            <div className="mt-4 rounded-xl border border-[#d4ad54]/20 bg-[#faf6ee] p-3">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0">
+                                  <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#9b806d]">
+                                    {courier} Tracking ID
+                                  </p>
+                                  <p className="mt-1 break-all font-mono text-xs font-bold text-[#4a1815]">
+                                    {awb}
+                                  </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 sm:w-auto">
+                                  <button
+                                    type="button"
+                                    onClick={() => copyTrackingId(awb)}
+                                    className="flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[#741522]/10 bg-white px-3 py-2 text-[9px] font-bold text-[#741522] hover:bg-[#f3e8d2]"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                    {copiedTrackingId === awb ? "Copied!" : "Copy"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleTrackSubmit({
+                                        awb,
+                                        courier,
+                                        orderId,
+                                        order: orderItem,
+                                      })
+                                    }
+                                    className="flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-[#741522] px-3 py-2 text-[9px] font-bold text-white hover:bg-[#5f111b]"
+                                  >
+                                    <Truck className="h-3.5 w-3.5" />
+                                    Track
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#d4ad54]/15 bg-[#faf6ee] px-3 py-2.5">
+                              <Clock className="h-3.5 w-3.5 shrink-0 text-[#C9A24A]" />
+                              <p className="text-[9px] leading-4 text-[#806c63]">
+                                {statusInfo.label === "Accepted"
+                                  ? "Your paid order is accepted and being prepared. Tracking will appear after dispatch."
+                                  : "Your paid order has been placed. We will update it when it is accepted."}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[#d4ad54]/30 bg-[#faf6ee] p-7 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#741522]/10 text-[#741522]">
+                    <ShoppingBag className="h-6 w-6" />
                   </div>
-                ) : (
-                  <div className="mt-3 rounded-xl border border-dashed border-[#741522]/15 bg-white px-4 py-5 text-center">
-                    <Package size={20} className="mx-auto text-[#C9A24A]" />
-                    <p className="mt-2 text-xs font-semibold text-[#5C4942]">
-                      Courier partner is ready. Tracking ID will appear here after dispatch.
-                    </p>
-                  </div>
-                )}
-              </div>
+                  <h3 className="mt-4 text-sm font-bold text-[#4a1815]">
+                    No orders yet
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-xs text-[11px] leading-5 text-[#806c63]">
+                    Only paid orders appear here with live status updates.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTrackingOpen(false);
+                      goTo("/allproducts");
+                    }}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#741522] px-4 py-2.5 text-[10px] font-bold text-white"
+                  >
+                    Start Shopping
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
 
-              <div className="relative mt-4">
-                <input
-                  value={trackingNumber}
-                  onChange={(event) =>
-                    setTrackingNumber(event.target.value)
-                  }
-                  placeholder="Paste tracking ID"
-                  autoComplete="off"
-                  aria-label="Tracking number"
-                  className="w-full rounded-xl border border-[#741522]/15 bg-[#F8F5ED] px-4 py-3.5 pr-11 text-sm text-[#3F302B] outline-none transition placeholder:text-[#A79A94] focus:border-[#C9A24A] focus:ring-4 focus:ring-[#C9A24A]/10"
-                />
-
-                <Package
-                  size={17}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9A8982]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={!trackingNumber.trim()}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#741522]/15 bg-white px-5 py-3 text-[8px] font-semibold tracking-[0.18em] text-[#741522] transition hover:bg-[#741522] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                OPEN TRACKING
-                <ArrowUpRight size={14} />
-              </button>
-
-              {latestShipment && (
+            <div className="border-t border-[#741522]/10 bg-[#faf6ee] px-4 py-3 sm:px-5">
+              <div className="flex items-center gap-2 text-[9px] text-[#9b806d]">
+                <Truck className="h-3.5 w-3.5 text-[#C9A24A]" />
+                <span>Paid orders only · DTDC & India Post tracking</span>
                 <button
                   type="button"
-                  onClick={useLatestAwb}
-                  className="mt-3 flex w-full items-center justify-center gap-2 text-[8px] font-semibold tracking-[0.13em] text-[#741522] transition hover:text-[#C9A24A]"
+                  onClick={() => setTrackingOpen(false)}
+                  className="ml-auto font-bold text-[#741522] hover:underline"
                 >
-                  USE CURRENT TRACKING ID
-                  <ChevronRight size={12} />
+                  Done
                 </button>
-              )}
-
-              <p className="mt-4 text-center text-[8px] leading-relaxed tracking-[0.03em] text-[#9A8982]">
-                Your courier partner is selected by Darsh when the order is dispatched.
-                Copy the tracking ID or open the courier tracking link directly.
-              </p>
-            </motion.form>
+              </div>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}      </AnimatePresence>
 
       {/* ======================================================
           LOCAL ANIMATION
