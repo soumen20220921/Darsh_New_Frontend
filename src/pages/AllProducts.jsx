@@ -154,36 +154,7 @@ const AllProducts = () => {
   }, [allProduct, priceBounds.min, priceBounds.max]);
 
 
-  /* =======================================================
-     SUB CATEGORIES
-  ======================================================= */
 
-  const availableSubCategories = useMemo(() => {
-    if (!allProduct) return [];
-
-    if (selectedCategory === "all") {
-      return [];
-    }
-
-    const subs = [
-      ...new Set(
-        allProduct
-          .filter(
-            (product) =>
-              product.category === selectedCategory
-          )
-          .map(
-            (product) =>
-              product.subCategory || "other"
-          )
-      ),
-    ];
-
-    return ["all", ...subs];
-  }, [
-    allProduct,
-    selectedCategory,
-  ]);
 
 
   /* =======================================================
@@ -514,13 +485,11 @@ const AllProducts = () => {
           className="
             max-w-[1180px]
             mx-auto
-            px-5
-            sm:px-8
-            lg:px-10
-            pt-16
-            sm:pt-20
-            lg:pt-24
-            pb-10
+            px-2
+            sm:px-5
+            pt-4
+            sm:pt-6
+            pb-3
           "
         >
 
@@ -584,9 +553,9 @@ const AllProducts = () => {
                 font-serif
                 font-normal
                 text-[#3f1616]
-                text-[42px]
-                sm:text-[52px]
-                md:text-[60px]
+                text-[32px]
+                sm:text-[42px]
+                md:text-[50px]
                 leading-[1.05]
                 tracking-[-0.025em]
               "
@@ -602,10 +571,10 @@ const AllProducts = () => {
 
             <p
               className="
-                mt-5
+                mt-3
                 max-w-[560px]
-                text-[10px]
-                sm:text-[12px]
+                text-[8px]
+                sm:text-[10px]
                 leading-6
                 text-[#806c63]
               "
@@ -638,7 +607,7 @@ const AllProducts = () => {
               duration: 0.6,
             }}
             className="
-              mt-8
+              mt-5
               flex
               gap-2
               overflow-x-auto
@@ -704,124 +673,6 @@ const AllProducts = () => {
       </section>
 
 
-      {/* ===================================================
-          SUBCATEGORY
-      =================================================== */}
-
-      <AnimatePresence>
-
-        {selectedCategory !== "all" &&
-          availableSubCategories.length >
-            0 && (
-
-            <motion.section
-              initial={{
-                opacity: 0,
-                height: 0,
-              }}
-              animate={{
-                opacity: 1,
-                height: "auto",
-              }}
-              exit={{
-                opacity: 0,
-                height: 0,
-              }}
-              className="
-                border-b
-                border-[#741522]/10
-                overflow-hidden
-              "
-            >
-
-              <div
-                className="
-                  max-w-[1180px]
-                  mx-auto
-                  px-5
-                  sm:px-8
-                  lg:px-10
-                  py-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-4
-                    overflow-x-auto
-                    scrollbar-hide
-                  "
-                >
-
-                  <span
-                    className="
-                      shrink-0
-                      text-[7px]
-                      tracking-[0.25em]
-                      uppercase
-                      text-[#977e73]
-                    "
-                  >
-                    {selectedCategory}
-                  </span>
-
-
-                  <span
-                    className="
-                      w-px
-                      h-4
-                      bg-[#741522]/15
-                    "
-                  />
-
-
-                  {availableSubCategories.map(
-                    (sub) => {
-
-                      const active =
-                        selectedSubCategory ===
-                        sub;
-
-                      return (
-                        <button
-                          key={sub}
-                          type="button"
-                          onClick={() =>
-                            setSelectedSubCategory(
-                              sub
-                            )
-                          }
-                          className={`
-                            shrink-0
-                            text-[8px]
-                            uppercase
-                            tracking-[0.16em]
-                            transition-colors
-                            ${
-                              active
-                                ? "text-[#741522]"
-                                : "text-[#806c63] hover:text-[#741522]"
-                            }
-                          `}
-                        >
-                          {sub}
-                        </button>
-                      );
-                    }
-                  )}
-
-                </div>
-
-              </div>
-
-            </motion.section>
-
-          )}
-
-      </AnimatePresence>
-
 
       {/* ===================================================
           PRODUCTS AREA
@@ -834,9 +685,9 @@ const AllProducts = () => {
           px-5
           sm:px-8
           lg:px-10
-          py-12
-          sm:py-14
-          lg:py-16
+          py-4
+          sm:py-6
+          lg:py-8
         "
       >
 
