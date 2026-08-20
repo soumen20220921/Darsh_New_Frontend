@@ -144,8 +144,8 @@ const WhatsAppChat = () => {
               bottom-24
               right-4
               left-4
-              sm:left-auto
-              sm:right-6
+              sm:right-auto
+              sm:left-6
               sm:bottom-28
               w-auto
               sm:w-[370px]
@@ -447,7 +447,7 @@ const WhatsAppChat = () => {
           FLOATING WHATSAPP BUTTON
       ===================================================== */}
 
-      <div className="fixed bottom-5 right-5 md:bottom-6 md:right-6 z-[61]">
+      <div className="fixed bottom-5 left-5 md:bottom-6 md:left-6 z-[61]">
 
         {/* Pulse ring */}
 
