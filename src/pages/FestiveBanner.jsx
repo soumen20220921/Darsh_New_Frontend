@@ -1,985 +1,704 @@
-import { motion } from "framer-motion";
+import React from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowDown,
   Sparkles,
- 
+  Gift,
+  CalendarDays,
+  Clock3,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
+/* =========================================================
+   FESTIVAL BANNER DATA
+========================================================= */
 
+const festivalBannerData = {
+  active: true,
 
-const FestiveBanner = () => {
+  festival: "Rakshabandhan",
+
+  title: "Rakshabandhan Sale",
+
+  subtitle:
+    "Celebrate the beautiful bond of Rakhi with exclusive Darsh sarees.",
+
+  discount: "60% OFF",
+
+  image: "/IMG/festival.png",
+
+  buttonText: "Shop 60% Sale",
+
+  route: "/festival-sale",
+
+  /* Raksha Bandhan 2026 */
+  festivalDate: "Friday, August 28, 2026",
+
+  /* Shubh Muhurat */
+  muhurat: "5:57 AM – 9:48 AM IST",
+
+  /* Sale countdown deadline */
+  saleEndsAt: "2026-08-28T23:59:59+05:30",
+};
+
+/* =========================================================
+   COUNTDOWN HELPER
+========================================================= */
+
+const getCountdown = (targetDate) => {
+  const target = new Date(targetDate).getTime();
+  const now = Date.now();
+
+  const difference = target - now;
+
+  if (!Number.isFinite(target) || difference <= 0) {
+    return {
+      expired: true,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    };
+  }
+
+  const totalSeconds = Math.floor(difference / 1000);
+
+  return {
+    expired: false,
+
+    days: Math.floor(
+      totalSeconds / (60 * 60 * 24)
+    ),
+
+    hours: Math.floor(
+      (totalSeconds % (60 * 60 * 24)) /
+        (60 * 60)
+    ),
+
+    minutes: Math.floor(
+      (totalSeconds % (60 * 60)) / 60
+    ),
+
+    seconds: totalSeconds % 60,
+  };
+};
+
+/* =========================================================
+   COUNTDOWN ITEM
+========================================================= */
+
+const CountdownItem = ({ value, label }) => {
   return (
-    <main className="bg-[#f8f4eb] text-[#3f1616] overflow-hidden">
-
-      {/* =====================================================
-          HERO
-      ===================================================== */}
-
-      <section
+    <div className="flex items-center gap-1">
+      <div
         className="
-          relative
-          min-h-[620px]
-          sm:min-h-[680px]
-          lg:min-h-[720px]
-          bg-[#741522]
           flex
+          min-w-[34px]
+          flex-col
           items-center
           justify-center
-          overflow-hidden
+          rounded-md
+          border
+          border-[#e7c979]/40
+          bg-black/15
+          px-1.5
+          py-1
+          backdrop-blur-sm
+          sm:min-w-[42px]
+          sm:px-2
+          sm:py-1.5
         "
       >
-
-        {/* Background Decoration */}
-
-        <div className="absolute inset-0 pointer-events-none">
-
-          {/* Large Circle */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.8,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            transition={{
-              duration: 1.8,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="
-              absolute
-              -left-40
-              -top-40
-              w-[500px]
-              h-[500px]
-              rounded-full
-              border
-              border-[#d4ad54]/10
-            "
-          />
-
-          {/* Right Circle */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.85,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            transition={{
-              duration: 2,
-              delay: 0.2,
-            }}
-            className="
-              absolute
-              -right-40
-              -bottom-40
-              w-[520px]
-              h-[520px]
-              rounded-full
-              border
-              border-[#d4ad54]/10
-            "
-          />
-
-          {/* Horizontal Lines */}
-
-          <div
-            className="
-              absolute
-              left-0
-              right-0
-              top-[18%]
-              h-px
-              bg-[#d4ad54]/10
-            "
-          />
-
-          <div
-            className="
-              absolute
-              left-0
-              right-0
-              bottom-[18%]
-              h-px
-              bg-[#d4ad54]/10
-            "
-          />
-
-          {/* Floating Gold Dots */}
-
-          <motion.span
-            animate={{
-              y: [0, -18, 0],
-              opacity: [0.25, 0.8, 0.25],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="
-              absolute
-              left-[15%]
-              top-[30%]
-              w-1
-              h-1
-              rounded-full
-              bg-[#d4ad54]
-              shadow-[0_0_15px_rgba(212,173,84,.7)]
-            "
-          />
-
-          <motion.span
-            animate={{
-              y: [0, 20, 0],
-              opacity: [0.2, 0.7, 0.2],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1,
-            }}
-            className="
-              absolute
-              right-[17%]
-              top-[25%]
-              w-1.5
-              h-1.5
-              rounded-full
-              bg-[#d4ad54]
-            "
-          />
-
-          <motion.span
-            animate={{
-              y: [0, -12, 0],
-              x: [0, 8, 0],
-              opacity: [0.15, 0.6, 0.15],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5,
-            }}
-            className="
-              absolute
-              right-[25%]
-              bottom-[25%]
-              w-1
-              h-1
-              rounded-full
-              bg-[#d4ad54]
-            "
-          />
-
-        </div>
-
-
-        {/* =====================================================
-            HERO CONTENT
-        ===================================================== */}
-
-        <div
+        <span
           className="
+            font-serif
+            text-[14px]
+            font-bold
+            leading-none
+            text-[#fff8ed]
+            sm:text-[17px]
+          "
+        >
+          {String(value).padStart(2, "0")}
+        </span>
+
+        <span
+          className="
+            mt-1
+            text-[4px]
+            font-semibold
+            uppercase
+            tracking-[0.12em]
+            text-[#e5cfb0]
+            sm:text-[5px]
+          "
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* =========================================================
+   FESTIVE BANNER
+========================================================= */
+
+const FestiveBanner = ({
+  data = festivalBannerData,
+}) => {
+  const [countdown, setCountdown] = React.useState(
+    () =>
+      getCountdown(
+        data?.saleEndsAt ||
+          festivalBannerData.saleEndsAt
+      )
+  );
+
+  /* -------------------------------------------------------
+     Live countdown
+  ------------------------------------------------------- */
+
+  React.useEffect(() => {
+    const target =
+      data?.saleEndsAt ||
+      festivalBannerData.saleEndsAt;
+
+    setCountdown(getCountdown(target));
+
+    const timer = window.setInterval(() => {
+      setCountdown(getCountdown(target));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [data?.saleEndsAt]);
+
+  /* -------------------------------------------------------
+     Safety check
+  ------------------------------------------------------- */
+
+  if (
+    !data ||
+    data.active === false ||
+    !data.image ||
+    !data.discount
+  ) {
+    return null;
+  }
+
+  const festival =
+    data.festival ||
+    "Rakshabandhan";
+
+  const festivalDate =
+    data.festivalDate ||
+    "Friday, August 28, 2026";
+
+  const muhurat =
+    data.muhurat ||
+    "5:57 AM – 9:48 AM IST";
+
+  return (
+    <section
+      className="
+        relative
+        overflow-hidden
+        border-b
+        border-[#741522]/10
+        bg-[#f8f4eb]
+        px-3
+        py-3
+        sm:px-5
+        sm:py-5
+      "
+    >
+      <div className="mx-auto w-full max-w-[1400px]">
+        <Link
+          to={data.route || "/festival-sale"}
+          onClick={() => {
+            window.scrollTo({
+              top: 0,
+              left: 0,
+              behavior: "smooth",
+            });
+          }}
+          className="
+            group
             relative
-            z-10
-            max-w-[1050px]
-            mx-auto
-            px-6
-            sm:px-10
-            text-center
+            block
+            overflow-hidden
+            rounded-[14px]
+            border
+            border-[#741522]/15
+            bg-[#3f1616]
+            shadow-[0_14px_45px_rgba(63,22,22,.14)]
           "
         >
+          {/* =================================================
+              DECORATIVE GLOW
+          ================================================= */}
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 45,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 1,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-          >
-
-            {/* Eyebrow */}
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 10,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.15,
-                duration: 0.7,
-              }}
-              className="
-                flex
-                items-center
-                justify-center
-                gap-4
-                mb-7
-              "
-            >
-
-              <span
-                className="
-                  hidden
-                  sm:block
-                  w-8
-                  h-px
-                  bg-[#d4ad54]
-                "
-              />
-
-              <span
-                className="
-                  text-[#e1c982]
-                  text-[8px]
-                  sm:text-[9px]
-                  tracking-[0.42em]
-                  uppercase
-                "
-              >
-                OUR STORY
-              </span>
-
-              <span
-                className="
-                  hidden
-                  sm:block
-                  w-8
-                  h-px
-                  bg-[#d4ad54]
-                "
-              />
-
-            </motion.div>
-
-
-            {/* Main Heading */}
-
-            <motion.h1
-              initial={{
-                opacity: 0,
-                y: 30,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.25,
-                duration: 0.9,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="
-                font-serif
-                font-normal
-                text-[#f8f4eb]
-                text-[40px]
-                sm:text-[52px]
-                md:text-[64px]
-                lg:text-[72px]
-                leading-[1.02]
-                tracking-[-0.025em]
-              "
-            >
-              Tradition,
-              <span className="block">
-                beautifully draped.
-              </span>
-            </motion.h1>
-
-
-            {/* Gold Divider */}
-
-            <motion.div
-              initial={{
-                width: 0,
-                opacity: 0,
-              }}
-              animate={{
-                width: 90,
-                opacity: 1,
-              }}
-              transition={{
-                delay: 0.65,
-                duration: 0.8,
-              }}
-              className="
-                mx-auto
-                mt-7
-                mb-7
-                h-px
-                bg-[#d4ad54]
-              "
-            />
-
-
-            {/* Short Information */}
-
-            <motion.p
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.7,
-                duration: 0.8,
-              }}
-              className="
-                max-w-[720px]
-                mx-auto
-                text-[#f4e9dc]/80
-                text-[12px]
-                sm:text-[14px]
-                md:text-[15px]
-                leading-7
-                sm:leading-8
-              "
-            >
-              Darsh is a celebration of India's timeless handloom heritage.
-              We bring together beautiful sarees, regional artistry and
-              traditional craftsmanship from across India — thoughtfully
-              curated for the modern woman.
-            </motion.p>
-
-
-            {/* CTA */}
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.95,
-                duration: 0.7,
-              }}
-              className="
-                flex
-                flex-col
-                sm:flex-row
-                items-center
-                justify-center
-                gap-3
-                mt-9
-              "
-            >
-
-              <Link
-                to="/allproducts"
-                className="
-                  group
-                  inline-flex
-                  items-center
-                  gap-3
-                  bg-[#d4ad54]
-                  text-[#4b1519]
-                  px-7
-                  py-3.5
-                  text-[8px]
-                  sm:text-[9px]
-                  tracking-[0.25em]
-                  uppercase
-                  font-medium
-                  transition-all
-                  duration-500
-                  hover:bg-[#e2c477]
-                  hover:-translate-y-0.5
-                "
-              >
-                Explore Our Collection
-
-                <ArrowRight
-                  size={14}
-                  strokeWidth={1.3}
-                  className="
-                    transition-transform
-                    duration-300
-                    group-hover:translate-x-1
-                  "
-                />
-              </Link>
-
-
-              <a
-                href="/newarrivals"
-                className="
-                  group
-                  inline-flex
-                  items-center
-                  gap-3
-                  border
-                  border-[#f8f4eb]/35
-                  text-[#f8f4eb]
-                  px-7
-                  py-3.5
-                  text-[8px]
-                  sm:text-[9px]
-                  tracking-[0.25em]
-                  uppercase
-                  transition-all
-                  duration-500
-                  hover:border-[#d4ad54]
-                  hover:text-[#e1c982]
-                "
-              >
-                Discover Darsh
-
-                <ArrowDown
-                  size={13}
-                  strokeWidth={1.2}
-                  className="
-                    transition-transform
-                    duration-300
-                    group-hover:translate-y-1
-                  "
-                />
-              </a>
-
-            </motion.div>
-
-          </motion.div>
-
-        </div>
-
-
-        {/* Scroll Indicator */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 1.5,
-            duration: 1,
-          }}
-          className="
-            absolute
-            bottom-7
-            left-1/2
-            -translate-x-1/2
-            flex
-            flex-col
-            items-center
-            gap-2
-            text-[#e1c982]/60
-          "
-        >
-
-          <span
+          <div
             className="
-              text-[7px]
-              tracking-[0.3em]
-              uppercase
+              pointer-events-none
+              absolute
+              -left-20
+              -top-20
+              h-48
+              w-48
+              rounded-full
+              bg-[#e7c979]/20
+              blur-3xl
             "
-          >
-            SCROLL
-          </span>
+          />
 
-          <motion.span
-            animate={{
-              y: [0, 5, 0],
-            }}
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -bottom-24
+              -right-20
+              h-56
+              w-56
+              rounded-full
+              bg-[#b53b46]/25
+              blur-3xl
+            "
+          />
+
+          {/* =================================================
+              ANIMATED SHIMMER
+          ================================================= */}
+
+          <motion.div
+            initial={{ x: "-120%" }}
+            animate={{ x: "120%" }}
             transition={{
-              duration: 1.5,
+              duration: 4.5,
               repeat: Infinity,
+              repeatDelay: 3,
+              ease: "easeInOut",
             }}
-          >
-            <ArrowDown
-              size={14}
-              strokeWidth={1}
-            />
-          </motion.span>
+            className="
+              pointer-events-none
+              absolute
+              inset-y-0
+              z-30
+              w-[20%]
+              skew-x-[-20deg]
+              bg-gradient-to-r
+              from-transparent
+              via-white/10
+              to-transparent
+            "
+          />
 
-        </motion.div>
+          {/* =================================================
+              MAIN GRID
+          ================================================= */}
 
-      </section>
-
-
-     
-
-
-      {/* =====================================================
-          WHAT IS DARSH
-      ===================================================== */}
-
-      <section
-        className="
-          bg-[#eee5d6]
-          py-16
-          sm:py-20
-          lg:py-24
-        "
-      >
-
-        <div
-          className="
-            max-w-[900px]
-            mx-auto
-            px-6
-            text-center
-          "
-        >
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 0.8,
-            }}
-            viewport={{
-              once: true,
-            }}
-          >
-
-            <span
-              className="
-                text-[8px]
-                tracking-[0.38em]
-                uppercase
-                text-[#977e73]
-              "
-            >
-              WHAT IS DARSH?
-            </span>
-
-            <h2
-              className="
-                font-serif
-                text-[#3f1616]
-                text-[34px]
-                sm:text-[45px]
-                mt-3
-              "
-            >
-              India's traditions, one collection
-            </h2>
-
-            <p
-              className="
-                mt-6
-                text-[#806c63]
-                text-[12px]
-                sm:text-[14px]
-                leading-7
-                sm:leading-8
-                max-w-[720px]
-                mx-auto
-              "
-            >
-              From Bengal's handloom artistry to the rich silk traditions of
-              Banaras, Kanjivaram and Uppada, Darsh brings together the
-              distinctive beauty of India's weaving heritage in one place.
-            </p>
-
-            <p
-              className="
-                mt-4
-                text-[#806c63]
-                text-[12px]
-                sm:text-[14px]
-                leading-7
-                sm:leading-8
-                max-w-[720px]
-                mx-auto
-              "
-            >
-              Every collection is chosen to help you discover something
-              beautiful, authentic and uniquely yours.
-            </p>
-
-          </motion.div>
-
-        </div>
-
-      </section>
-
-
-      {/* =====================================================
-          CELEBRATE TRADITIONS
-      ===================================================== */}
-
-      <section
-        className="
-          bg-[#f8f4eb]
-          py-16
-          sm:py-20
-          lg:py-24
-        "
-      >
-
-        <div
-          className="
-            max-w-[1100px]
-            mx-auto
-            px-6
-            sm:px-8
-            grid
-            lg:grid-cols-2
-            gap-12
-            lg:gap-20
-            items-center
-          "
-        >
-
-          {/* Left */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: -30,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              duration: 0.8,
-            }}
-            viewport={{
-              once: true,
-            }}
-          >
-
-            <span
-              className="
-                text-[8px]
-                tracking-[0.38em]
-                uppercase
-                text-[#977e73]
-              "
-            >
-              CELEBRATE TRADITIONS
-            </span>
-
-            <h2
-              className="
-                font-serif
-                text-[#3f1616]
-                text-[37px]
-                sm:text-[48px]
-                leading-tight
-                mt-3
-              "
-            >
-              A saree for
-              <span className="block">
-                every story.
-              </span>
-            </h2>
-
-            <div
-              className="
-                w-14
-                h-px
-                bg-[#d4ad54]
-                my-6
-              "
-            />
-
-            <p
-              className="
-                text-[#806c63]
-                text-[12px]
-                sm:text-[14px]
-                leading-7
-                sm:leading-8
-              "
-            >
-              Whether it is a simple everyday drape, a festive celebration,
-              a wedding occasion or a meaningful gift, Darsh brings together
-              sarees for every chapter of your life.
-            </p>
-
-            <p
-              className="
-                text-[#806c63]
-                text-[12px]
-                sm:text-[14px]
-                leading-7
-                sm:leading-8
-                mt-4
-              "
-            >
-              Choose the colour, weave and story that feels like you.
-            </p>
-
-          </motion.div>
-
-
-          {/* Right Quote Card */}
-
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              duration: 0.8,
-            }}
-            viewport={{
-              once: true,
-            }}
+          <div
             className="
               relative
-              bg-[#741522]
-              min-h-[330px]
-              flex
-              items-center
-              justify-center
-              px-8
-              sm:px-12
-              overflow-hidden
+              grid
+              min-h-[245px]
+              grid-cols-2
+              sm:min-h-[265px]
+              lg:min-h-[300px]
+              lg:grid-cols-[1.05fr_.95fr]
             "
           >
-
-            {/* Decorative Circle */}
-
-            <div
-              className="
-                absolute
-                -right-24
-                -top-24
-                w-64
-                h-64
-                rounded-full
-                border
-                border-[#d4ad54]/15
-              "
-            />
+            {/* =================================================
+                LEFT CONTENT
+            ================================================= */}
 
             <div
               className="
-                absolute
-                -left-24
-                -bottom-24
-                w-64
-                h-64
-                rounded-full
-                border
-                border-[#d4ad54]/15
+                relative
+                z-20
+                flex
+                flex-col
+                justify-center
+                px-5
+                py-7
+                sm:px-8
+                sm:py-9
+                lg:px-12
+                lg:py-10
               "
-            />
+            >
+              {/* Festival label */}
 
-            <div className="relative z-10 text-center">
+              <div className="mb-2 flex items-center gap-2">
+                <motion.span
+                  animate={{
+                    rotate: [0, 8, -8, 0],
+                    scale: [1, 1.08, 1],
+                  }}
+                  transition={{
+                    duration: 2.2,
+                    repeat: Infinity,
+                  }}
+                >
+                  <Gift
+                    size={14}
+                    className="text-[#e7c979]"
+                  />
+                </motion.span>
 
-              <Sparkles
-                size={18}
-                strokeWidth={1}
+                <span
+                  className="
+                    text-[7px]
+                    font-medium
+                    uppercase
+                    tracking-[0.32em]
+                    text-[#e5cfb0]
+                    sm:text-[8px]
+                  "
+                >
+                  {festival} Special
+                </span>
+              </div>
+
+              {/* Title */}
+
+              <h2
                 className="
-                  mx-auto
-                  mb-6
-                  text-[#d4ad54]
+                  max-w-[620px]
+                  font-serif
+                  text-[29px]
+                  leading-[0.95]
+                  text-[#fff8ed]
+                  sm:text-[38px]
+                  lg:text-[46px]
+                  xl:text-[52px]
                 "
-              />
+              >
+                {data.title}
+              </h2>
+
+              {/* Subtitle */}
 
               <p
                 className="
-                  font-serif
-                  italic
-                  text-[#f8f4eb]
-                  text-[27px]
-                  sm:text-[35px]
-                  leading-[1.2]
+                  mt-2
+                  max-w-[500px]
+                  text-[8px]
+                  leading-4
+                  text-[#dfcfc0]
+                  sm:text-[10px]
+                  sm:leading-5
                 "
               >
-                Wear the tradition.
-                <span className="block">
-                  Carry the story.
-                </span>
+                {data.subtitle}
               </p>
+
+              {/* =================================================
+                  COUNTDOWN
+              ================================================= */}
+
+              <div className="mt-4 sm:mt-5">
+                <p
+                  className="
+                    mb-1.5
+                    text-[5px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.2em]
+                    text-[#e5cfb0]
+                    sm:text-[6px]
+                  "
+                >
+                  Sale Ends In
+                </p>
+
+                {countdown.expired ? (
+                  <div
+                    className="
+                      inline-flex
+                      items-center
+                      gap-2
+                      rounded-full
+                      bg-[#e7c979]
+                      px-4
+                      py-2
+                      text-[7px]
+                      font-bold
+                      uppercase
+                      tracking-[0.12em]
+                      text-[#3f1616]
+                    "
+                  >
+                    <Sparkles size={11} />
+                    Festival Sale Ended
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <CountdownItem
+                      value={countdown.days}
+                      label="Days"
+                    />
+
+                    <span className="mb-3 text-[#e7c979]">
+                      :
+                    </span>
+
+                    <CountdownItem
+                      value={countdown.hours}
+                      label="Hours"
+                    />
+
+                    <span className="mb-3 text-[#e7c979]">
+                      :
+                    </span>
+
+                    <CountdownItem
+                      value={countdown.minutes}
+                      label="Min"
+                    />
+
+                    <span className="mb-3 text-[#e7c979]">
+                      :
+                    </span>
+
+                    <CountdownItem
+                      value={countdown.seconds}
+                      label="Sec"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* =================================================
+                  OFFER + CTA
+              ================================================= */}
 
               <div
                 className="
-                  mt-7
-                  text-[8px]
-                  tracking-[0.35em]
-                  uppercase
-                  text-[#d9bd78]
+                  mt-4
+                  flex
+                  flex-wrap
+                  items-center
+                  gap-3
+                  sm:mt-5
                 "
               >
-                — DARSH
-              </div>
+                <motion.span
+                  animate={{
+                    scale: [1, 1.04, 1],
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                  }}
+                  className="
+                    inline-flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    bg-[#e7c979]
+                    px-4
+                    py-2
+                    text-[8px]
+                    font-bold
+                    tracking-[0.16em]
+                    text-[#3f1616]
+                    sm:px-5
+                    sm:py-2.5
+                    sm:text-[9px]
+                  "
+                >
+                  <Sparkles size={11} />
+                  {data.discount}
+                </motion.span>
 
+                <span
+                  className="
+                    inline-flex
+                    items-center
+                    gap-2
+                    text-[7px]
+                    uppercase
+                    tracking-[0.22em]
+                    text-[#f5e6d2]
+                    sm:text-[8px]
+                  "
+                >
+                  {data.buttonText || "Shop now"}
+
+                  <ArrowRight
+                    size={13}
+                    className="
+                      transition-transform
+                      duration-300
+                      group-hover:translate-x-1
+                    "
+                  />
+                </span>
+              </div>
             </div>
 
-          </motion.div>
+            {/* =================================================
+                RIGHT IMAGE
+            ================================================= */}
 
-        </div>
-
-      </section>
-
-
-      {/* =====================================================
-          FOOTER CTA
-      ===================================================== */}
-
-      <section
-        className="
-          bg-[#eee5d6]
-          py-16
-          sm:py-20
-          text-center
-        "
-      >
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 25,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.7,
-          }}
-          viewport={{
-            once: true,
-          }}
-        >
-
-          <p
-            className="
-              text-[8px]
-              tracking-[0.38em]
-              text-[#977e73]
-              uppercase
-              mb-4
-            "
-          >
-            CONTINUE THE JOURNEY
-          </p>
-
-          <h2
-            className="
-              font-serif
-              text-[#3f1616]
-              text-[35px]
-              sm:text-[45px]
-            "
-          >
-            Find your perfect weave
-          </h2>
-
-          <p
-            className="
-              max-w-[520px]
-              mx-auto
-              mt-4
-              px-6
-              text-[11px]
-              sm:text-[12px]
-              leading-6
-              text-[#806c63]
-            "
-          >
-            Explore the colours, fabrics and traditions that make every
-            Darsh saree special.
-          </p>
-
-          <Link
-            to="/allproducts"
-            className="
-              group
-              inline-flex
-              items-center
-              gap-3
-              mt-7
-              border
-              border-[#741522]
-              text-[#741522]
-              px-7
-              py-3.5
-              text-[8px]
-              sm:text-[9px]
-              tracking-[0.28em]
-              uppercase
-              transition-all
-              duration-300
-              hover:bg-[#741522]
-              hover:text-[#f8f4eb]
-            "
-          >
-            Shop Darsh
-
-            <ArrowRight
-              size={14}
+            <div
               className="
-                transition-transform
-                group-hover:translate-x-1
+                relative
+                min-h-[145px]
+                overflow-hidden
+                sm:min-h-[175px]
+                lg:min-h-0
               "
-            />
-          </Link>
+            >
+              <img
+                src={data.image}
+                alt={`${festival} sale at Darsh`}
+                className="
+                  absolute
+                  inset-0
+                  h-full
+                  w-full
+                  object-cover
+                  object-center
+                  transition-transform
+                  duration-[1400ms]
+                  ease-out
+                  group-hover:scale-[1.035]
+                "
+                onError={(event) => {
+                  event.currentTarget.style.display =
+                    "none";
+                }}
+              />
 
-        </motion.div>
+              {/* Image overlay */}
 
-      </section>
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-gradient-to-t
+                  from-[#3f1616]/55
+                  via-transparent
+                  to-transparent
+                  lg:bg-gradient-to-r
+                  lg:from-[#3f1616]
+                  lg:via-[#3f1616]/15
+                  lg:to-transparent
+                "
+              />
 
+              {/* Image side label */}
 
-      {/* =====================================================
-          REDUCED MOTION
-      ===================================================== */}
+              <div
+                className="
+                  absolute
+                  bottom-4
+                  right-4
+                  rounded-lg
+                  border
+                  border-white/20
+                  bg-black/20
+                  px-3
+                  py-2
+                  text-right
+                  backdrop-blur-md
+                  sm:bottom-5
+                  sm:right-5
+                "
+              >
+                <p
+                  className="
+                    text-[5px]
+                    uppercase
+                    tracking-[0.18em]
+                    text-[#e7c979]
+                  "
+                >
+                  Limited Festival Edit
+                </p>
 
-      <style>
-        {`
-          @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-              animation-duration: 0.01ms !important;
-              animation-iteration-count: 1 !important;
-              transition-duration: 0.01ms !important;
-              scroll-behavior: auto !important;
-            }
-          }
-        `}
-      </style>
+                <p
+                  className="
+                    mt-0.5
+                    text-[7px]
+                    font-semibold
+                    text-white
+                  "
+                >
+                  Darsh Handlooms
+                </p>
+              </div>
+            </div>
+          </div>
 
-    </main>
+          {/* =================================================
+              BOTTOM INFORMATION BAR
+          ================================================= */}
+
+          <div
+            className="
+              relative
+              z-30
+              flex
+              flex-wrap
+              items-center
+              justify-center
+              gap-x-4
+              gap-y-1
+              border-t
+              border-[#e7c979]/20
+              bg-black/10
+              px-4
+              py-2
+              text-center
+              sm:justify-between
+              sm:px-6
+            "
+          >
+            <span
+              className="
+                text-[5px]
+                uppercase
+                tracking-[0.16em]
+                text-[#e5cfb0]
+                sm:text-[6px]
+              "
+            >
+              Raksha Bandhan • August 28, 2026
+            </span>
+
+            <span
+              className="
+                text-[5px]
+                uppercase
+                tracking-[0.16em]
+                text-[#e5cfb0]
+                sm:text-[6px]
+              "
+            >
+              Shubh Muhurat: 5:57 AM – 9:48 AM IST
+            </span>
+
+            <span
+              className="
+                text-[5px]
+                font-semibold
+                uppercase
+                tracking-[0.16em]
+                text-[#e7c979]
+                sm:text-[6px]
+              "
+            >
+              60% OFF & Above
+            </span>
+          </div>
+        </Link>
+      </div>
+    </section>
   );
 };
 

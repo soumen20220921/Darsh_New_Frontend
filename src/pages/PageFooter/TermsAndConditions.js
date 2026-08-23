@@ -42,7 +42,7 @@ const TermsAndConditions = () => {
           Rule 3 (1) of the Information Technology (Intermediaries guidelines)
           Rules, 2011 that require publishing the rules and regulations,
           privacy policy and Terms of Use for access or usage of domain name{" "}
-          <strong>contactdarsh9@gmail.com</strong> (“Website”), including the related
+          <strong>darshweb2004@gmail.com</strong> (“Website”), including the related
           mobile site and mobile application (hereinafter referred to as
           “Platform”).
         </>
@@ -57,12 +57,12 @@ const TermsAndConditions = () => {
           incorporated under the Companies Act, 1956 with its registered
           office at{" "}
           <strong>
-            Nilkuthidanga, Puruli, West Bengal, 723101
+            Patrasayer, Bankura Patrasayer, West Bengal 722206
           </strong>{" "}
           (hereinafter referred to as "Platform Owner", “we”, “us”, “our”).
           This website is operated by{" "}
-          <strong>Piyali Sarkar Bakshi</strong>, and the Bank Account Name is{" "}
-          <strong>Piyali Sarkar Bakshi</strong>.
+          <strong>Sathi Dey Sarkar</strong>, and the Bank Account Name is{" "}
+          <strong>Sathi Dey Sarkar</strong>.
         </>
       ),
     },

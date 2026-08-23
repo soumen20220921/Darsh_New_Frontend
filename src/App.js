@@ -30,6 +30,7 @@ import SareesByColor from "./pages/SareesByColor";
 import Wishlist from "./pages/Wishlist.jsx";
 import PremiumSarees from "./pages/PremiumSarees.jsx";
 import ShopByPrice from "./pages/ShopByPrice.jsx";
+import FestivalSale from "./pages/FestivalSale";
 
 const App = () => {
   const context = useAppContext();
@@ -58,6 +59,10 @@ const App = () => {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/premium-sarees" element={<PremiumSarees />}/>
             <Route path="/shop-by-price" element={<ShopByPrice />} />
+            <Route
+  path="/festival-sale"
+  element={<FestivalSale />}
+/>
             <Route
               path="/CancellationandRefund"
               element={<CancellationAndRefund />}

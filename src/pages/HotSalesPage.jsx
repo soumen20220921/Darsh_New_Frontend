@@ -527,13 +527,12 @@ const HotSalesPage = () => {
   const { allProduct, url } = useAppContext();
 
   const [search, setSearch] = useState("");
-  const [category, setCategory] =
-    useState("All");
+  const [category, setCategory] = useState("All Saree");
   const [sort, setSort] =
     useState("featured");
   const [sortOpen, setSortOpen] =
     useState(false);
-
+  
   /* ==========================================================
      HOT PRODUCTS
   ========================================================== */
@@ -583,94 +582,143 @@ const HotSalesPage = () => {
       null
     )?.product;
   }, [hotSales]);
-
-  /* ==========================================================
-     CATEGORY LIST
-  ========================================================== */
-
+ 
   const categories = useMemo(() => {
-    const list = hotSales
-      .map(getCategory)
-      .filter(Boolean);
+  const sourceProducts = [
+    ...(Array.isArray(hotSales) ? hotSales : []),
+    ...(deal ? [deal] : []),
+  ];
 
-    return [
-      "All",
-      ...Array.from(new Set(list)).slice(0, 7),
-    ];
-  }, [hotSales]);
+  const categoryMap = new Map();
 
-  /* ==========================================================
-     FILTER
-  ========================================================== */
+  sourceProducts.forEach((product) => {
+    const rawCategory =
+      product?.category ||
+      product?.Category ||
+      product?.categoryName ||
+      product?.collection ||
+      "";
 
-  const products = useMemo(() => {
-    let result = hotSales.filter(
-      (product) =>
-        getId(product) !== getId(deal)
+    if (!rawCategory) return;
+
+    const value = String(rawCategory).trim();
+    if (!value) return;
+
+    const key = value.toLowerCase();
+
+    if (!categoryMap.has(key)) {
+      categoryMap.set(key, value);
+    }
+  });
+
+  return [
+    "All Saree",
+    ...Array.from(categoryMap.values()),
+  ];
+}, [hotSales, deal]);
+
+ const products = useMemo(() => {
+  const hotProducts = Array.isArray(hotSales)
+    ? [...hotSales]
+    : [];
+
+  // Make sure Hot Price / Hot Deal is also included
+  if (deal) {
+    const exists = hotProducts.some(
+      (product) => getId(product) === getId(deal)
     );
 
-    if (category !== "All") {
-      result = result.filter(
-        (product) =>
-          getCategory(product) === category
-      );
+    if (!exists) {
+      hotProducts.unshift(deal);
     }
+  }
 
-    const term = search
-      .trim()
-      .toLowerCase();
+  let result = hotProducts;
 
-    if (term) {
-      result = result.filter(
-        (product) => {
-          const searchable = [
-            getName(product),
-            product?.category,
-            product?.subCategory,
-            product?.fabric,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
+  /* =========================
+     CATEGORY
+  ========================= */
 
-          return searchable.includes(term);
-        }
+  if (category !== "All Saree") {
+    result = result.filter((product) => {
+      const productCategory =
+        product?.category ||
+        product?.Category ||
+        product?.categoryName ||
+        product?.collection ||
+        "";
+
+      return (
+        String(productCategory).trim().toLowerCase() ===
+        String(category).trim().toLowerCase()
       );
-    }
+    });
+  }
 
-    if (sort === "discount") {
-      result.sort(
-        (a, b) =>
-          getDiscount(b) -
-          getDiscount(a)
-      );
-    }
+  /* =========================
+     SEARCH
+  ========================= */
 
-    if (sort === "priceLow") {
-      result.sort(
-        (a, b) =>
-          getPrice(a) -
-          getPrice(b)
-      );
-    }
+  const term = search.trim().toLowerCase();
 
-    if (sort === "priceHigh") {
-      result.sort(
-        (a, b) =>
-          getPrice(b) -
-          getPrice(a)
-      );
-    }
+  if (term) {
+    result = result.filter((product) => {
+      const searchable = [
+        getName(product),
+        product?.category,
+        product?.Category,
+        product?.categoryName,
+        product?.subCategory,
+        product?.fabric,
+        product?.material,
+        product?.weave,
+        product?.occasion,
+        product?.description,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    return result;
-  }, [
-    hotSales,
-    deal,
-    category,
-    search,
-    sort,
-  ]);
+      return searchable.includes(term);
+    });
+  }
 
+  /* =========================
+     SORT
+  ========================= */
+
+  if (sort === "discount") {
+    result.sort(
+      (a, b) =>
+        Number(getDiscount(b) || 0) -
+        Number(getDiscount(a) || 0)
+    );
+  }
+
+  if (sort === "priceLow") {
+    result.sort(
+      (a, b) =>
+        Number(getPrice(a) || 0) -
+        Number(getPrice(b) || 0)
+    );
+  }
+
+  if (sort === "priceHigh") {
+    result.sort(
+      (a, b) =>
+        Number(getPrice(b) || 0) -
+        Number(getPrice(a) || 0)
+    );
+  }
+
+  return result;
+}, [
+  hotSales,
+  deal,
+  category,
+  search,
+  sort,
+]);
   /* ==========================================================
      STATISTICS
   ========================================================== */

@@ -28,6 +28,7 @@ import { useAppContext } from "../context/AppContext.jsx";
 
 import Reels from "./Reels.jsx";
 import FestiveBanner from "./FestiveBanner.jsx";
+import HomeFooter from "./HomeFooter.jsx";
 
 /* =========================================================
    CATEGORY DATA
@@ -1606,6 +1607,8 @@ const Home = () => {
       ================================================= */}
 
       <SignatureWeaves />
+
+      <FestiveBanner />
 
      
 
@@ -3222,7 +3225,7 @@ const Home = () => {
           FESTIVE BANNER
       ========================================================= */}
 
-      <FestiveBanner />
+      <HomeFooter />
 
       {/* =========================================================
           ANIMATIONS

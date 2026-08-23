@@ -523,7 +523,7 @@ const Disclaimer = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
 
                       <a
-                        href="mailto:contactdarsh9@gmail.com"
+                        href="mailto:darshweb2004@gmail.com"
                         className="
                           flex
                           items-center
@@ -557,13 +557,13 @@ const Disclaimer = () => {
                             mt-1
                             break-all
                           ">
-                           contactdarsh9@gmail.com
+                           darshweb2004@gmail.com
                           </p>
                         </div>
                       </a>
 
                       <a
-                        href="tel:+919907804710"
+                        href="tel:+919883277103"
                         className="
                           flex
                           items-center
@@ -596,7 +596,7 @@ const Disclaimer = () => {
                             text-[#5d0e16]
                             mt-1
                           ">
-                            +91 9907804710
+                            +91 9883277103
                           </p>
                         </div>
                       </a>

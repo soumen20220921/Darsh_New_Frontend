@@ -44,6 +44,290 @@ import { motion, AnimatePresence } from "framer-motion";
 ========================================================= */
 
 
+/* =========================================================
+   DARSH 60%+ FESTIVAL OFFER JOURNEY
+   Shows only for products with 60% discount or above.
+========================================================= */
+// const FESTIVAL_SALE_END = "2026-08-28T23:59:59+05:30";
+
+// const FestivalOfferJourney = ({ discount }) => {
+//   const [remaining, setRemaining] = useState(() =>
+//     Math.max(0, new Date(FESTIVAL_SALE_END).getTime() - Date.now())
+//   );
+
+//   useEffect(() => {
+//     const update = () => {
+//       setRemaining(
+//         Math.max(
+//           0,
+//           new Date(FESTIVAL_SALE_END).getTime() - Date.now()
+//         )
+//       );
+//     };
+
+//     update();
+//     const timer = window.setInterval(update, 1000);
+//     return () => window.clearInterval(timer);
+//   }, []);
+
+//   if (Number(discount) < 60 || remaining <= 0) {
+//     return null;
+//   }
+
+//   const totalSeconds = Math.floor(remaining / 1000);
+//   const totalHours = Math.floor(totalSeconds / 3600);
+//   const minutes = Math.floor((totalSeconds % 3600) / 60);
+//   const seconds = totalSeconds % 60;
+
+//   const countdownItems = [
+//     { value: totalHours, label: "Hours" },
+//     { value: minutes, label: "Minutes" },
+//     { value: seconds, label: "Seconds" },
+//   ];
+
+//   const journey = [
+//     {
+//       icon: ShoppingBag,
+//       title: "Ordered",
+//       text: "Place your order",
+//     },
+//     {
+//       icon: Truck,
+//       title: "Shipped",
+//       text: "Fast dispatch",
+//     },
+//     {
+//       icon: PackageCheck,
+//       title: "Delivered",
+//       text: "At your doorstep",
+//     },
+//   ];
+
+//   return (
+//     <motion.section
+//       initial={{ opacity: 0, y: 14 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ duration: 0.45 }}
+//       className="
+//         mt-5
+//         overflow-hidden
+//         rounded-[18px]
+//         border
+//         border-[#ead9c7]
+//         bg-[#fffdf8]
+//         shadow-[0_12px_35px_rgba(66,21,26,0.07)]
+//       "
+//     >
+//       {/* Header */}
+//       <div
+//         className="
+//           relative
+//           overflow-hidden
+//           border-b
+//           border-[#ead9c7]
+//           bg-gradient-to-r
+//           from-[#4a1020]
+//           via-[#76131d]
+//           to-[#8d1d2b]
+//           px-4
+//           py-3.5
+//           sm:px-5
+//         "
+//       >
+//         <div
+//           className="
+//             absolute
+//             -right-10
+//             -top-12
+//             h-28
+//             w-28
+//             rounded-full
+//             bg-[#f4d98a]/10
+//             blur-2xl
+//           "
+//         />
+
+//         <div className="relative flex items-center justify-between gap-3">
+//           <div className="min-w-0">
+//             <div className="flex items-center gap-2">
+//               <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#f4d98a]" />
+//               <p
+//                 className="
+//                   truncate
+//                   text-[8px]
+//                   font-semibold
+//                   uppercase
+//                   tracking-[0.2em]
+//                   text-[#f7e9c0]
+//                   sm:text-[9px]
+//                 "
+//               >
+//                 Rakshabandhan Flash Offer
+//               </p>
+//             </div>
+
+//             <p className="mt-1 text-[7px] text-white/70 sm:text-[8px]">
+//               This product qualifies for our {discount}% OFF festival offer.
+//             </p>
+//           </div>
+
+//           <div
+//             className="
+//               shrink-0
+//               rounded-full
+//               border
+//               border-[#f4d98a]/60
+//               bg-[#f4d98a]
+//               px-3
+//               py-1.5
+//               text-[9px]
+//               font-bold
+//               text-[#5b1720]
+//               shadow-sm
+//               sm:px-4
+//             "
+//           >
+//             {discount}% OFF
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Countdown */}
+//       <div className="px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+//         <div className="mb-3 text-center">
+//           <p
+//             className="
+//               text-[7px]
+//               font-semibold
+//               uppercase
+//               tracking-[0.24em]
+//               text-[#927d70]
+//             "
+//           >
+//             Offer closes in
+//           </p>
+//         </div>
+
+//         <div className="flex items-center justify-center gap-1 sm:gap-2">
+//           {countdownItems.map((item, index) => (
+//             <React.Fragment key={item.label}>
+//               <div className="relative flex h-[76px] w-[76px] items-center justify-center sm:h-[88px] sm:w-[88px]">
+//                 <div
+//                   className="
+//                     absolute
+//                     inset-0
+//                     rounded-full
+//                     border-[2px]
+//                     border-[#8b3151]/35
+//                   "
+//                 />
+//                 <div
+//                   className="
+//                     absolute
+//                     inset-[5px]
+//                     rounded-full
+//                     border
+//                     border-dashed
+//                     border-[#8b3151]/30
+//                   "
+//                 />
+//                 <div
+//                   className="
+//                     absolute
+//                     inset-[11px]
+//                     rounded-full
+//                     bg-white
+//                     shadow-[0_5px_18px_rgba(118,19,29,0.08)]
+//                   "
+//                 />
+
+//                 <div className="relative z-10 text-center">
+//                   <motion.div
+//                     key={item.value}
+//                     initial={{ opacity: 0.5, y: 2 }}
+//                     animate={{ opacity: 1, y: 0 }}
+//                     transition={{ duration: 0.18 }}
+//                     className="font-serif text-[23px] font-bold leading-none text-[#741522] sm:text-[27px]"
+//                   >
+//                     {String(item.value).padStart(2, "0")}
+//                   </motion.div>
+//                   <div className="mt-1 text-[6px] font-bold uppercase tracking-[0.12em] text-[#8b3151] sm:text-[7px]">
+//                     {item.label}
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {index < countdownItems.length - 1 && (
+//                 <span className="-mt-4 text-[15px] font-bold text-[#8b3151]/35 sm:text-[18px]">
+//                   :
+//                 </span>
+//               )}
+//             </React.Fragment>
+//           ))}
+//         </div>
+
+//         {/* Journey line */}
+//         <div className="relative mt-5 px-2 sm:mt-6 sm:px-4">
+//           <div className="absolute left-[13%] right-[13%] top-5 h-[2px] bg-gradient-to-r from-[#f08a8d] via-[#ef555b] to-[#df2e35]" />
+
+//           <div className="relative grid grid-cols-3">
+//             {journey.map((step, index) => {
+//               const Icon = step.icon;
+
+//               return (
+//                 <div key={step.title} className="relative flex flex-col items-center text-center">
+//                   <div
+//                     className={`
+//                       relative
+//                       z-10
+//                       flex
+//                       h-10
+//                       w-10
+//                       items-center
+//                       justify-center
+//                       rounded-full
+//                       border-[5px]
+//                       border-[#fffdf8]
+//                       shadow-[0_5px_16px_rgba(118,19,29,0.12)]
+//                       ${
+//                         index === 0
+//                           ? "bg-[#ff9699]"
+//                           : index === 1
+//                             ? "bg-[#ff5c61]"
+//                             : "bg-[#eb3036]"
+//                       }
+//                     `}
+//                   >
+//                     <Icon className="h-4 w-4 text-white" strokeWidth={1.8} />
+//                   </div>
+
+//                   <p className="mt-2 text-[7px] font-bold uppercase tracking-[0.1em] text-[#302523] sm:text-[8px]">
+//                     {step.title}
+//                   </p>
+//                   <p className="mt-0.5 text-[5px] text-[#8b7b72] sm:text-[6px]">
+//                     {step.text}
+//                   </p>
+//                 </div>
+//               );
+//             })}
+//           </div>
+//         </div>
+
+//         {/* Footer */}
+//         <div className="mt-4 flex items-center justify-center gap-2 border-t border-[#eee2d5] pt-3">
+//           <CalendarDays className="h-3 w-3 text-[#8b3151]" />
+//           <p className="text-[6px] font-medium uppercase tracking-[0.12em] text-[#927d70] sm:text-[7px]">
+//             Offer valid until August 28, 2026 · 11:59 PM IST
+//           </p>
+//         </div>
+//       </div>
+//     </motion.section>
+//   );
+// };
+
+
+
+
 /* ============================================================
    SHARED DARSH WISHLIST BUTTON
    Source of truth: localStorage "wishlist"
@@ -1557,6 +1841,7 @@ useEffect(() => {
 </p>
             </motion.div>
 
+           
             {/* Description */}
 
             <motion.p
@@ -2392,6 +2677,12 @@ useEffect(() => {
                 Copy link
               </button>
             </div>
+
+             {/* 60%+ FESTIVAL OFFER JOURNEY */}
+            {/* {discount >= 60 && (
+              <FestivalOfferJourney discount={discount} />
+            )} */}
+
 
             {/* Trust */}
 

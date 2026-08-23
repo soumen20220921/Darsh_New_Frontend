@@ -56,7 +56,7 @@ const ShippingAndDelivery = () => {
       title: "Contact Information",
       icon: <FaHeadset />,
       text:
-        "If you have any questions about shipping or delivery, please contact us at contactdarsh9@gmail.com or +91 9907804710.",
+        "If you have any questions about shipping or delivery, please contact us at darshweb2004@gmail.com or +91 9883277103.",
     },
   ];
 

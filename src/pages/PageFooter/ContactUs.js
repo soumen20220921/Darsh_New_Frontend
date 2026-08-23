@@ -31,22 +31,21 @@ const ContactUs = () => {
     {
       icon: Mail,
       label: "EMAIL",
-      value: "contactdarsh9@gmail.com",
-      href: "mailto:contactdarsh9@gmail.com",
+      value: "darshweb2004@gmail.com",
+      href: "mailto:darshweb2004@gmail.com",
     },
 
     {
       icon: Phone,
       label: "PHONE",
-      value: "+91 9907804710",
-      href: "tel:+919907804710",
+      value: "+91 9883277103",
+      href: "tel:+919883277103",
     },
 
     {
       icon: MapPin,
       label: "ADDRESS",
-      value: " 6VJG+23H, Ichlabad, Bardhaman, West Bengal 713103, Burdwan, India, 713103",
-      href: "https://share.google/pClPGHzUnS3mJENSA",
+      value: "Patrasayer, Bankura Patrasayer, West Bengal 722206",
     },
   ];
 
@@ -892,7 +891,7 @@ const ContactUs = () => {
           </h2>
 
           <a
-            href="tel:+919907804710"
+            href="tel:+919883277103"
             className="
               group
               inline-flex

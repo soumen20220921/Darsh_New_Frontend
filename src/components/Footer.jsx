@@ -276,7 +276,7 @@ export default function Footer() {
                 />
 
                 <span>
-                  +91 9907804710
+                  +91 9883277103
                 </span>
 
               </a>
@@ -285,7 +285,7 @@ export default function Footer() {
               {/* Email */}
 
               <a
-                href="mailto:contactdarsh9@gmail.com"
+                href="mailto:darshweb2004@gmail.com"
                 className="
                   group
                   flex
@@ -294,7 +294,7 @@ export default function Footer() {
                   text-[10px]
                   text-[#5e4941]
                   hover:text-[#741522]
-                  transition-colors
+                  transition-colorsdarshweb2004@gmail.com
                 "
               >
 
@@ -309,7 +309,7 @@ export default function Footer() {
                 />
 
                 <span className="break-all">
-                 contactdarsh9@gmail.com
+                 darshweb2004@gmail.com
                 </span>
 
               </a>
@@ -318,8 +318,6 @@ export default function Footer() {
               {/* Address */}
 
               <a
-                href="https://share.google/pClPGHzUnS3mJENSA"
-                target="_blank"
                 rel="noopener noreferrer"
                 className="
                   group
@@ -345,7 +343,7 @@ export default function Footer() {
                 />
 
                 <span>
-                   6VJG+23H, Ichlabad, Bardhaman, West Bengal 713103, Burdwan, India, 713103
+                   Patrasayer, Bankura Patrasayer, West Bengal 722206
                 </span>
 
               </a>

@@ -23,7 +23,7 @@ const CancellationAndRefund = () => {
       content: [
         "Orders can be cancelled before they are shipped.",
         "Once the order has been dispatched, cancellation requests will no longer be accepted.",
-        "To cancel your order, please email us with your order ID at contactdarsh9@gmail.com",
+        "To cancel your order, please email us with your order ID at darshweb2004@gmail.com",
       ],
     },
 
@@ -82,7 +82,7 @@ const CancellationAndRefund = () => {
       accent: "gold",
       contact: true,
       content: [
-        "Email: contactdarsh9@gmail.com",
+        "Email: darshweb2004@gmail.com",
         "Phone: +91 9907804710",
       ],
     },
@@ -504,7 +504,7 @@ const CancellationAndRefund = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                       <a
-                        href="mailto:contactdarsh9@gmail.com"
+                        href="mailto:darshweb2004@gmail.com"
                         className="
                           flex
                           items-center
@@ -539,7 +539,7 @@ const CancellationAndRefund = () => {
                             mt-1
                             break-all
                           ">
-                            contactdarsh9@gmail.com
+                            darshweb2004@gmail.com
                           </p>
                         </div>
                       </a>
