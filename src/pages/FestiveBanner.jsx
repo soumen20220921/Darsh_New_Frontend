@@ -14,31 +14,31 @@ import { motion } from "framer-motion";
 ========================================================= */
 
 const festivalBannerData = {
-  active: true,
+  // active: true,
 
-  festival: "Rakshabandhan",
+  // festival: "Rakshabandhan",
 
-  title: "Rakshabandhan Sale",
+  // title: "Rakshabandhan Sale",
 
-  subtitle:
-    "Celebrate the beautiful bond of Rakhi with exclusive Darsh sarees.",
+  // subtitle:
+  //   "Celebrate the beautiful bond of Rakhi with exclusive Darsh sarees.",
 
-  discount: "60% OFF",
+  // discount: "60% OFF",
 
-  image: "/IMG/festival.png",
+  // image: "/IMG/festival.png",
 
-  buttonText: "Shop 60% Sale",
+  // buttonText: "Shop 60% Sale",
 
-  route: "/festival-sale",
+  // route: "/festival-sale",
 
-  /* Raksha Bandhan 2026 */
-  festivalDate: "Friday, August 28, 2026",
+  // /* Raksha Bandhan 2026 */
+  // festivalDate: "Friday, August 28, 2026",
 
-  /* Shubh Muhurat */
-  muhurat: "5:57 AM – 9:48 AM IST",
+  // /* Shubh Muhurat */
+  // muhurat: "5:57 AM – 9:48 AM IST",
 
-  /* Sale countdown deadline */
-  saleEndsAt: "2026-08-28T23:59:59+05:30",
+  // /* Sale countdown deadline */
+  // saleEndsAt: "2026-08-28T23:59:59+05:30",
 };
 
 /* =========================================================

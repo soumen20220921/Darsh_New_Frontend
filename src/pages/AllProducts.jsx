@@ -16,25 +16,6 @@ import {
 } from "lucide-react";
 
 
-/* =========================================================
-   CATEGORIES
-========================================================= */
-
-const ALL_CATEGORIES = [
-   "Pujo Special",
-    "Banarasi",
-    "Kanthastitch",
-    "Kanjivaram",
-    "Pure Silk",
-    "Cotton Handloom",
-    "Bandhani",
-    "Festive Edit",
-    "Bridal collection",
-    "Pure Silk Replica",
-    "Fancy Saree",
-    "Handloom Saree",
-    "Other Saree",
-];
 
 
 /* =========================================================
@@ -83,6 +64,35 @@ const AllProducts = () => {
 
   const { allProduct, url } = useAppContext();
 
+  /* =======================================================
+     DYNAMIC CATEGORIES
+     -------------------------------------------------------
+     Any category added from Admin automatically appears
+     on this page. No manual category list is required.
+  ======================================================= */
+
+  const dynamicCategories = useMemo(() => {
+    const seen = new Map();
+
+    (allProduct || []).forEach((product) => {
+      const category = String(product?.category ?? "").trim();
+      if (!category) return;
+
+      const key = category.toLowerCase();
+      if (!seen.has(key)) seen.set(key, category);
+    });
+
+    return Array.from(seen.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      })
+    );
+  }, [allProduct]);
+
+ 
+
+
 
   /* =======================================================
      STATES
@@ -128,6 +138,47 @@ const AllProducts = () => {
     }
   }, [allProduct]);
 
+  useEffect(() => {
+    if (
+      selectedCategory !== "all" &&
+      !dynamicCategories.some(
+        (category) =>
+          category.toLowerCase() === selectedCategory.toLowerCase()
+      )
+    ) {
+      setSelectedCategory("all");
+      setSelectedSubCategory("all");
+    }
+  }, [dynamicCategories, selectedCategory]);
+
+   const availableSubCategories = useMemo(() => {
+    const seen = new Map();
+
+    (allProduct || []).forEach((product) => {
+      const category = String(product?.category ?? "").trim();
+      const subCategory = String(product?.subCategory ?? "").trim();
+
+      if (
+        selectedCategory !== "all" &&
+        category.toLowerCase() !== selectedCategory.toLowerCase()
+      ) {
+        return;
+      }
+
+      if (!subCategory) return;
+
+      const key = subCategory.toLowerCase();
+      if (!seen.has(key)) seen.set(key, subCategory);
+    });
+
+    return Array.from(seen.values()).sort((a, b) =>
+      a.localeCompare(b, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      })
+    );
+  }, [allProduct, selectedCategory]);
+  
   /* =======================================================
      DYNAMIC PRICE BOUNDS
   ======================================================= */
@@ -170,7 +221,8 @@ const AllProducts = () => {
     if (selectedCategory !== "all") {
       products = products.filter(
         (product) =>
-          product.category === selectedCategory
+          String(product?.category ?? "").trim().toLowerCase() ===
+          String(selectedCategory).trim().toLowerCase()
       );
     }
 
@@ -180,8 +232,8 @@ const AllProducts = () => {
     if (selectedSubCategory !== "all") {
       products = products.filter(
         (product) =>
-          product.subCategory ===
-          selectedSubCategory
+          String(product?.subCategory ?? "").trim().toLowerCase() ===
+          String(selectedSubCategory).trim().toLowerCase()
       );
     }
 
@@ -221,15 +273,14 @@ const AllProducts = () => {
 
     if (stockStatus === "inStock") {
       products = products.filter(
-        (product) => product.stock > 0
+        (product) => Number(product?.stock) > 0
       );
     }
 
     if (stockStatus === "outOfStock") {
       products = products.filter(
         (product) =>
-          !product.stock ||
-          product.stock === 0
+          Number(product?.stock) <= 0
       );
     }
 
@@ -616,12 +667,10 @@ const AllProducts = () => {
             "
           >
 
-            {ALL_CATEGORIES.map(
+            {["all", ...dynamicCategories].map(
               (category) => {
-
-                const active =
-                  selectedCategory ===
-                  category;
+                const active = selectedCategory === category;
+                const label = category === "all" ? "All" : category;
 
                 return (
                   <button
@@ -659,7 +708,7 @@ const AllProducts = () => {
                       }
                     `}
                   >
-                    {category}
+                    {label}
                   </button>
                 );
               }
@@ -667,6 +716,47 @@ const AllProducts = () => {
 
 
           </motion.div>
+
+          <AnimatePresence initial={false}>
+            {selectedCategory !== "all" &&
+              availableSubCategories.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -5 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -5 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {["all", ...availableSubCategories].map((subCategory) => {
+                      const active = selectedSubCategory === subCategory;
+
+                      return (
+                        <button
+                          key={subCategory}
+                          type="button"
+                          onClick={() => setSelectedSubCategory(subCategory)}
+                          className={`
+                            shrink-0 rounded-full px-3.5 py-1.5
+                            border text-[7px] tracking-[0.12em] uppercase
+                            transition-all duration-200
+                            ${
+                              active
+                                ? "bg-[#d4ad54] border-[#d4ad54] text-[#3f1616]"
+                                : "bg-transparent border-[#741522]/12 text-[#806c63] hover:border-[#741522]/30 hover:text-[#741522]"
+                            }
+                          `}
+                        >
+                          {subCategory === "all"
+                            ? "All Subcategories"
+                            : subCategory}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+          </AnimatePresence>
 
         </div>
 

@@ -140,23 +140,48 @@ const Categories = () => {
   const categories = [
     {
       id: "1",
-      name: "Pure Silk",
+      name: "Bengal Tussar",
       image: "/IMG/p7.jpg",
     },
     {
       id: "2",
-      name: "Cotton Handloom",
+      name: "Pure Silk",
       image: "/IMG/p8.jpg",
     },
     {
       id: "3",
-      name: "Bandhani",
+      name: "Pure Handloom",
       image: "/IMG/p9.jpg",
     },
     {
       id: "4",
-      name: "Festive Edit",
+      name: "Silk Replica",
       image: "/IMG/p10.jpg",
+    },
+    {
+      id: "5",
+      name: "Pujo Special",
+      image: "/IMG/ddp5.jpg",
+    },
+    {
+      id: "6",
+      name: "Designer Saree",
+      image: "/IMG/ddp6.jpg",
+    },
+    {
+      id: "7",
+      name: "Handstitch",
+      image: "/IMG/ddp7.jpg",
+    },
+    {
+      id: "8",
+      name: "Royal Bengal Tussar",
+      image: "/IMG/ddp1.jpg",
+    },
+    {
+      id: "8",
+      name: "Tussar kantha",
+      image: "/IMG/ddp3.jpg",
     },
     
   ];

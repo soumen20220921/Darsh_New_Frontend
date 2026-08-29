@@ -36,32 +36,32 @@ import HomeFooter from "./HomeFooter.jsx";
 
 const categories = [
   {
-    id: "silk",
-    name: "Pure Silk",
-    subtitle: " PURE Silk Collections",
+    id: "Tussar",
+    name: "Bengal Tussar",
+    subtitle: "Everyday breathable drapes",
     image: "/IMG/p7.jpg",
+    path: "/Categories/Bengal Tussar",
+  },
+  {
+    id: "Silk",
+    name: "Pure Silk",
+    subtitle: "Pure Silk Collections",
+    image: "/IMG/p8.jpg",
     path: "/Categories/Pure Silk",
   },
   {
-    id: "cotton",
-    name: "Cotton Handloom",
-    subtitle: " Everyday breathable drapes",
-    image: "/IMG/p8.jpg",
-    path: "/Categories/Cotton Handloom",
-  },
-  {
-    id: "bandhani",
-    name: "Bandhani",
+    id: "Handloom",
+    name: "Pure Handloom ",
     subtitle: " Traditional tie-dye artistry",
     image: "/IMG/p9.jpg",
-    path: "/Categories/Bandhani",
+    path: "/Categories/Pure Handloom",
   },
   {
-    id: "festive",
-    name: "Festive Edit",
+    id: "Replica",
+    name: "Silk Replica",
     subtitle: " Celebrate in style with our curated collection",
     image: "/IMG/p10.jpg",
-    path: "/Categories/Festive Edit",
+    path: "/Categories/Silk Replica",
   },
 ];
 
@@ -419,7 +419,7 @@ const LuxuryProductCard = ({
           </div>
         </div>
 
-        <div className="mt-3 inline-flex items-center gap-1.5 border border-[#741522]/10 bg-[#f3eadb] px-2.5 py-1.5 text-[7px] uppercase tracking-[0.16em] text-[#741522]">
+        <div className="mt-3 inline-flex items-center rounded-sm text-[5px] gap-1 sm:gap-1.5 border border-[#741522]/10 bg-[#f3eadb] px-2.5 py-1.5 sm:text-[7px] uppercase tracking-[0.16em] text-[#741522]">
           <Truck size={11} strokeWidth={1.4} />
           Free shipping on every product
         </div>
@@ -1611,233 +1611,820 @@ const Home = () => {
       <FestiveBanner />
 
      
+{/* =========================================================
+    FIND YOUR WEAVE
+    MOBILE:
+    01 LARGE | 02 SMALL
+               03 SMALL
+    04 FULL WIDTH
+    DESKTOP: ORIGINAL 2 × 2 EDITORIAL GRID
+========================================================= */}
 
-      {/* =================================================
-          FIND YOUR WEAVE
-      ================================================= */}
+<section
+  className="
+    relative
+    overflow-hidden
+    border-b border-[#741522]/10
+    py-14
+    sm:py-20
+    lg:py-24
+  "
+>
+  <div
+    className="
+      mx-auto
+      w-full
+      max-w-[1120px]
+      px-4
+      sm:px-8
+      lg:px-0
+    "
+  >
 
-      <section
-        className="
-          relative
-          border-b
-          border-[#741522]/10
-          py-16
-          sm:py-20
-          lg:py-24
-        "
-      >
-        <div
+    {/* =====================================================
+        HEADER
+    ===================================================== */}
+
+    <div
+      className="
+        mb-8
+        flex
+        flex-col
+        gap-6
+        sm:mb-11
+        sm:flex-row
+        sm:items-end
+        sm:justify-between
+      "
+    >
+      <div>
+        <p
           className="
-            mx-auto
-            max-w-[1120px]
-            px-5
-            sm:px-8
-            lg:px-0
+            mb-3
+            text-[8px]
+            uppercase
+            tracking-[0.38em]
+            text-[#977e73]
+            sm:text-[9px]
           "
         >
+          SHOP BY CATEGORY
+        </p>
 
-          {/* Header */}
+        <h2
+          className="
+            font-serif
+            text-[35px]
+            font-normal
+            leading-[0.95]
+            tracking-[-0.025em]
+            text-[#3f1616]
+            sm:text-[48px]
+            lg:text-[54px]
+          "
+        >
+          Find your weave
+        </h2>
 
+        {/* Mobile supporting line */}
+        <p
+          className="
+            mt-3
+            max-w-[330px]
+            text-[10px]
+            leading-5
+            text-[#806c63]
+            sm:hidden
+          "
+        >
+          Four signature collections, thoughtfully curated for
+          every kind of drape.
+        </p>
+      </div>
+
+      <Link
+        to="/allproducts"
+        onClick={scrollTop}
+        className="
+          group
+          inline-flex
+          w-fit
+          items-center
+          gap-2
+          border
+          border-[#741522]/40
+          px-5
+          py-3
+          text-[7px]
+          uppercase
+          tracking-[0.25em]
+          text-[#741522]
+          transition-all
+          duration-300
+          hover:bg-[#741522]
+          hover:text-[#f8f4eb]
+          sm:px-7
+          sm:py-3.5
+        "
+      >
+        All Categories
+
+        <ArrowRight
+          size={12}
+          strokeWidth={1.2}
+          className="
+            transition-transform
+            duration-300
+            group-hover:translate-x-1
+          "
+        />
+      </Link>
+    </div>
+
+
+    {/* =====================================================
+        MOBILE EDITORIAL GRID
+        01 LARGE | 02 + 03 SMALL
+        04 FULL WIDTH
+    ===================================================== */}
+
+    <div className="sm:hidden">
+
+      {/* -----------------------------------------------
+          TOP FEATURE GRID
+      ----------------------------------------------- */}
+
+      <div
+        className="
+          grid
+          grid-cols-[1.58fr_0.72fr]
+          gap-2
+        "
+      >
+
+        {/* =============================================
+            01 — LARGE
+        ============================================= */}
+
+        <Link
+          to={categories[0].path}
+          onClick={scrollTop}
+          className="
+            group
+            relative
+            min-h-[330px]
+            overflow-hidden
+            bg-[#e8dece]
+          "
+        >
+          <img
+            src={categories[0].image}
+            alt={categories[0].name}
+            className="
+              absolute
+              inset-0
+              h-full
+              w-full
+              object-cover
+              transition-transform
+              duration-[1400ms]
+              ease-out
+              group-hover:scale-[1.05]
+            "
+          />
+
+          {/* Dark luxury overlay */}
           <div
             className="
-              mb-9
+              absolute
+              inset-0
+              bg-gradient-to-t
+              from-[#4c1017]/90
+              via-[#65171b]/15
+              to-transparent
+            "
+          />
+
+          {/* Number */}
+          <div
+            className="
+              absolute
+              left-3
+              top-3
               flex
-              flex-col
-              gap-7
-              sm:mb-11
-              sm:flex-row
-              sm:items-end
-              sm:justify-between
+              h-8
+              w-8
+              items-center
+              justify-center
+              border
+              border-white/40
+              bg-[#3f1616]/30
+              text-[9px]
+              tracking-[0.12em]
+              text-white
+              backdrop-blur-sm
             "
           >
-            <div>
+            01
+          </div>
+
+          {/* Arrow */}
+          <div
+            className="
+              absolute
+              right-3
+              top-3
+              flex
+              h-8
+              w-8
+              items-center
+              justify-center
+              rounded-full
+              border
+              border-white/40
+              bg-white/10
+              text-white
+              backdrop-blur-sm
+            "
+          >
+            <ArrowUpRight
+              size={14}
+              strokeWidth={1.2}
+            />
+          </div>
+
+          {/* Content */}
+          <div
+            className="
+              absolute
+              inset-x-0
+              bottom-0
+              p-4
+            "
+          >
+            <p
+              className="
+                mb-2
+                text-[6px]
+                uppercase
+                tracking-[0.28em]
+                text-[#eadaca]
+              "
+            >
+              SIGNATURE WEAVE
+            </p>
+
+            <h3
+              className="
+                font-serif
+                text-[25px]
+                leading-none
+                text-white
+              "
+            >
+              {categories[0].name}
+            </h3>
+
+            <p
+              className="
+                mt-2
+                max-w-[180px]
+                text-[8px]
+                leading-4
+                text-white/75
+              "
+            >
+              {categories[0].subtitle}
+            </p>
+          </div>
+        </Link>
+
+
+        {/* =============================================
+            RIGHT COLUMN
+            02 + 03
+        ============================================= */}
+
+        <div className="grid grid-rows-2 gap-2">
+
+          {/* -------------------------------------------
+              02 — PURE SILK
+          ------------------------------------------- */}
+
+          <Link
+            to={categories[1].path}
+            onClick={scrollTop}
+            className="
+              group
+              relative
+              min-h-0
+              overflow-hidden
+              bg-[#e8dece]
+            "
+          >
+            <img
+              src={categories[1].image}
+              alt={categories[1].name}
+              className="
+                absolute
+                inset-0
+                h-full
+                w-full
+                object-cover
+                transition-transform
+                duration-[1200ms]
+                ease-out
+                group-hover:scale-[1.06]
+              "
+            />
+
+            <div
+              className="
+                absolute
+                inset-0
+                bg-gradient-to-t
+                from-[#451216]/85
+                via-[#451216]/15
+                to-transparent
+              "
+            />
+
+            {/* Number */}
+            <span
+              className="
+                absolute
+                left-2
+                top-2
+                text-[8px]
+                tracking-[0.12em]
+                text-white
+              "
+            >
+              02
+            </span>
+
+            {/* Arrow */}
+            <span
+              className="
+                absolute
+                right-2
+                top-2
+                flex
+                h-6
+                w-6
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-white/35
+                bg-black/10
+                text-white
+              "
+            >
+              <ArrowUpRight
+                size={11}
+                strokeWidth={1.2}
+              />
+            </span>
+
+            <div
+              className="
+                absolute
+                inset-x-0
+                bottom-0
+                p-2.5
+              "
+            >
+              <h3
+                className="
+                  font-serif
+                  text-[16px]
+                  leading-none
+                  text-white
+                "
+              >
+                {categories[1].name}
+              </h3>
 
               <p
                 className="
-                  mb-4
-                  text-[8px]
+                  mt-1
+                  truncate
+                  text-[6px]
                   uppercase
-                  tracking-[0.38em]
-                  text-[#977e73]
-                  sm:text-[9px]
+                  tracking-[0.14em]
+                  text-white/70
                 "
               >
-                SHOP BY CATEGORY
+                {categories[1].subtitle}
               </p>
-
-              <h2
-                className="
-                  font-serif
-                  text-[35px]
-                  font-normal
-                  leading-none
-                  text-[#3f1616]
-                  sm:text-[48px]
-                  lg:text-[54px]
-                "
-              >
-                Find your weave
-              </h2>
-
             </div>
+          </Link>
 
-            <Link
-              to="/allproducts"
-              onClick={scrollTop}
-              className="
-                self-start
-                border
-                border-[#741522]/50
-                px-7
-                py-3.5
-                text-[8px]
-                uppercase
-                tracking-[0.25em]
-                text-[#741522]
-                transition-all
-                duration-300
-                hover:bg-[#741522]
-                hover:text-[#f8f4eb]
-                sm:self-auto
-              "
-            >
-              All Categories
-            </Link>
-          </div>
 
-          {/* Category grid */}
+          {/* -------------------------------------------
+              03 — PURE HANDLOOM
+          ------------------------------------------- */}
 
-          <div
+          <Link
+            to={categories[2].path}
+            onClick={scrollTop}
             className="
-              grid
-              grid-cols-1
-              gap-3
-              sm:grid-cols-2
-              lg:grid-cols-4
-              lg:grid-rows-[225px_225px]
+              group
+              relative
+              min-h-0
+              overflow-hidden
+              bg-[#e8dece]
             "
           >
-
-            {/* Silk */}
-
-            <Link
-              to="/Categories/Pure Silk"
-              onClick={scrollTop}
+            <img
+              src={categories[2].image}
+              alt={categories[2].name}
               className="
-                group
-                relative
-                min-h-[390px]
-                overflow-hidden
-                sm:col-span-2
-                lg:row-span-2
-                lg:min-h-0
+                absolute
+                inset-0
+                h-full
+                w-full
+                object-cover
+                transition-transform
+                duration-[1200ms]
+                ease-out
+                group-hover:scale-[1.06]
               "
-            >
-              <img
-                src={categories[0].image}
-                alt={categories[0].name}
-                className="
-                  absolute
-                  inset-0
-                  h-full
-                  w-full
-                  object-cover
-                  transition-transform
-                  duration-[1400ms]
-                  group-hover:scale-[1.06]
-                "
-              />
-
-              <div
-                className="
-                  absolute
-                  inset-0
-                  bg-gradient-to-t
-                  from-[#65171b]/85
-                  via-[#65171b]/10
-                  to-transparent
-                "
-              />
-
-              <CategoryText
-                title={
-                  categories[0].name
-                }
-                subtitle={
-                  categories[0].subtitle
-                }
-              />
-            </Link>
-
-            {/* Cotton */}
-
-            <CategoryTile
-              category={categories[1]}
-              scrollTop={scrollTop}
             />
 
-            {/* Bandhani */}
-
-            <CategoryTile
-              category={categories[2]}
-              scrollTop={scrollTop}
+            <div
+              className="
+                absolute
+                inset-0
+                bg-gradient-to-t
+                from-[#4b1817]/85
+                via-[#4b1817]/10
+                to-transparent
+              "
             />
 
-            {/* Festive */}
-
-            <Link
-              to="/Categories/Festive Edit"
-              onClick={scrollTop}
+            {/* Number */}
+            <span
               className="
-                group
-                relative
-                min-h-[230px]
-                overflow-hidden
-                sm:col-span-2
+                absolute
+                left-2
+                top-2
+                text-[8px]
+                tracking-[0.12em]
+                text-white
               "
             >
-              <img
-                src={categories[3].image}
-                alt={categories[3].name}
-                className="
-                  absolute
-                  inset-0
-                  h-full
-                  w-full
-                  object-cover
-                  transition-transform
-                  duration-[1400ms]
-                  group-hover:scale-[1.06]
-                "
-              />
+              03
+            </span>
 
-              <div
-                className="
-                  absolute
-                  inset-0
-                  bg-gradient-to-t
-                  from-[#7d2c24]/80
-                  via-[#7d2c24]/10
-                  to-transparent
-                "
+            {/* Arrow */}
+            <span
+              className="
+                absolute
+                right-2
+                top-2
+                flex
+                h-6
+                w-6
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-white/35
+                bg-black/10
+                text-white
+              "
+            >
+              <ArrowUpRight
+                size={11}
+                strokeWidth={1.2}
               />
+            </span>
 
-              <CategoryText
-                title={
-                  categories[3].name
-                }
-                subtitle={
-                  categories[3].subtitle
-                }
-              />
-            </Link>
-          </div>
+            <div
+              className="
+                absolute
+                inset-x-0
+                bottom-0
+                p-2.5
+              "
+            >
+              <h3
+                className="
+                  font-serif
+                  text-[16px]
+                  leading-none
+                  text-white
+                "
+              >
+                {categories[2].name}
+              </h3>
+
+              <p
+                className="
+                  mt-1
+                  truncate
+                  text-[6px]
+                  uppercase
+                  tracking-[0.14em]
+                  text-white/70
+                "
+              >
+                {categories[2].subtitle}
+              </p>
+            </div>
+          </Link>
+
         </div>
-      </section>
+      </div>
 
-      {/* =========================================================
+
+      {/* =================================================
+          04 — FULL WIDTH
+      ================================================= */}
+
+      <Link
+        to={categories[3].path}
+        onClick={scrollTop}
+        className="
+          group
+          relative
+          mt-2
+          block
+          h-[105px]
+          overflow-hidden
+          bg-[#e8dece]
+        "
+      >
+        <img
+          src={categories[3].image}
+          alt={categories[3].name}
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-[1400ms]
+            ease-out
+            group-hover:scale-[1.05]
+          "
+        />
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-r
+            from-[#5b191b]/85
+            via-[#7d2c24]/35
+            to-transparent
+          "
+        />
+
+        {/* Number */}
+        <div
+          className="
+            absolute
+            left-3
+            top-3
+            flex
+            h-7
+            w-7
+            items-center
+            justify-center
+            border
+            border-white/35
+            bg-black/10
+            text-[8px]
+            tracking-[0.1em]
+            text-white
+            backdrop-blur-sm
+          "
+        >
+          04
+        </div>
+
+        {/* Arrow */}
+        <div
+          className="
+            absolute
+            right-3
+            top-1/2
+            flex
+            h-8
+            w-8
+            -translate-y-1/2
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-white/45
+            bg-white/10
+            text-white
+            backdrop-blur-sm
+            transition-all
+            duration-300
+            group-hover:bg-white
+            group-hover:text-[#741522]
+          "
+        >
+          <ArrowUpRight
+            size={14}
+            strokeWidth={1.2}
+          />
+        </div>
+
+        {/* Content */}
+        <div
+          className="
+            absolute
+            left-12
+            top-1/2
+            -translate-y-1/2
+          "
+        >
+          <p
+            className="
+              mb-1.5
+              text-[6px]
+              uppercase
+              tracking-[0.3em]
+              text-white/70
+            "
+          >
+            THE NEW CLASSIC
+          </p>
+
+          <h3
+            className="
+              font-serif
+              text-[22px]
+              leading-none
+              text-white
+            "
+          >
+            {categories[3].name}
+          </h3>
+
+          <p
+            className="
+              mt-1.5
+              text-[7px]
+              text-white/75
+            "
+          >
+            {categories[3].subtitle}
+          </p>
+        </div>
+      </Link>
+
+    </div>
+
+
+    {/* =====================================================
+        DESKTOP / TABLET GRID
+        Original editorial structure preserved
+    ===================================================== */}
+
+    <div
+      className="
+        hidden
+        sm:grid
+        sm:grid-cols-2
+        sm:gap-3
+        lg:grid-cols-4
+        lg:grid-rows-[225px_225px]
+      "
+    >
+
+      {/* ================================================
+          01 — BENGAL TUSSAR
+      ================================================ */}
+
+      <Link
+        to={categories[0].path}
+        onClick={scrollTop}
+        className="
+          group
+          relative
+          min-h-[390px]
+          overflow-hidden
+          sm:col-span-2
+          lg:col-span-2
+          lg:row-span-2
+          lg:min-h-0
+        "
+      >
+        <img
+          src={categories[0].image}
+          alt={categories[0].name}
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-[1400ms]
+            group-hover:scale-[1.06]
+          "
+        />
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-[#65171b]/85
+            via-[#65171b]/10
+            to-transparent
+          "
+        />
+
+        <CategoryText
+          title={categories[0].name}
+          subtitle={categories[0].subtitle}
+        />
+      </Link>
+
+
+      {/* ================================================
+          02 — PURE SILK
+      ================================================ */}
+
+      <CategoryTile
+        category={categories[1]}
+        scrollTop={scrollTop}
+      />
+
+
+      {/* ================================================
+          03 — PURE HANDLOOM
+      ================================================ */}
+
+      <CategoryTile
+        category={categories[2]}
+        scrollTop={scrollTop}
+      />
+
+
+      {/* ================================================
+          04 — SILK REPLICA
+      ================================================ */}
+
+      <Link
+        to={categories[3].path}
+        onClick={scrollTop}
+        className="
+          group
+          relative
+          min-h-[230px]
+          overflow-hidden
+          sm:col-span-2
+        "
+      >
+        <img
+          src={categories[3].image}
+          alt={categories[3].name}
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-[1400ms]
+            group-hover:scale-[1.06]
+          "
+        />
+
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-[#7d2c24]/80
+            via-[#7d2c24]/10
+            to-transparent
+          "
+        />
+
+        <CategoryText
+          title={categories[3].name}
+          subtitle={categories[3].subtitle}
+        />
+      </Link>
+
+    </div>
+
+  </div>
+</section>
+
+{/* =========================================================
           COLOR STORIES
-          Placed between Find Your Weave and New Arrivals.
       ========================================================= */}
 
       <ColorStories
@@ -1870,7 +2457,7 @@ const Home = () => {
                 <h2 className="font-serif text-[30px] leading-none text-[#fff8ed] sm:text-[38px]">
                   Premium Sarees
                 </h2>
-                <p className="mt-2 max-w-[520px] text-[10px] leading-5 text-[#dccdc0] sm:text-[11px]">
+                <p className="mt-2 max-w-[520px] text-[8px] leading-5 text-[#dccdc0] sm:text-[11px]">
                   A refined edit of exceptional silks, heirloom weaves and statement drapes.
                 </p>
               </div>
@@ -1944,7 +2531,7 @@ const Home = () => {
           border-b
           border-[#741522]/10
           bg-[#f8f4eb]
-          py-16
+          py-8
           sm:py-20
           lg:py-24
         "
@@ -1964,7 +2551,7 @@ const Home = () => {
 
           <div
             className="
-              mb-8
+              mb-2
               flex
               flex-col
               gap-6
@@ -2014,7 +2601,7 @@ const Home = () => {
                 className="
                   mt-5
                   max-w-[500px]
-                  text-[12px]
+                  text-[9px]
                   leading-6
                   text-[#806c63]
                   sm:text-[13px]
@@ -2209,76 +2796,6 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Mobile helper */}
-
-          <div
-            className="
-              mt-5
-              flex
-              flex-col
-              items-center
-              gap-3
-              sm:hidden
-            "
-          >
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-              "
-            >
-              <span
-                className="
-                  h-px
-                  w-7
-                  bg-[#741522]/30
-                "
-              />
-
-              <span
-                className="
-                  text-[7px]
-                  uppercase
-                  tracking-[0.28em]
-                  text-[#977e73]
-                "
-              >
-                Swipe new arrivals
-              </span>
-
-              <ChevronRight
-                size={13}
-                strokeWidth={1.2}
-                className="text-[#741522]"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={scrollMobileNext}
-              aria-label="Next new arrival"
-              className="
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                rounded-full
-                border
-                border-[#741522]/20
-                text-[#741522]
-                transition-all
-                duration-300
-                active:scale-90
-              "
-            >
-              <ChevronRight
-                size={15}
-                strokeWidth={1.2}
-              />
-            </button>
-          </div>
 
           {/* Desktop progress */}
 
@@ -2334,7 +2851,7 @@ const Home = () => {
 
           <div
             className="
-              mt-10
+              mt-5
               flex
               justify-center
               sm:mt-12
@@ -2425,7 +2942,7 @@ const Home = () => {
             border-b
             border-[#741522]/10
             bg-[#f3eadb]
-            py-16
+            py-8
             sm:py-20
             lg:py-24
           "
@@ -2522,9 +3039,9 @@ const Home = () => {
 
                 <p
                   className="
-                    mt-5
+                    mt-2
                     max-w-[500px]
-                    text-[12px]
+                    text-[9px]
                     leading-6
                     text-[#806c63]
                     sm:text-[13px]
@@ -2731,84 +3248,11 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Mobile helper */}
-
-            <div
-              className="
-                mt-5
-                flex
-                flex-col
-                items-center
-                gap-4
-                sm:hidden
-              "
-            >
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                "
-              >
-                <span
-                  className="
-                    h-px
-                    w-7
-                    bg-[#741522]/30
-                  "
-                />
-
-                <span
-                  className="
-                    text-[7px]
-                    uppercase
-                    tracking-[0.28em]
-                    text-[#977e73]
-                  "
-                >
-                  Swipe hot picks
-                </span>
-
-                <ChevronRight
-                  size={13}
-                  strokeWidth={1.2}
-                  className="text-[#741522]"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={
-                  scrollHotMobileNext
-                }
-                aria-label="Next hot sale"
-                className="
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#741522]/20
-                  text-[#741522]
-                  transition-all
-                  duration-300
-                  active:scale-90
-                "
-              >
-                <ChevronRight
-                  size={15}
-                  strokeWidth={1.2}
-                />
-              </button>
-            </div>
-
             {/* Desktop progress */}
 
             <div
               className="
-                mt-9
+                mt-5
                 hidden
                 items-center
                 justify-center
@@ -3041,7 +3485,7 @@ const Home = () => {
         className="
           border-b
           border-[#741522]/10
-          py-16
+          py-8
           sm:py-20
           lg:py-24
         "
@@ -3295,8 +3739,7 @@ const Home = () => {
               scroll-snap-align: start;
             }
           }
-
-          @media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) {
             *,
             *::before,
             *::after {
