@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import {
@@ -366,6 +366,104 @@ const emitWishlistUpdate = () => {
 
   window.dispatchEvent(
     new Event("darsh-wishlist-updated")
+  );
+};
+
+/* =========================================================
+   RESPONSIVE PRODUCT TEXT
+   Desktop: 2 lines collapsed
+   Mobile: 3 lines collapsed
+   Expands only when the content actually overflows.
+========================================================= */
+const ResponsiveProductText = ({ text }) => {
+  const textRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  const checkOverflow = useCallback(() => {
+    const element = textRef.current;
+    if (!element) return;
+
+    // Temporarily remove the clamp so we can compare the real content height.
+    const previousWebkitLineClamp = element.style.webkitLineClamp;
+    const previousOverflow = element.style.overflow;
+
+    element.style.webkitLineClamp = "unset";
+    element.style.overflow = "visible";
+
+    const fullHeight = element.scrollHeight;
+
+    element.style.webkitLineClamp = previousWebkitLineClamp;
+    element.style.overflow = previousOverflow;
+
+    const lineHeight = parseFloat(window.getComputedStyle(element).lineHeight) || 28;
+    const mobileLines = 3;
+    const desktopLines = 2;
+    const maxCollapsedHeight =
+      window.innerWidth >= 640
+        ? lineHeight * desktopLines
+        : lineHeight * mobileLines;
+
+    setHasMore(fullHeight > maxCollapsedHeight + 2);
+
+    if (fullHeight <= maxCollapsedHeight + 2) {
+      setExpanded(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkOverflow();
+
+    const handleResize = () => checkOverflow();
+    window.addEventListener("resize", handleResize);
+
+    let observer;
+    if (typeof ResizeObserver !== "undefined" && textRef.current) {
+      observer = new ResizeObserver(checkOverflow);
+      observer.observe(textRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      observer?.disconnect();
+    };
+  }, [text, checkOverflow]);
+
+  return (
+    <div className="relative">
+      <div
+        ref={textRef}
+        className={`
+          text-sm leading-7 sm:leading-8 text-[#735f55]
+          ${!expanded ? "line-clamp-3 sm:line-clamp-2" : ""}
+        `}
+      >
+        {text}
+      </div>
+
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setExpanded((previous) => !previous)}
+          aria-expanded={expanded}
+          className="
+            mt-3 inline-flex items-center gap-1.5
+            border-b border-[#76131d]/40
+            pb-0.5 text-[9px] font-semibold uppercase
+            tracking-[0.18em] text-[#76131d]
+            transition-all duration-300
+            hover:border-[#76131d] hover:text-[#5f0e17]
+          "
+        >
+          {expanded ? "Read less" : "Read more"}
+          <ChevronDown
+            className={`h-3 w-3 transition-transform duration-300 ${
+              expanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -1092,7 +1190,7 @@ useEffect(() => {
       return;
     }
 
-    if (quantity > stock) {
+    if (!isPreBooking && quantity > stock) {
       showNotification(`Only ${stock} items are available.`, "error");
       return;
     }
@@ -1107,6 +1205,7 @@ useEffect(() => {
         qty: quantity,
         size: size || null,
         imgSrc: product.images?.[0],
+        preBooking: isPreBooking,
       };
 
       const response = await axios.post(
@@ -1123,7 +1222,7 @@ useEffect(() => {
       if (response.data.success) {
         getCart();
 
-        showNotification("Saree added to your bag.", "success");
+        showNotification(isPreBooking ? "Pre-booking added to your bag.": "Saree added to your bag.", "success");
 
         setIsAdded(true);
       } else {
@@ -1312,6 +1411,15 @@ useEffect(() => {
     );
   }
 
+  const isPreBooking = Boolean(product?.preBooking);
+
+  const preBookingDate = product?.preBookingDate || product?.bookingDate || product?.expectedDeliveryDate || product?.preBookingDeliveryDate || "To be announced";
+
+  const preBookingNote =
+    product?.preBookingDescription ||
+    product?.preBookingNote ||
+    "This piece is available for advance reservation. We will confirm your booking and share the expected dispatch timeline after order placement.";
+
   const rating = product.rating ?? 4.5;
 
   const discount =
@@ -1347,6 +1455,9 @@ useEffect(() => {
     <div
       className="
         min-h-screen
+        w-full
+        min-w-0
+        overflow-x-hidden
         bg-[#f8f4ec]
         text-[#42151a]
         font-sans
@@ -1504,8 +1615,10 @@ useEffect(() => {
           }}
           className="
             grid
+            min-w-0
+            max-w-full
             grid-cols-1
-            lg:grid-cols-[1fr_1fr]
+            lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]
             gap-8
             lg:gap-12
           "
@@ -1514,7 +1627,7 @@ useEffect(() => {
               IMAGE SIDE
           ================================================= */}
 
-          <div>
+          <div className="min-w-0 max-w-full overflow-hidden">
             <div
               className="
                 relative
@@ -1706,7 +1819,7 @@ useEffect(() => {
               PRODUCT INFORMATION
           ================================================= */}
 
-          <div className="flex flex-col">
+          <div className="flex min-w-0 max-w-full flex-col overflow-hidden">
             {/* Category */}
 
             <motion.div
@@ -1763,6 +1876,53 @@ useEffect(() => {
 
              
             </motion.div>
+
+            {isPreBooking && (
+              <motion.div
+                initial={{ opacity: 0, y: 12, scale: 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.16, duration: 0.45 }}
+                className="relative mt-5 overflow-hidden border border-[#d8bd78]/60 bg-[#42151a] px-4 py-4 sm:px-5 sm:py-5"
+              >
+                <motion.div
+                  aria-hidden="true"
+                  animate={{ x: ["-120%", "220%"] }}
+                  transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-18deg]"
+                />
+                <div className="relative flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d8bd78]/45 bg-[#fffaf2]/10 text-[#f1d78c]">
+                    <Hourglass className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#f1d78c]">PRE-BOOKING OPEN</span>
+                      <span className="h-1 w-1 rounded-full bg-[#d8bd78]" />
+                      <motion.span
+                        animate={{ opacity: [0.55, 1, 0.55] }}
+                        transition={{ duration: 1.8, repeat: Infinity }}
+                        className="text-[8px] uppercase tracking-[0.18em] text-[#eadaca]"
+                      >
+                        Reserve early
+                      </motion.span>
+                    </div>
+                    <p className="mt-1.5 text-[11px] leading-5 text-[#fff8ed] sm:text-xs">
+                      {preBookingNote}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1.5 text-[8px] uppercase tracking-[0.12em] text-[#eadaca]">
+                        <CalendarDays className="h-3 w-3 text-[#f1d78c]" />
+                        Timeline: {preBookingDate}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1.5 text-[8px] uppercase tracking-[0.12em] text-[#eadaca]">
+                        <BadgeCheck className="h-3 w-3 text-[#f1d78c]" />
+                        Priority reservation
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Price */}
 
@@ -1842,29 +2002,6 @@ useEffect(() => {
             </motion.div>
 
            
-            {/* Description */}
-
-            <motion.p
-              initial={{
-                opacity: 0,
-              }}
-              animate={{
-                opacity: 1,
-              }}
-              transition={{
-                delay: 0.3,
-              }}
-              className="
-                mt-6
-                text-sm
-                leading-7
-                text-[#735f55]
-                max-w-xl
-              "
-            >
-              {product.description ||
-                "A thoughtfully crafted saree made for timeless elegance, everyday grace and special occasions."}
-            </motion.p>
 
             {/* blouse Avaliable */}
             <div className="mt-6">
@@ -1911,7 +2048,7 @@ useEffect(() => {
                 transition={{ delay: 0.35 }}
                 className="mt-7"
               >
-                <div className="flex items-end justify-between gap-3 mb-3">
+                <div className="flex min-w-0 max-w-full items-end justify-between gap-3 mb-3">
                   <div>
                     <label
                       className="
@@ -1948,14 +2085,20 @@ useEffect(() => {
                   <div
                     className="
                       flex
+                      w-full
+                      max-w-full
+                      min-w-0
                       gap-2.5
                       overflow-x-auto
                       overflow-y-hidden
+                      overscroll-x-contain
                       px-1
                       pb-2
                       snap-x
                       snap-mandatory
-                      scrollbar-hide
+                      touch-pan-x
+                      [scrollbar-width:none]
+                      [&::-webkit-scrollbar]:hidden
                     "
                     style={{
                       WebkitOverflowScrolling: "touch",
@@ -1993,9 +2136,17 @@ useEffect(() => {
                             shrink-0
                             w-[72px]
                             sm:w-[82px]
+                            lg:w-[86px]
                             snap-start
                             text-left
                             outline-none
+                            rounded-xl
+                            border
+                            border-transparent
+                            transition-all
+                            duration-300
+                            hover:border-[#dfd2c0]
+                            hover:bg-[#fffaf2]
                           "
                           title={
                             colorProduct.color ||
@@ -2107,8 +2258,9 @@ useEffect(() => {
                       text-[#a28d80]
                     "
                   >
-                    <span>Swipe to explore</span>
-                    <span className="text-[#76131d]">→</span>
+                    <span className="lg:hidden">Swipe to explore</span>
+                    <span className="hidden lg:inline">Scroll to explore</span>
+                    <span className="text-[#76131d] lg:rotate-90">→</span>
                   </div>
                 )}
               </motion.div>
@@ -2413,8 +2565,8 @@ useEffect(() => {
 
                   <button
                     type="button"
-                    onClick={() => setQuantity(Math.min(stock, quantity + 1))}
-                    disabled={quantity >= stock}
+                    onClick={() => setQuantity(isPreBooking ? Math.min(99, quantity + 1) : Math.min(stock, quantity + 1))}
+                    disabled={isPreBooking ? quantity >= 99 : quantity >= stock}
                     className="
                       w-10
                       h-10
@@ -2445,7 +2597,20 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Add to bag */}
+            {isPreBooking && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 flex items-start gap-2 border-l-2 border-[#c9a24a] bg-[#f3eadb] px-3 py-2.5"
+              >
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8b6827]" />
+                <p className="text-[9px] leading-4 text-[#705c4f] sm:text-[10px]">
+                  Pre-booking quantity is a reservation request. Your booking is marked as a pre-booking order so our team can confirm availability and the expected dispatch timeline.
+                </p>
+              </motion.div>
+            )}
+
+            {/* Add to bag / Pre-book */}
 
             <motion.div
               initial={{
@@ -2470,7 +2635,7 @@ useEffect(() => {
                     scale: 0.98,
                   }}
                   onClick={handleAddToCart}
-                  disabled={loading || isOutOfStock}
+                  disabled={loading || (!isPreBooking && isOutOfStock)}
                   className="
                     w-full
                     h-12
@@ -2498,8 +2663,17 @@ useEffect(() => {
                     </>
                   ) : (
                     <>
-                      <ShoppingBag className="h-4 w-4" />
-                      {isOutOfStock ? "Out of stock" : "Add to bag"}
+                      {isPreBooking ? (
+                        <>
+                          <CalendarDays className="h-4 w-4" />
+                          {isOutOfStock ? "Pre-booking unavailable" : "Pre-book this saree"}
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="h-4 w-4" />
+                          {isOutOfStock ? "Out of stock" : "Add to bag"}
+                        </>
+                      )}
                     </>
                   )}
                 </motion.button>
@@ -2564,6 +2738,26 @@ useEffect(() => {
               )}
             </motion.div>
 
+
+            {isPreBooking && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-4 grid grid-cols-3 gap-2"
+              >
+                {[
+                  [CalendarDays, "Advance reserve"],
+                  [ShieldCheck, "Secure booking"],
+                  [PackageCheck, "Priority handling"],
+                ].map(([Icon, label]) => (
+                  <div key={label} className="flex min-h-[58px] flex-col items-center justify-center gap-1 border border-[#dfd2c0] bg-[#fffaf2] px-2 text-center">
+                    <Icon className="h-3.5 w-3.5 text-[#8b6827]" />
+                    <span className="text-[7px] uppercase tracking-[0.11em] text-[#806c60]">{label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
 
             {/* Wishlist — directly after Add to Bag */}
             <motion.button
@@ -2968,31 +3162,25 @@ useEffect(() => {
 
           <div
             className="
+            w-full
             max-w-4xl
+            min-w-0
+            overflow-hidden
             py-8
           "
           >
             {activeTab === "description" && (
               <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <p
-                  className="
-                  text-sm
-                  leading-8
-                  text-[#735f55]
-                "
-                >
-                  {product.description ||
-                    "This handcrafted saree reflects the beauty of traditional Indian weaving. Each piece is carefully finished and carries the natural character of the textile."}
-                </p>
+                <ResponsiveProductText
+                  text={
+                    product.description ||
+                    "This handcrafted saree reflects the beauty of traditional Indian weaving. Each piece is carefully finished and carries the natural character of the textile."
+                  }
+                />
               </motion.div>
             )}
 
@@ -3031,7 +3219,7 @@ useEffect(() => {
                     Category
                   </span>
 
-                  <span className="text-[#5c473e] text-right">
+                  <span className="min-w-0 max-w-full break-words text-right text-[#5c473e]">
                     {product.category || "Handloom"}
                   </span>
                 </div>
@@ -3056,7 +3244,7 @@ useEffect(() => {
                     Fabric
                   </span>
 
-                  <span className="text-[#5c473e] text-right">
+                  <span className="min-w-0 max-w-full break-words text-right text-[#5c473e]">
                     {product.fabric || "Handwoven textile"}
                   </span>
                 </div>
@@ -3081,7 +3269,7 @@ useEffect(() => {
                     Bouse piece
                   </span>
 
-                  <span className="text-[#5c473e] text-right">
+                  <span className="min-w-0 max-w-full break-words text-right text-[#5c473e]">
                    {product.blouseAvaliable ? "Available" : "Not available"}
                   </span>
                   
@@ -3162,15 +3350,12 @@ useEffect(() => {
                     Product details
                   </span>
 
-                  <p
-                    className="
-                    leading-7
-                    text-[#735f55]
-                  "
-                  >
-                    {product.specification ||
-                      "No additional specifications provided."}
-                  </p>
+                  <ResponsiveProductText
+                    text={
+                      product.specification ||
+                      "No additional specifications provided."
+                    }
+                  />
                 </div>
               </motion.div>
             )}
@@ -3261,7 +3446,7 @@ useEffect(() => {
             YOU MAY ALSO LIKE
         =================================================== */}
         {similarProducts.length > 0 && (
-          <section className="mt-10 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+          <section className=" border-t border-[#dfd2c0] pt-10 ">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
@@ -3279,7 +3464,11 @@ useEffect(() => {
 
             <div
               className="flex gap-3 overflow-x-auto pb-4 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-5 sm:overflow-visible"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+              }}
             >
               {similarProducts.slice(0, 8).map((item, index) => (
                 <motion.article
@@ -3339,7 +3528,7 @@ useEffect(() => {
             MORE PRODUCTS — PRICE NEARBY
         =================================================== */}
         {priceNearbyProducts.length > 0 && (
-          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+          <section className=" border-t border-[#dfd2c0] pt-10">
             <div className="mb-6">
               <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
                 More to explore
@@ -3354,7 +3543,11 @@ useEffect(() => {
 
             <div
               className="flex gap-3 overflow-x-auto pb-4 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-4 sm:overflow-visible"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+              }}
             >
               {priceNearbyProducts.slice(0, 10).map((item) => (
                 <motion.article
@@ -3395,7 +3588,7 @@ useEffect(() => {
             MORE FROM THIS COLLECTION
         =================================================== */}
         {moreFromCategory.length > 0 && (
-          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+          <section className=" border-t border-[#dfd2c0] pt-10 ">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
@@ -3458,7 +3651,7 @@ useEffect(() => {
             RECENTLY VIEWED
         =================================================== */}
         {recentlyViewed.length > 0 && (
-          <section className="mt-12 border-t border-[#dfd2c0] pt-10 sm:mt-16">
+          <section className=" border-t border-[#dfd2c0] pt-10">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
                 <p className="mb-2 text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">
@@ -3473,7 +3666,11 @@ useEffect(() => {
 
             <div
               className="flex gap-3 overflow-x-auto pb-4"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+              }}
             >
               {recentlyViewed.slice(0, 6).map((item) => (
                 <motion.article
@@ -3514,7 +3711,7 @@ useEffect(() => {
         {/* ===================================================
             WHY DARSH — FINAL CONVERSION STRIP
         =================================================== */}
-        <section className="mt-12 border-y border-[#dfd2c0] bg-[#f1e7d8] py-10 sm:mt-16">
+        <section className=" border-y border-[#dfd2c0] bg-[#f1e7d8] py-10 ">
           <div className="mx-auto max-w-5xl px-1 sm:px-4">
             <div className="text-center">
               <p className="text-[9px] uppercase tracking-[0.3em] text-[#a27d5f]">

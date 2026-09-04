@@ -1257,35 +1257,6 @@ const Categories = () => {
                 "
               >
 
-                {/* PREMIUM QUICK FILTER */}
-
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() =>
-                    setPremiumOnly((value) => !value)
-                  }
-                  className={`
-                    flex-shrink-0
-                    rounded-full
-                    border
-                    px-5
-                    py-2.5
-                    text-xs
-                    font-bold
-                    transition-all
-                    duration-300
-                    ${
-                      premiumOnly
-                        ? "border-[#d4ad54] bg-gradient-to-r from-[#741522] to-[#9b2432] text-white shadow-md"
-                        : "border-[#d4ad54]/40 bg-[#faf3e5] text-[#741522] hover:border-[#741522]/40"
-                    }
-                  `}
-                >
-                  <span className="flex items-center gap-2">
-                    <Crown className="h-3.5 w-3.5" />
-                    Premium
-                  </span>
-                </motion.button>
 
 
                 {/* ALL */}
@@ -1411,28 +1382,6 @@ const Categories = () => {
                   products
                 </p>
 
-                {premiumOnly && (
-                  <div
-                    className="
-                      mt-2
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-full
-                      bg-[#faf3e5]
-                      px-2.5
-                      py-1
-                      text-[9px]
-                      font-bold
-                      uppercase
-                      tracking-[0.12em]
-                      text-[#741522]
-                    "
-                  >
-                    <Crown className="h-3 w-3 text-[#b88732]" />
-                    Premium Collection
-                  </div>
-                )}
 
               </div>
 
@@ -1517,37 +1466,7 @@ const Categories = () => {
                         className="relative min-w-0"
                       >
 
-                        {isPremiumProduct(product) && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="
-                              pointer-events-none
-                              absolute
-                              left-2
-                              top-2
-                              z-20
-                              inline-flex
-                              items-center
-                              gap-1.5
-                              rounded-full
-                              border
-                              border-[#f5d98a]/70
-                              bg-[#741522]/95
-                              px-2.5
-                              py-1.5
-                              text-[9px]
-                              font-bold
-                              uppercase
-                              tracking-[0.12em]
-                              text-[#f5d98a]
-                              shadow-lg
-                            "
-                          >
-                            <Crown className="h-3 w-3" />
-                            Premium
-                          </motion.div>
-                        )}
+                       
 
                         <ProductCard
                           product={{

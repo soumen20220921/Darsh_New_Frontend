@@ -31,7 +31,7 @@ import Wishlist from "./pages/Wishlist.jsx";
 import PremiumSarees from "./pages/PremiumSarees.jsx";
 import ShopByPrice from "./pages/ShopByPrice.jsx";
 import FestivalSale from "./pages/FestivalSale";
-
+import PrebookingPage from "./pages/PrebookingPage.jsx";
 const App = () => {
   const context = useAppContext();
 
@@ -54,20 +54,24 @@ const App = () => {
             <Route path="/contactus" element={<ContactUs />} />
             <Route path="/Categories/:name" element={<Categories />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
-            <Route path="/ShippingAndDelivery" element={<ShippingAndDelivery />} />
+            <Route
+              path="/ShippingAndDelivery"
+              element={<ShippingAndDelivery />}
+            />
             <Route path="/PaymentOptions" element={<PaymentOptions />} />
             <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/premium-sarees" element={<PremiumSarees />}/>
+            <Route path="/premium-sarees" element={<PremiumSarees />} />
             <Route path="/shop-by-price" element={<ShopByPrice />} />
-            <Route
-  path="/festival-sale"
-  element={<FestivalSale />}
-/>
+            <Route path="/prebooking" element={<PrebookingPage />} />
+            <Route path="/festival-sale" element={<FestivalSale />} />
             <Route
               path="/CancellationandRefund"
               element={<CancellationAndRefund />}
             />
-            <Route path="/ShippingAndDelivery" element={<ShippingAndDelivery />} />
+            <Route
+              path="/ShippingAndDelivery"
+              element={<ShippingAndDelivery />}
+            />
             <Route
               path="/terms-and-conditions"
               element={<TermsAndConditions />}

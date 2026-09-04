@@ -29,6 +29,8 @@ import { useAppContext } from "../context/AppContext.jsx";
 import Reels from "./Reels.jsx";
 import FestiveBanner from "./FestiveBanner.jsx";
 import HomeFooter from "./HomeFooter.jsx";
+import PrebookingSection from "./PrebookingSection.jsx";
+
 
 /* =========================================================
    CATEGORY DATA
@@ -1607,6 +1609,7 @@ const Home = () => {
       ================================================= */}
 
       <SignatureWeaves />
+
 
       <FestiveBanner />
 
@@ -3474,6 +3477,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+               <PrebookingSection />
 
       
 
