@@ -42,7 +42,7 @@ const Auth = () => {
   const [message, setMessage] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [userName, setUserName] = useState("");
-    const logoSrc = "/IMG/Logo.jpg";
+    const logoSrc = "/IMG/Logo.png";
 
 
 

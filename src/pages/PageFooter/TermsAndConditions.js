@@ -13,7 +13,7 @@ import {
 
 const TermsAndConditions = () => {
 
-  const logoSrc = "/IMG/Logo.jpg";
+  const logoSrc = "/IMG/Logo.png";
 
   // =========================================================
   // INTRODUCTION CONTENT

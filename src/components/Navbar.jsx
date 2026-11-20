@@ -43,7 +43,7 @@ import { toast } from "react-toastify";
 ============================================================ */
 
 const WISHLIST_KEY = "wishlist";
-const LOGO_SRC = "/IMG/Logo.jpg";
+const LOGO_SRC = "/IMG/Logo.png";
 const COURIER_PARTNERS = ["DTDC", "India Post"];
 
 const COURIER_TRACKING_URLS = {
