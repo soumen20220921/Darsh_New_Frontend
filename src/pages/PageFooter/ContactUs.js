@@ -31,15 +31,15 @@ const ContactUs = () => {
     {
       icon: Mail,
       label: "EMAIL",
-      value: "darshweb2004@gmail.com",
-      href: "mailto:darshweb2004@gmail.com",
+      value: "contactdarsh22@gmail.com",
+      href: "mailto:contactdarsh22@gmail.com",
     },
 
     {
       icon: Phone,
       label: "PHONE",
-      value: "+91 9883277103",
-      href: "tel:+919883277103",
+      value: "+91 9907804710",
+      href: "tel:+919907804710",
     },
 
     {
@@ -891,7 +891,7 @@ const ContactUs = () => {
           </h2>
 
           <a
-            href="tel:+919883277103"
+            href="tel:+919907804710"
             className="
               group
               inline-flex
